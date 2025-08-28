@@ -3,6 +3,8 @@ import 'package:go_router/go_router.dart';
 import 'package:mobile/adapter/core/in/ui/app_layout.dart';
 import 'package:mobile/adapter/core/in/ui/home_layout.dart';
 
+import 'package:mobile/adapter/credentials/credentials.dart';
+
 final GoRouter appRoutes = GoRouter(
   initialLocation: '/credentials',
   errorBuilder: (context, state) => Placeholder(),
@@ -39,7 +41,11 @@ final GoRouter appRoutes = GoRouter(
                   routes: [
                     GoRoute(
                       path: '/credentials',
-                      builder: (context, state) => const Text('Credencial'),
+                      builder: (context, state) => const CredentialPage(),
+                      routes: [GoRoute(
+                        path: 'new-credential', // ruta relativa: /credentials/new
+                        builder: (context, state) => const NewCredentialPage(),
+                      ),]
                     ),
                   ],
                 ),
