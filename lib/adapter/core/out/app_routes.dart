@@ -2,15 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile/adapter/core/in/ui/app_layout.dart';
 import 'package:mobile/adapter/core/in/ui/home_layout.dart';
+import 'package:mobile/features/lodging/presentation/screens/lodging_list_screen.dart';
+import 'package:mobile/features/lodging/presentation/screens/lodging_reservation_screen.dart';
 
 final GoRouter appRoutes = GoRouter(
   initialLocation: '/credentials',
   errorBuilder: (context, state) => Placeholder(),
 
   routes: <RouteBase>[
-    
     GoRoute(path: '/login', builder: (context, state) => const Placeholder()),
-    
+
     // Rutas protegidas, solo accesibles si el usuario está autenticado
     // Este StatefulShellRoute se encarga de ir entre el inicio y perfil
     StatefulShellRoute.indexedStack(
@@ -29,8 +30,7 @@ final GoRouter appRoutes = GoRouter(
       branches: [
         StatefulShellBranch(
           routes: [
-
-            // Este StatefulShellRoute se encarga de ir entre credenciales, transporte y alojamiento 
+            // Este StatefulShellRoute se encarga de ir entre credenciales, transporte y alojamiento
             StatefulShellRoute.indexedStack(
               builder: (context, state, navigationShell) =>
                   HomeLayout(navigationShell: navigationShell),
@@ -55,7 +55,14 @@ final GoRouter appRoutes = GoRouter(
                   routes: [
                     GoRoute(
                       path: '/lodging',
-                      builder: (context, state) => const Text('Alojamiento'),
+                      builder: (context, state) => const LodgingListScreen(),
+                      routes: [
+                        GoRoute(
+                          path: 'new',
+                          builder: (context, state) =>
+                              const LodgingReservationScreen(),
+                        ),
+                      ],
                     ),
                   ],
                 ),
