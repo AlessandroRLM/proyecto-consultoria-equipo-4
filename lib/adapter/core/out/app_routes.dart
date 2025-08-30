@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile/adapter/core/in/ui/app_layout.dart';
 import 'package:mobile/adapter/core/in/ui/home_layout.dart';
-
+import 'package:mobile/adapter/credentials/out/image_services.dart';
 import 'package:mobile/adapter/credentials/credentials.dart';
 
 final GoRouter appRoutes = GoRouter(
@@ -41,14 +41,27 @@ final GoRouter appRoutes = GoRouter(
                   routes: [
                     GoRoute(
                       path: '/credentials',
-                      builder: (context, state) => const CredentialPage(),
-                      routes: [GoRoute(
-                        path: 'new-credential', // ruta relativa: /credentials/new
-                        builder: (context, state) => const NewCredentialPage(),
-                      ),]
+                      builder: (context, state) => const CredentialScreen(),
+                      routes: [
+                        GoRoute(
+                          path: 'new-credential',
+                          builder: (context, state) => const NewCredentialScreen(),
+                          routes:[
+                            GoRoute(
+                              path: 'photo-camera',
+                              builder: (context, state) => PhotoCredencialScreen(onTakePhoto: () => ImageService.pickFromCamera(), fromCamera: true),
+                            ),
+                            GoRoute(
+                              path: 'photo-gallery',
+                              builder: (context, state) => PhotoCredencialScreen(onTakePhoto: () => ImageService.pickFromGallery(),fromCamera: false),
+                            )
+                          ]
+                        )
+                      ]
                     ),
                   ],
                 ),
+
                 StatefulShellBranch(
                   routes: [
                     GoRoute(
@@ -57,6 +70,7 @@ final GoRouter appRoutes = GoRouter(
                     ),
                   ],
                 ),
+
                 StatefulShellBranch(
                   routes: [
                     GoRoute(
@@ -66,6 +80,7 @@ final GoRouter appRoutes = GoRouter(
                   ],
                 ),
               ],
+              
             ),
           ],
         ),

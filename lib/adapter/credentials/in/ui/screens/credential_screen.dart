@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+//import 'package:go_router/go_router.dart';
+import 'package:mobile/adapter/credentials/in/ui/widgets/widgets_credentials.dart';
 
-class CredentialPage extends StatelessWidget {
-  const CredentialPage({super.key});
+class CredentialScreen extends StatelessWidget {
+  const CredentialScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -34,12 +35,7 @@ class CredentialPage extends StatelessWidget {
           ]
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-        context.go('/credentials/new-credential');},
-        label: const Text('Solicitar Credencial'),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+      floatingActionButton: const RequestCredentialButton(route: '/credentials/new-credential',label: 'Solicitar Credencial'),
     );
   }
 }
