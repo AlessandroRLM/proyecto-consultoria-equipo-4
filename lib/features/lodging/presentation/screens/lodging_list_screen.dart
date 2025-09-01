@@ -33,15 +33,13 @@ class LodgingListScreen extends StatelessWidget {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
-        child:
-            reservations.isEmpty
-                ? const Center(child: Text("No hay reservas aún"))
-                : ListView.builder(
-                  itemCount: reservations.length,
-                  itemBuilder:
-                      (context, index) =>
-                          ReservationCard(reservation: reservations[index]),
-                ),
+        child: reservations.isEmpty
+            ? const Center(child: Text("No hay reservas aún"))
+            : ListView.builder(
+                itemCount: reservations.length,
+                itemBuilder: (context, index) =>
+                    ReservationCard(reservation: reservations[index]),
+              ),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.go('/lodging/new'),

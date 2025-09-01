@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:mobile/features/lodging/providers/lodging_provider.dart';
-import 'package:provider/provider.dart';
+import 'package:mobile/adapter/core/out/app_themes.dart';
 
 class LodgingReservationScreen extends StatefulWidget {
   const LodgingReservationScreen({super.key});
@@ -12,71 +11,108 @@ class LodgingReservationScreen extends StatefulWidget {
 }
 
 class _LodgingReservationScreenState extends State<LodgingReservationScreen> {
-  DateTimeRange? selectedDates;
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _addressController = TextEditingController();
+  final TextEditingController _searchController = TextEditingController();
+
+  final List<Map<String, String>> clinics = [
+    {
+      "name": "Centro Médico Andes Salud Talca",
+      "city": "Talca",
+      "address": "Cuatro Nte. 1656, 3467384 Talca, Maule",
+    },
+    {
+      "name": "Clínica Santa María",
+      "city": "Talca",
+      "address": "Calle Falsa 123, Talca, Maule",
+    },
+  ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Reservar alojamiento")),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            TextField(
-              controller: _nameController,
-              decoration: const InputDecoration(labelText: "Nombre del lugar"),
-            ),
-            TextField(
-              controller: _addressController,
-              decoration: const InputDecoration(labelText: "Dirección"),
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () async {
-                final now = DateTime.now();
-                final picked = await showDateRangePicker(
-                  context: context,
-                  firstDate: now,
-                  lastDate: DateTime(now.year, now.month + 3, now.day),
-                );
-                if (picked != null) {
-                  setState(() {
-                    selectedDates = picked;
-                  });
-                }
-              },
-              child: Text(
-                selectedDates == null
-                    ? "Seleccionar fechas"
-                    : "Del ${selectedDates!.start.day}/${selectedDates!.start.month} "
-                          "al ${selectedDates!.end.day}/${selectedDates!.end.month}",
+      appBar: AppBar(title: const Text("Reservar")),
+      body: Column(
+        children: [
+          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              decoration: BoxDecoration(
+                color: Colors.grey[200],
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: TextField(
+                controller: _searchController,
+                decoration: const InputDecoration(
+                  hintText: "Buscar campo clínico",
+                  border: InputBorder.none,
+                  icon: Icon(Icons.search),
+                ),
               ),
             ),
-            const Spacer(),
-            ElevatedButton(
-              onPressed:
-                  selectedDates == null ||
-                      _nameController.text.isEmpty ||
-                      _addressController.text.isEmpty
-                  ? null
-                  : () {
-                      context.read<LodgingProvider>().addReservation(
-                        LodgingReservation(
-                          name: _nameController.text,
-                          address: _addressController.text,
-                          startDate: selectedDates!.start,
-                          endDate: selectedDates!.end,
+          ),
+          const SizedBox(height: 16),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: ListView.builder(
+                itemCount: clinics.length,
+                itemBuilder: (_, index) {
+                  final clinic = clinics[index];
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.grey[400]!),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black12,
+                          blurRadius: 2,
+                          offset: Offset(0, 1),
                         ),
-                      );
-                      context.go('/lodging');
-                    },
-              child: const Text("Confirmar reserva"),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.local_hospital,
+                          color: AppThemes.primary_600,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                clinic["name"]!,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              Text(clinic["city"]!),
+                              Text(clinic["address"]!),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          // Abrir mapa
+        },
+        label: const Text("Buscar en mapa"),
+        icon: const Icon(Icons.map),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
 }
