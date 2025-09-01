@@ -1,15 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/widgets/buttons/icon_button.dart'; // <-- ojo, ajusta si tu ruta es distinta
+import 'package:mobile/widgets/utils/theme.dart'; // si AppColors está en otro archivo, importa ahí
 
-class AppColors {
-  static const Color primary = Color(0xFF4A90E2); // Azul pastel
-  static const Color secondary = Color(0xFF50E3C2); // Verde agua
-  static const Color accent = Color(0xFFFFC107); // Amarillo suave
+class CustomIconButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onPressed;
+  final Color? color;
+  final double size;
 
-  static const Color background = Color(0xFFF9F9F9);
-  static const Color textPrimary = Color(0xFF333333);
-  static const Color textSecondary = Color(0xFF777777);
+  const CustomIconButton({
+    Key? key,
+    required this.icon,
+    required this.onPressed,
+    this.color,
+    this.size = 28.0,
+  }) : super(key: key);
 
-  static const Color success = Color(0xFF4CAF50);
-  static const Color error = Color(0xFFE53935);
-  static const Color warning = Color(0xFFFFA726);
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      icon: Icon(icon, color: color ?? AppColors.primary, size: size),
+      onPressed: onPressed,
+      splashRadius: size, // mejora UX en pantallas táctiles
+    );
+  }
 }
