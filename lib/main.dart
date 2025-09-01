@@ -39,7 +39,7 @@ class HomePage extends StatelessWidget {
           // 🔹 Botones
           CustomButton(text: "Botón Principal", onPressed: () {}),
           const SizedBox(height: 10),
-          CustomIconButton(icon: Icons.home, onPressed: () {}),
+          CustomIconButton(icon: Icons.emoji_transportation, onPressed: () {}),
 
           const Divider(),
 
