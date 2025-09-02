@@ -13,58 +13,7 @@ class TransportPage extends StatefulWidget {
 }
 
 class _TransportPageState extends State<TransportPage> {
-  int selectedTabIndex = 1; // 0: Credencial, 1: Transporte, 2: Alojamiento
-
-  void onTabSelected(int index) {
-    setState(() {
-      selectedTabIndex = index;
-    });
-  }
-
-  Widget buildTabButton(String label, IconData icon, int index) {
-    final bool isSelected = selectedTabIndex == index;
-    return Expanded(
-      child: GestureDetector(
-        onTap: () => onTabSelected(index),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
-          margin: const EdgeInsets.symmetric(horizontal: 2),
-          decoration: BoxDecoration(
-            color: isSelected ? Colors.red.shade300 : Colors.transparent,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: isSelected ? Colors.red : Colors.grey.shade400,
-              width: 1.5,
-            ),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                icon,
-                size: 18,
-                color: isSelected ? Colors.white : Colors.black54,
-              ),
-              const SizedBox(width: 4),
-              Flexible(
-                child: Text(
-                  label,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: isSelected ? Colors.white : Colors.black54,
-                    fontWeight: isSelected
-                        ? FontWeight.bold
-                        : FontWeight.normal,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+  // CustomTabBar Credencial, Transporte y Alojamiento.
 
 
   Widget buildHighlightedReservationCard(Map<String, dynamic> reservation) {
@@ -173,16 +122,7 @@ class _TransportPageState extends State<TransportPage> {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
-            child: Row(
-              children: [
-                buildTabButton('Credencial', Icons.credit_card, 0),
-                buildTabButton('Transporte', Icons.directions_bus, 1),
-                buildTabButton('Alojamiento', Icons.hotel, 2),
-              ],
-            ),
-          ),
+          // CustomTabBar Credencial, Transporte y Alojamiento.
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             child: Row(
@@ -256,15 +196,6 @@ class _TransportPageState extends State<TransportPage> {
         label: const Text('Reservar', style: TextStyle(color: Colors.white)),
         icon: const Icon(Icons.calendar_today, color: Colors.white),
         backgroundColor: Colors.red,
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 0, // Inicio
-        selectedItemColor: Colors.red,
-        unselectedItemColor: Colors.grey,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Inicio'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Perfil'),
-        ],
       ),
     );
   }
