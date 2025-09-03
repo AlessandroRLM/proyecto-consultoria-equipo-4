@@ -143,10 +143,12 @@ class HomePage extends StatelessWidget {
           ItemCard(
             title: "Transporte",
             subtitle: "Reserva disponible",
+            icon: Icons.directions_bus,
             onTap: () {
               print("Transporte tocado");
             },
           ),
+
           const SizedBox(height: 10),
           const ProfileCard(
             name: "Juan Pérez",

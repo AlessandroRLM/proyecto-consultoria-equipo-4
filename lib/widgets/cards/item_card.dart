@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
-import '../utils/theme.dart';
+import '../utils/theme.dart'; // Ajusta según donde tengas tus colores
 
 class ItemCard extends StatelessWidget {
   final String title;
   final String subtitle;
   final VoidCallback onTap;
+  final IconData? icon;
 
   const ItemCard({
     super.key,
     required this.title,
     required this.subtitle,
     required this.onTap,
+    this.icon,
   });
 
   @override
@@ -20,6 +22,13 @@ class ItemCard extends StatelessWidget {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       elevation: 2,
       child: ListTile(
+        leading: icon != null
+            ? Icon(
+                icon,
+                size: 28,
+                color: AppThemes.primary_600, // color visible y acorde a tema
+              )
+            : null,
         title: Text(
           title,
           style: TextStyle(
