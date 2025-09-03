@@ -16,10 +16,21 @@ class CustomCheckbox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CheckboxListTile(
-      title: Text(label),
+      title: Text(
+        label,
+        style: TextStyle(
+          color: AppThemes.black_1000,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
       value: value,
-      activeColor: AppColors.primary,
+      activeColor: AppThemes.primary_600,
+      checkColor: AppThemes.black_100,
+      tileColor: AppThemes.black_100,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       onChanged: onChanged,
+      controlAffinity: ListTileControlAffinity.leading,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 8),
     );
   }
 }

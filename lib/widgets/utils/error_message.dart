@@ -11,7 +11,10 @@ class ErrorMessage extends StatelessWidget {
     return Center(
       child: Text(
         message,
-        style: const TextStyle(color: AppColors.error, fontSize: 16),
+        style: TextStyle(
+          color: AppThemes.light.colorScheme.error,
+          fontSize: 16,
+        ),
       ),
     );
   }

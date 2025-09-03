@@ -18,16 +18,18 @@ class CustomTextField extends StatelessWidget {
       decoration: InputDecoration(
         hintText: hint,
         filled: true,
-        fillColor: Colors.white,
+        fillColor: AppThemes.black_100,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: AppColors.textSecondary),
+          borderSide: BorderSide(color: AppThemes.black_700),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: AppColors.primary, width: 2),
+          borderSide: BorderSide(color: AppThemes.primary_600, width: 2),
         ),
       ),
+      style: TextStyle(color: AppThemes.black_1300),
+      cursorColor: AppThemes.primary_600,
     );
   }
 }

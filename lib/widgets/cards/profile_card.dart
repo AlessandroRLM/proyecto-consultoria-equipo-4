@@ -16,27 +16,38 @@ class ProfileCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
+      color: AppThemes.black_100,
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
         padding: const EdgeInsets.all(12),
         child: Row(
           children: [
-            CircleAvatar(radius: 30, backgroundImage: NetworkImage(imageUrl)),
+            CircleAvatar(
+              radius: 30,
+              backgroundImage: NetworkImage(imageUrl),
+              backgroundColor: AppThemes.black_300,
+            ),
             const SizedBox(width: 12),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  name,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    name,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: AppThemes.black_1000,
+                    ),
                   ),
-                ),
-                Text(email, style: TextStyle(color: AppColors.textSecondary)),
-              ],
+                  const SizedBox(height: 4),
+                  Text(
+                    email,
+                    style: TextStyle(color: AppThemes.black_700, fontSize: 14),
+                  ),
+                ],
+              ),
             ),
           ],
         ),

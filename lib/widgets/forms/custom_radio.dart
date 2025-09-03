@@ -18,10 +18,10 @@ class CustomRadio<T> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return RadioListTile<T>(
-      title: Text(label),
+      title: Text(label, style: TextStyle(color: AppThemes.black_1300)),
       value: value,
       groupValue: groupValue,
-      activeColor: AppColors.primary,
+      activeColor: AppThemes.primary_600,
       onChanged: onChanged,
     );
   }

@@ -16,9 +16,26 @@ class _CustomDatePickerState extends State<CustomDatePicker> {
   void _pickDate() async {
     final pickedDate = await showDatePicker(
       context: context,
-      initialDate: DateTime.now(),
+      initialDate: _selectedDate ?? DateTime.now(),
       firstDate: DateTime(2000),
       lastDate: DateTime(2100),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: AppThemes.primary_600,
+              onPrimary: AppThemes.black_100,
+              onSurface: AppThemes.black_1300,
+            ),
+            textButtonTheme: TextButtonThemeData(
+              style: TextButton.styleFrom(
+                foregroundColor: AppThemes.primary_600,
+              ),
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
 
     if (pickedDate != null) {
@@ -32,13 +49,16 @@ class _CustomDatePickerState extends State<CustomDatePicker> {
     return OutlinedButton(
       onPressed: _pickDate,
       style: OutlinedButton.styleFrom(
-        side: BorderSide(color: AppColors.primary),
+        foregroundColor: AppThemes.black_1300,
+        side: const BorderSide(color: AppThemes.primary_600),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       ),
       child: Text(
         _selectedDate != null
             ? "${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}"
             : "Seleccionar fecha",
+        style: const TextStyle(fontSize: 16, color: AppThemes.black_1300),
       ),
     );
   }

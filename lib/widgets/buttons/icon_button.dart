@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/widgets/buttons/icon_button.dart'; // <-- ojo, ajusta si tu ruta es distinta
-import 'package:mobile/widgets/utils/theme.dart'; // si AppColors está en otro archivo, importa ahí
+import 'package:mobile/widgets/utils/theme.dart'; // Ajusta ruta
 
 class CustomIconButton extends StatelessWidget {
   final IconData icon;
@@ -18,10 +17,19 @@ class CustomIconButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return IconButton(
-      icon: Icon(icon, color: color ?? AppColors.primary, size: size),
-      onPressed: onPressed,
-      splashRadius: size, // mejora UX en pantallas táctiles
+    return Material(
+      color: Colors.transparent,
+      shape: const CircleBorder(),
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: onPressed,
+        child: Padding(
+          padding: const EdgeInsets.all(
+            8.0,
+          ), // Ajusta el padding para zona táctil
+          child: Icon(icon, color: color ?? AppThemes.primary_600, size: size),
+        ),
+      ),
     );
   }
 }
