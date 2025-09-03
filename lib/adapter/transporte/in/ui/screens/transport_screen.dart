@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import '../../../out/providers/transport_reservations_provider.dart';
-import 'reservation_page.dart';
-import 'transport_calendar_screen.dart';
+import 'package:mobile/adapter/transporte/transport.dart';
+import 'package:mobile/adapter/core/in/ui/widgets/widgets.dart';
 
-class TransportPage extends StatefulWidget {
-  const TransportPage({super.key});
+class TransportScreen extends StatefulWidget {
+  const TransportScreen({super.key});
 
   @override
   // ignore: library_private_types_in_public_api
-  _TransportPageState createState() => _TransportPageState();
+  _TransportScreenState createState() => _TransportScreenState();
 }
 
-class _TransportPageState extends State<TransportPage> {
+class _TransportScreenState extends State<TransportScreen> {
   // CustomTabBar Credencial, Transporte y Alojamiento.
 
 
@@ -114,11 +114,6 @@ class _TransportPageState extends State<TransportPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.red),
-      ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -137,19 +132,13 @@ class _TransportPageState extends State<TransportPage> {
                   ),
                 ),
                 GestureDetector(
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => const TransportCalendarScreen(),
-                      ),
-                    );
+                  onTap: () { context.go('/transport/calendar');
                   },
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
                       border: Border.all(color: Colors.red, width: 2),
                       borderRadius: BorderRadius.circular(12),
-                      color: Colors.white,
                     ),
                     child: const Icon(Icons.calendar_today, color: Colors.red, size: 20),
                   ),
@@ -185,18 +174,11 @@ class _TransportPageState extends State<TransportPage> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => const ReservationPage(showMapButton: true),
-            ),
-          );
-        },
-        label: const Text('Reservar', style: TextStyle(color: Colors.white)),
-        icon: const Icon(Icons.calendar_today, color: Colors.white),
-        backgroundColor: Colors.red,
-      ),
+      floatingActionButton: RequestButton(
+        funcion: () => context.go('/transport/reservation'),
+        label: 'Reservar', 
+        icon: Icons.calendar_today),
+      
     );
   }
 }

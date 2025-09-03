@@ -4,6 +4,7 @@ import 'package:mobile/adapter/core/in/ui/app_layout.dart';
 import 'package:mobile/adapter/core/in/ui/home_layout.dart';
 import 'package:mobile/adapter/credentials/out/image_services.dart';
 import 'package:mobile/adapter/credentials/credentials.dart';
+import 'package:mobile/adapter/transporte/transport.dart';
 
 final GoRouter appRoutes = GoRouter(
   initialLocation: '/credentials',
@@ -37,7 +38,7 @@ final GoRouter appRoutes = GoRouter(
               builder: (context, state, navigationShell) =>
                   HomeLayout(navigationShell: navigationShell),
               branches: [
-                StatefulShellBranch(
+                StatefulShellBranch( //Rutas de credenciales
                   routes: [
                     GoRoute(
                       path: '/credentials',
@@ -62,11 +63,26 @@ final GoRouter appRoutes = GoRouter(
                   ],
                 ),
 
-                StatefulShellBranch(
+                StatefulShellBranch( //Rutas de transporte
                   routes: [
                     GoRoute(
                       path: '/transport',
-                      builder: (context, state) => const Text('Transporte'),
+                      builder: (context, state) => const TransportScreen(),
+                      routes:[
+                        GoRoute(
+                          path: 'reservation', 
+                          builder: (context, state) => const ReservationScreen(),
+                          routes:[
+                            GoRoute(
+                              path: 'map_screen',
+                              builder:(context, state) => const MapScreen()
+                              )
+                          ]),
+                        GoRoute(
+                          path: 'calendar', 
+                          builder: (context, state) => const TransportCalendarScreen(),
+                          ),
+                      ]
                     ),
                   ],
                 ),

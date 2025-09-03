@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 import 'map_screen.dart';
 
-class ReservationPage extends StatefulWidget {
+class ReservationScreen extends StatefulWidget {
   final bool showMapButton;
 
-  const ReservationPage({super.key, this.showMapButton = false});
+  const ReservationScreen({super.key, this.showMapButton = false});
 
   @override
   // ignore: library_private_types_in_public_api
-  _ReservationPageState createState() => _ReservationPageState();
+  _ReservationScreenState createState() => _ReservationScreenState();
 }
 
-class _ReservationPageState extends State<ReservationPage> {
+class _ReservationScreenState extends State<ReservationScreen> {
   final TextEditingController _searchController = TextEditingController();
 
   @override
@@ -40,10 +40,7 @@ class _ReservationPageState extends State<ReservationPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Reservar'),
-        backgroundColor: Colors.white,
-        iconTheme: const IconThemeData(color: Colors.black87),
-        elevation: 1,
+        title: const Text('Reservar')
       ),
       body: Column(
         children: [

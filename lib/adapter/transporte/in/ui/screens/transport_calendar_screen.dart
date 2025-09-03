@@ -66,10 +66,7 @@ class _TransportCalendarScreenState extends State<TransportCalendarScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Reservar'),
-        backgroundColor: Colors.white,
-        iconTheme: const IconThemeData(color: Colors.black87),
-        elevation: 1,
+        title: const Text('Reservar')
       ),
       body: Column(
         children: [

@@ -6,7 +6,7 @@ class MapScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Mapa'), backgroundColor: Colors.white),
+      appBar: AppBar(title: const Text('Mapa')),
       body: const Center(
         // Placeholder mapa
         child: Text('Aquí se mostrará el mapa.'),

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-//import 'package:go_router/go_router.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mobile/adapter/credentials/in/ui/widgets/widgets_credentials.dart';
 
 class CredentialScreen extends StatelessWidget {
@@ -35,7 +35,7 @@ class CredentialScreen extends StatelessWidget {
           ]
         ),
       ),
-      floatingActionButton: const RequestCredentialButton(route: '/credentials/new-credential',label: 'Solicitar Credencial'),
+      floatingActionButton: RequestButton(funcion: () => context.go( '/credentials/new-credential'),label: 'Solicitar Credencial'),
     );
   }
 }

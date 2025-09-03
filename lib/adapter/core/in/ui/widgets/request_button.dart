@@ -1,16 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
-
-class RequestCredentialButton extends StatelessWidget {
-  final String route;
+class RequestButton extends StatelessWidget {
+  final VoidCallback funcion; 
   final String label;
   final Color? color;
   final IconData? icon;
   final Color? textColor; 
 
-  const RequestCredentialButton({
+  const RequestButton({
     super.key,
-    required this.route,
+    required this.funcion,
     required this.label,
     this.color,
     this.icon,
@@ -21,7 +19,7 @@ class RequestCredentialButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return FloatingActionButton.extended(
       onPressed: () {
-        context.go(route);
+       funcion;
       },
       backgroundColor: color ?? Theme.of(context).colorScheme.primary,
       label: Text(
