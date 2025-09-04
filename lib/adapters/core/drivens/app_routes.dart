@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:mobile/adapter/core/in/ui/app_layout.dart';
-import 'package:mobile/adapter/core/in/ui/home_layout.dart';
+import 'package:mobile/adapters/core/drivers/ui/layouts/app_layout.dart';
+import 'package:mobile/adapters/core/drivers/ui/layouts/home_layout.dart';
 
 final GoRouter appRoutes = GoRouter(
   initialLocation: '/credentials',

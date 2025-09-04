@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/adapter/core/out/app_themes.dart';
+import 'package:mobile/adapters/core/drivens/app_themes.dart';
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
