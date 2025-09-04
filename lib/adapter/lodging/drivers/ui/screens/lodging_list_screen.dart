@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:mobile/features/lodging/providers/lodging_provider.dart';
-import 'package:mobile/features/lodging/presentation/widgets/reservation_card.dart';
+import 'package:mobile/adapter/lodging/drivens/providers/lodging_provider.dart';
+import 'package:mobile/adapter/lodging/drivers/ui/widgets/reservation_card.dart';
 import 'package:provider/provider.dart';
-import 'package:mobile/features/lodging/presentation/widgets/calendar_icon_button.dart';
+import 'package:mobile/adapter/lodging/drivers/ui/widgets/calendar_icon_button.dart';
 
 class LodgingListScreen extends StatelessWidget {
   const LodgingListScreen({super.key});

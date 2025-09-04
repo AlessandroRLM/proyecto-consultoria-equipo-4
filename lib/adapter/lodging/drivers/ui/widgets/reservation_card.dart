@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/features/lodging/providers/lodging_provider.dart';
+import 'package:mobile/adapter/lodging/drivens/providers/lodging_provider.dart';
 import 'package:mobile/adapter/core/out/app_themes.dart'; // Para AppThemes.primary_600
 
 class ReservationCard extends StatefulWidget {
