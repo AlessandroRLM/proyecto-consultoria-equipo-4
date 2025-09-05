@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:mobile/adapter/core/out/app_themes.dart';
 
 class AppLayout extends StatefulWidget {
   final StatefulNavigationShell navigationShell;
@@ -14,13 +13,15 @@ class AppLayout extends StatefulWidget {
 class _AppLayoutState extends State<AppLayout> {
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
     return Scaffold(
       body: widget.navigationShell,
       bottomNavigationBar: BottomNavigationBar(
         onTap: widget.navigationShell.goBranch,
         currentIndex: widget.navigationShell.currentIndex,
-        selectedItemColor: AppThemes.primary_600,
-        unselectedItemColor: AppThemes.black_700,
+        selectedItemColor: cs.primary,
+        unselectedItemColor: cs.onSurfaceVariant,
         type: BottomNavigationBarType.fixed,
         showSelectedLabels: true,
         showUnselectedLabels: true,

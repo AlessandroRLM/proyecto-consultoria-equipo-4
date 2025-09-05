@@ -11,30 +11,19 @@ class LodgingListScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final reservations = context.watch<LodgingProvider>().reservations;
+    final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Reservas'),
-        actions: [
-          CalendarIconButton(
-            onDateSelected: (selectedDate) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    'Fecha seleccionada: ${selectedDate.toLocal()}'.split(
-                      ' ',
-                    )[0],
-                  ),
-                ),
-              );
-            },
-          ), //CALENDARIO SOLO A MODO DE PRUEBA
-        ],
-      ),
+      appBar: AppBar(title: const Text('Reservas')),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: reservations.isEmpty
-            ? const Center(child: Text("No hay reservas aún"))
+            ? Center(
+                child: Text(
+                  "No hay reservas aún",
+                  style: TextStyle(color: cs.onSurfaceVariant),
+                ),
+              )
             : ListView.builder(
                 itemCount: reservations.length,
                 itemBuilder: (context, index) =>

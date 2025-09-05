@@ -13,17 +13,25 @@ class CustomTabBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
     return Row(
       spacing: 8.0,
       children: [
-        _buildTabItem(0, Icons.credit_card_outlined, 'Credencial'),
-        _buildTabItem(1, Icons.airport_shuttle_outlined, 'Transporte'),
-        _buildTabItem(2, Icons.hotel_outlined, 'Alojamiento'),
+        _buildTabItem(context, 0, Icons.credit_card_outlined, 'Credencial'),
+        _buildTabItem(context, 1, Icons.airport_shuttle_outlined, 'Transporte'),
+        _buildTabItem(context, 2, Icons.hotel_outlined, 'Alojamiento'),
       ],
     );
   }
 
-  Widget _buildTabItem(int index, IconData icon, String label) {
+  Widget _buildTabItem(
+    BuildContext context,
+    int index,
+    IconData icon,
+    String label,
+  ) {
+    final cs = Theme.of(context).colorScheme;
     final isSelected = currentIndex == index;
 
     return Expanded(
@@ -32,11 +40,9 @@ class CustomTabBar extends StatelessWidget {
         child: Container(
           height: 36,
           decoration: BoxDecoration(
-            color: isSelected ? AppThemes.primary_200 : Colors.transparent,
+            color: isSelected ? cs.primaryContainer : Colors.transparent,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: AppThemes.black_500
-            )
+            border: Border.all(color: cs.outlineVariant),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -44,17 +50,15 @@ class CustomTabBar extends StatelessWidget {
               Icon(
                 icon,
                 size: 20,
-                color: isSelected ? (AppThemes.primary_700) : AppThemes.black_1300,
+                color: isSelected ? cs.onPrimaryContainer : cs.onSurfaceVariant,
               ),
               const SizedBox(width: 4),
               Text(
                 label,
                 style: TextStyle(
                   fontSize: 11,
-                  fontWeight: FontWeight.bold ,
-                  color: isSelected
-                      ? AppThemes.primary_700
-                      : AppThemes.black_1300,
+                  fontWeight: FontWeight.bold,
+                  color: isSelected ? cs.onPrimaryContainer : cs.onSurface,
                 ),
               ),
             ],

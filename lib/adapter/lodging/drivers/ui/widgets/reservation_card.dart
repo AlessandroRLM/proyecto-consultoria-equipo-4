@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/adapter/lodging/drivens/providers/lodging_provider.dart';
-import 'package:mobile/adapter/core/out/app_themes.dart'; // Para AppThemes.primary_600
+import 'package:mobile/adapter/core/out/app_themes.dart';
+import 'package:mobile/adapter/lodging/drivers/ui/screens/lodging_map_screen.dart';
 
 class ReservationCard extends StatefulWidget {
   final LodgingReservation reservation;
@@ -15,63 +16,117 @@ class _ReservationCardState extends State<ReservationCard> {
 
   @override
   Widget build(BuildContext context) {
-    final leftInfo = Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          widget.reservation.area,
-          style: const TextStyle(fontWeight: FontWeight.w600),
-        ),
-        Text(widget.reservation.name),
-        Text(widget.reservation.address),
-      ],
-    );
-
-    final midExtra = Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text("Habitación: ${widget.reservation.room}"),
-        Text("Entrada: ${widget.reservation.checkIn}"),
-        Text("Salida: ${widget.reservation.checkOut}"),
-      ],
-    );
+    final cs = Theme.of(context).colorScheme;
+    final text = Theme.of(context).textTheme;
 
     return InkWell(
       onTap: () => setState(() => expanded = !expanded),
+      borderRadius: BorderRadius.circular(12),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: cs.surface,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey[400]!),
+          border: Border.all(color: cs.outlineVariant),
         ),
-        child: expanded
-            ? Row(
-                children: [
-                  Expanded(child: leftInfo),
-                  const SizedBox(width: 8),
-                  Expanded(child: midExtra),
-                  const SizedBox(width: 8),
-                  Icon(
-                    Icons.house_rounded,
-                    size: 28,
-                    color: AppThemes.primary_600,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header principal
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  Icons.house_rounded,
+                  size: 28,
+                  color: AppThemes.primary_600,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.reservation.area,
+                        style: text.titleSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(widget.reservation.name, style: text.bodyMedium),
+                      Text(widget.reservation.address, style: text.bodySmall),
+                    ],
                   ),
-                ],
-              )
-            : Row(
+                ),
+              ],
+            ),
+
+            // Info extra cuando la card está expandida
+            if (expanded) ...[
+              const SizedBox(height: 12),
+              const Divider(height: 1), // <- línea divisoria
+
+              const SizedBox(height: 12),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Icon(
-                    Icons.house_rounded,
-                    size: 28,
-                    color: AppThemes.primary_600,
+                  // Columna izquierda
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Entrada: ${widget.reservation.checkIn}",
+                        style: text.bodySmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        "Salida: ${widget.reservation.checkOut}",
+                        style: text.bodySmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        "Habitación: ${widget.reservation.room}",
+                        style: text.bodySmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(child: leftInfo),
+                  // Botón Mapa a la derecha, alineado abajo
+                  FilledButton(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: cs.primary,
+                      foregroundColor: cs.onPrimary,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 10,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      textStyle: text.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const LodgingMapScreen(),
+                        ),
+                      );
+                    },
+                    child: const Text("Mapa"),
+                  ),
                 ],
               ),
+            ],
+          ],
+        ),
       ),
     );
   }

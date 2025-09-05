@@ -4,6 +4,7 @@ import 'package:mobile/adapter/core/in/ui/app_layout.dart';
 import 'package:mobile/adapter/core/in/ui/home_layout.dart';
 import 'package:mobile/adapter/lodging/drivers/ui/screens/lodging_list_screen.dart';
 import 'package:mobile/adapter/lodging/drivers/ui/screens/lodging_reservation_screen.dart';
+import 'package:mobile/adapter/lodging/drivers/ui/screens/lodging_map_screen.dart';
 
 final GoRouter appRoutes = GoRouter(
   initialLocation: '/credentials',
@@ -61,6 +62,10 @@ final GoRouter appRoutes = GoRouter(
                           path: 'new',
                           builder: (context, state) =>
                               const LodgingReservationScreen(),
+                        ),
+                        GoRoute(
+                          path: 'new',
+                          builder: (context, state) => const LodgingMapScreen(),
                         ),
                       ],
                     ),

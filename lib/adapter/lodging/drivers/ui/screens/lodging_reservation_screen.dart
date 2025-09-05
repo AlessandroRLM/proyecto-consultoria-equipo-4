@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mobile/adapter/core/out/app_themes.dart';
+import 'package:mobile/adapter/lodging/drivers/ui/screens/lodging_map_screen.dart';
 
 class LodgingReservationScreen extends StatefulWidget {
   const LodgingReservationScreen({super.key});
@@ -27,6 +29,9 @@ class _LodgingReservationScreenState extends State<LodgingReservationScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final text = Theme.of(context).textTheme;
+
     return Scaffold(
       appBar: AppBar(title: const Text("Reservar")),
       body: Column(
@@ -37,15 +42,15 @@ class _LodgingReservationScreenState extends State<LodgingReservationScreen> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12),
               decoration: BoxDecoration(
-                color: Colors.grey[200],
+                color: cs.surfaceVariant,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: TextField(
                 controller: _searchController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   hintText: "Buscar campo clínico",
                   border: InputBorder.none,
-                  icon: Icon(Icons.search),
+                  icon: Icon(Icons.search, color: cs.onSurfaceVariant),
                 ),
               ),
             ),
@@ -62,14 +67,14 @@ class _LodgingReservationScreenState extends State<LodgingReservationScreen> {
                     margin: const EdgeInsets.only(bottom: 12),
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: cs.surface,
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.grey[400]!),
+                      border: Border.all(color: cs.outlineVariant),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black12,
+                          color: cs.shadow.withOpacity(0.1),
                           blurRadius: 2,
-                          offset: Offset(0, 1),
+                          offset: const Offset(0, 1),
                         ),
                       ],
                     ),
@@ -84,14 +89,9 @@ class _LodgingReservationScreenState extends State<LodgingReservationScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                clinic["name"]!,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              Text(clinic["city"]!),
-                              Text(clinic["address"]!),
+                              Text(clinic["name"]!, style: text.titleSmall),
+                              Text(clinic["city"]!, style: text.bodySmall),
+                              Text(clinic["address"]!, style: text.bodySmall),
                             ],
                           ),
                         ),
@@ -106,7 +106,9 @@ class _LodgingReservationScreenState extends State<LodgingReservationScreen> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
-          // Abrir mapa
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (context) => const LodgingMapScreen()),
+          );
         },
         label: const Text("Buscar en mapa"),
         icon: const Icon(Icons.map),

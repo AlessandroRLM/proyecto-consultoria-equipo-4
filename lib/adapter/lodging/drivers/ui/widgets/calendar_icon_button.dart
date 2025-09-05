@@ -8,13 +8,15 @@ class CalendarIconButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8),
       child: Container(
         width: 80,
         height: 50,
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: cs.surface,
           border: Border.all(color: AppThemes.primary_600),
           borderRadius: BorderRadius.circular(18),
         ),
@@ -26,10 +28,7 @@ class CalendarIconButton extends StatelessWidget {
               firstDate: DateTime(2023),
               lastDate: DateTime(2030),
             );
-
-            if (selectedDate != null) {
-              onDateSelected(selectedDate);
-            }
+            if (selectedDate != null) onDateSelected(selectedDate);
           },
           icon: const Icon(Icons.calendar_today),
           color: AppThemes.primary_600,
