@@ -1,8 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/adapters/core/drivens/app_routes.dart';
-import 'package:mobile/adapters/core/drivens/app_themes.dart';
+import 'package:mobile/adapters/core/driven/app_routes.dart';
+import 'package:mobile/adapters/core/driven/app_themes.dart';
+import 'package:mobile/ports/auth/driven/for_authenticating_user.dart';
+import 'package:mobile/service_locator.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  setupServiceLocator();
+  await serviceLocator<ForAuthenticatingUser>().initialize();
+
   runApp(const MyApp());
 }
 

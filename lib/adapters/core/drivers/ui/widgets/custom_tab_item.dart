@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/adapters/core/drivens/app_themes.dart';
+import 'package:mobile/adapters/core/driven/app_themes.dart';
 
 class CustomTabItem extends StatelessWidget {
   final int currentIndex;
