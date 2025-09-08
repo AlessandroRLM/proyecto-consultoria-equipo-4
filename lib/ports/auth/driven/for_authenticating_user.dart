@@ -1,3 +1,5 @@
+import 'package:mobile/domain/entities/user.dart';
+
 abstract class ForAuthenticatingUser {
   bool get isAuthenticated;
   
@@ -13,4 +15,6 @@ abstract class ForAuthenticatingUser {
   });
 
   Future<void> logout();
+
+  User? get currentUser;
 }

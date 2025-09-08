@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile/adapters/core/driven/app_themes.dart';
+import 'package:mobile/domain/entities/user.dart';
 import 'package:mobile/ports/auth/driven/for_authenticating_user.dart';
 import 'package:mobile/service_locator.dart';
 
@@ -11,6 +12,9 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreen extends State<ProfileScreen> {
+  final authService = serviceLocator<ForAuthenticatingUser>();
+  User? get user => authService.currentUser;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -23,31 +27,32 @@ class _ProfileScreen extends State<ProfileScreen> {
             children: [
               CircleAvatar(
                 radius: 60,
-                backgroundImage: NetworkImage('https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png')
+                backgroundImage: NetworkImage(
+                  user?.avatarUrl ?? 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png')
               ),
               const SizedBox(height: 20),
               Column(
-                children: const [
+                children: [
                   Text(
-                    'Nombre Apellido',
-                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)
+                    user?.name ?? 'Nombre de Usuario',
+                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)
                   ),
-                  SizedBox(height: 5),
+                  const SizedBox(height: 5),
                   Text(
-                    'RUT: XX.XXX.XXX-X',
+                    'RUT: ${user?.rut?? 'XX.XXX.XXX-X'}',
                     style: TextStyle(fontSize: 14,fontWeight: FontWeight.w600),
                   ),
-                  SizedBox(height: 5),
+                  const SizedBox(height: 5),
                   Text(
-                    'Año de carrera: X',
+                    'Año de carrera: ${user?.aCarrera ?? 'X'}',
                     style: TextStyle(fontSize: 14,fontWeight: FontWeight.w600),
                     ),
-                    SizedBox(height: 5),
+                    const SizedBox(height: 5),
                     Text(
-                      'Sede: Santiago',
+                      'Sede: ${user?.sede ?? 'XXXX'}',
                       style: TextStyle(fontSize: 14,fontWeight: FontWeight.w600),
                     ),
-                    SizedBox(height: 5),
+                    const SizedBox(height: 5),
                   ]
                 ),
                 const SizedBox(height: 40),
