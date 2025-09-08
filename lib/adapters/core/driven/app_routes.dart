@@ -5,6 +5,7 @@ import 'package:mobile/adapters/core/drivers/ui/layouts/app_layout.dart';
 import 'package:mobile/adapters/core/drivers/ui/layouts/home_layout.dart';
 import 'package:mobile/ports/auth/driven/for_authenticating_user.dart';
 import 'package:mobile/service_locator.dart';
+import 'package:mobile/adapters/auth/drivers/screens/profile_screen.dart';
 
 final GoRouter appRoutes = GoRouter(
   initialLocation: '/credentials',
@@ -67,7 +68,7 @@ final GoRouter appRoutes = GoRouter(
           routes: [
             GoRoute(
               path: '/profile',
-              builder: (context, state) => const Placeholder(),
+              builder: (context, state) => const ProfileScreen(),
             ),
           ],
         ),
