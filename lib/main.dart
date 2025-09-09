@@ -1,12 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:mobile/adapters/core/driven/app_routes.dart';
 import 'package:mobile/adapters/core/driven/app_themes.dart';
 import 'package:mobile/ports/auth/driven/for_authenticating_user.dart';
 import 'package:mobile/service_locator.dart';
 import 'package:mobile/adapters/lodging/drivens/providers/lodging_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:mobile/adapter/transporte/transport.dart';
+import 'package:intl/intl.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
-void main() async {
+
+void main() async async{
+  WidgetsFlutterBinding.ensureInitialized();
+  await initializeDateFormatting(Intl.getCurrentLocale(), null);
   WidgetsFlutterBinding.ensureInitialized();
 
   setupServiceLocator();
@@ -18,9 +25,21 @@ void main() async {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
+    return MultiProvider(
+      providers: [
+        // Inicializamos el proveedor vacío, sin datos aún
+        ChangeNotifierProvider(
+          create: (_) => TransportReservationsProvider(),
+        ),
+      ],
+      child: MaterialApp.router(
+        title: 'ServicesApp',
+        darkTheme: AppThemes.dark,
+        theme: AppThemes.light,
+        routerConfig: appRoutes,
+      ),
     return MultiProvider(
       providers: [ChangeNotifierProvider(create: (_) => LodgingProvider())],
       child: MaterialApp.router(
@@ -33,4 +52,3 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-
