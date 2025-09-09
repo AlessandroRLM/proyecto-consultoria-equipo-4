@@ -39,6 +39,7 @@ class AppThemes {
       onError: black_100,
       surface: black_100,
       onSurface: black_1300,
+      outlineVariant: black_500,
     ),
   );
   static final ThemeData dark = ThemeData(
@@ -52,6 +53,7 @@ class AppThemes {
       onError: black_100,
       surface: black_1000,
       onSurface: black_200,
+      outlineVariant: black_500,
     ),
   );
 }

@@ -12,13 +12,13 @@ class AuthMockService implements ForAuthenticatingUser {
 
   @override
   bool get isAuthenticated => _isAuthenticated;
-   User? get currentUser => _currentUser;
+  @override
+  User? get currentUser => _currentUser;
 
   @override
   Future<void> initialize() async {
     final prefs = await SharedPreferences.getInstance();
     _isAuthenticated = prefs.getBool(_isAuthenticatedKey) ?? false;
-    print('Auth state initialized: $_isAuthenticated');
   }
 
   @override
