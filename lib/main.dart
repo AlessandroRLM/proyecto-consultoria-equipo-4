@@ -5,17 +5,16 @@ import 'package:mobile/adapters/core/driven/app_themes.dart';
 import 'package:mobile/ports/auth/driven/for_authenticating_user.dart';
 import 'package:mobile/service_locator.dart';
 import 'package:mobile/adapters/lodging/drivens/providers/lodging_provider.dart';
-import 'package:provider/provider.dart';
 import 'package:mobile/adapter/transporte/transport.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 
-void main() async async{
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
   await initializeDateFormatting(Intl.getCurrentLocale(), null);
-  WidgetsFlutterBinding.ensureInitialized();
-
+  
   setupServiceLocator();
   await serviceLocator<ForAuthenticatingUser>().initialize();
 
@@ -33,21 +32,15 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(
           create: (_) => TransportReservationsProvider(),
         ),
+        ChangeNotifierProvider(
+          create: (_) => LodgingProvider()
+        ),
       ],
       child: MaterialApp.router(
         title: 'ServicesApp',
         darkTheme: AppThemes.dark,
         theme: AppThemes.light,
         routerConfig: appRoutes,
-      ),
-    return MultiProvider(
-      providers: [ChangeNotifierProvider(create: (_) => LodgingProvider())],
-      child: MaterialApp.router(
-        title: 'ServicesApp',
-        routerConfig: appRoutes,
-        debugShowCheckedModeBanner: false,
-        theme: AppThemes.light,
-        darkTheme: AppThemes.dark,
       ),
     );
   }
