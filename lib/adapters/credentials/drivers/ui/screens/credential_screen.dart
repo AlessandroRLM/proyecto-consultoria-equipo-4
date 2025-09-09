@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:mobile/adapter/credentials/in/ui/widgets/widgets_credentials.dart';
+import 'package:mobile/adapters/credentials/drivers/ui/widgets/widgets_credentials.dart';
 
 class CredentialScreen extends StatelessWidget {
   const CredentialScreen({super.key});

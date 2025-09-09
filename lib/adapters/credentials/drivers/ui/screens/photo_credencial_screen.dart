@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:mobile/adapter/credentials/in/ui/widgets/widgets_credentials.dart';
+import 'package:mobile/adapters/credentials/drivers/ui/widgets/widgets_credentials.dart';
 import 'package:go_router/go_router.dart';
 
 class PhotoCredencialScreen extends StatefulWidget {

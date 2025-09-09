@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/adapters/transport/driven/providers/transport_reservations_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:mobile/adapters/core/driven/app_routes.dart';
 import 'package:mobile/adapters/core/driven/app_themes.dart';
 import 'package:mobile/ports/auth/driven/for_authenticating_user.dart';
 import 'package:mobile/service_locator.dart';
-import 'package:mobile/adapters/lodging/drivens/providers/lodging_provider.dart';
-import 'package:mobile/adapter/transporte/transport.dart';
+import 'package:mobile/adapters/lodging/driven/providers/lodging_provider.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
 

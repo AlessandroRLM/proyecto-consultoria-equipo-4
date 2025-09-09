@@ -49,3 +49,7 @@ app.*.map.json
 **/generated_plugin_registrant.*
 **/GeneratedPluginRegistrant.*
 **/generated_plugins.cmake
+
+# Environment variables
+.env
+.env.test
