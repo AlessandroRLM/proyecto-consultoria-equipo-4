@@ -3,6 +3,8 @@ import 'package:mobile/adapters/core/driven/app_routes.dart';
 import 'package:mobile/adapters/core/driven/app_themes.dart';
 import 'package:mobile/ports/auth/driven/for_authenticating_user.dart';
 import 'package:mobile/service_locator.dart';
+import 'package:mobile/adapter/lodging/drivens/providers/lodging_provider.dart';
+import 'package:provider/provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,11 +21,15 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(
-      title: 'ServicesApp',
-      darkTheme: AppThemes.dark,
-      theme: AppThemes.light,
-      routerConfig: appRoutes,
+    return MultiProvider(
+      providers: [ChangeNotifierProvider(create: (_) => LodgingProvider())],
+      child: MaterialApp.router(
+        title: 'ServicesApp',
+        routerConfig: appRoutes,
+        debugShowCheckedModeBanner: false,
+        theme: AppThemes.light,
+        darkTheme: AppThemes.dark,
+      ),
     );
   }
 }
