@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
-import 'package:mobile/adapter/core/out/app_themes.dart';
-import 'package:mobile/adapter/lodging/drivers/ui/screens/lodging_map_screen.dart';
+import 'package:mobile/adapters/core/driven/app_themes.dart';
+import 'package:mobile/adapters/lodging/drivers/ui/screens/lodging_map_screen.dart';
 
 class LodgingReservationScreen extends StatefulWidget {
   const LodgingReservationScreen({super.key});

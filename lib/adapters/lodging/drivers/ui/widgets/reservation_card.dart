@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/adapter/lodging/drivens/providers/lodging_provider.dart';
-import 'package:mobile/adapter/core/out/app_themes.dart';
-import 'package:mobile/adapter/lodging/drivers/ui/screens/lodging_map_screen.dart';
+import 'package:mobile/adapters/core/driven/app_themes.dart';
+import 'package:mobile/adapters/lodging/drivens/providers/lodging_provider.dart';
+import 'package:mobile/adapters/lodging/drivers/ui/screens/lodging_map_screen.dart';
 
 class ReservationCard extends StatefulWidget {
   final LodgingReservation reservation;
@@ -39,7 +39,7 @@ class _ReservationCardState extends State<ReservationCard> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Icon(
-                  Icons.house_rounded,
+                  Icons.cottage_outlined,
                   size: 28,
                   color: AppThemes.primary_600,
                 ),

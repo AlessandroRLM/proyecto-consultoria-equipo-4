@@ -3,6 +3,9 @@ import 'package:go_router/go_router.dart';
 import 'package:mobile/adapters/auth/drivers/screens/login_screen.dart';
 import 'package:mobile/adapters/core/drivers/ui/layouts/app_layout.dart';
 import 'package:mobile/adapters/core/drivers/ui/layouts/home_layout.dart';
+import 'package:mobile/adapters/lodging/drivers/ui/screens/lodging_list_screen.dart';
+import 'package:mobile/adapters/lodging/drivers/ui/screens/lodging_map_screen.dart';
+import 'package:mobile/adapters/lodging/drivers/ui/screens/lodging_reservation_screen.dart';
 import 'package:mobile/ports/auth/driven/for_authenticating_user.dart';
 import 'package:mobile/service_locator.dart';
 import 'package:mobile/adapters/auth/drivers/screens/profile_screen.dart';
@@ -56,7 +59,18 @@ final GoRouter appRoutes = GoRouter(
                   routes: [
                     GoRoute(
                       path: '/lodging',
-                      builder: (context, state) => const Text('Alojamiento'),
+                      builder: (context, state) => const LodgingListScreen(),
+                      routes: [
+                        GoRoute(
+                          path: 'new',
+                          builder: (context, state) =>
+                              const LodgingReservationScreen(),
+                        ),
+                        GoRoute(
+                          path: 'new',
+                          builder: (context, state) => const LodgingMapScreen(),
+                        ),
+                      ],
                     ),
                   ],
                 ),

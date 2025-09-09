@@ -3,7 +3,7 @@ import 'package:mobile/adapters/core/driven/app_routes.dart';
 import 'package:mobile/adapters/core/driven/app_themes.dart';
 import 'package:mobile/ports/auth/driven/for_authenticating_user.dart';
 import 'package:mobile/service_locator.dart';
-import 'package:mobile/adapter/lodging/drivens/providers/lodging_provider.dart';
+import 'package:mobile/adapters/lodging/drivens/providers/lodging_provider.dart';
 import 'package:provider/provider.dart';
 
 void main() async {
