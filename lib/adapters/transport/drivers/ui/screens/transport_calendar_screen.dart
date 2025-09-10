@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:mobile/adapters/core/driven/app_themes.dart';
 
 class TransportCalendarScreen extends StatefulWidget {
   const TransportCalendarScreen({super.key});
@@ -63,6 +64,7 @@ class _TransportCalendarScreenState extends State<TransportCalendarScreen> {
   Widget build(BuildContext context) {
     final days = _getDaysInMonth(_focusedDay);
     final monthName = DateFormat('MMMM', 'es_ES').format(_focusedDay);
+    final capitalizedMonthName = monthName.isNotEmpty ? '${monthName[0].toUpperCase()}${monthName.substring(1)}' : monthName;
 
     return Scaffold(
       appBar: AppBar(
@@ -71,9 +73,9 @@ class _TransportCalendarScreenState extends State<TransportCalendarScreen> {
       body: Column(
         children: [
           const SizedBox(height: 12),
-          const Text(
+          Text(
             'Seleccione la fecha del alojamiento',
-            style: TextStyle(fontSize: 16, color: Colors.black54),
+            style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.onSurface),
           ),
           const SizedBox(height: 12),
           Padding(
@@ -82,19 +84,19 @@ class _TransportCalendarScreenState extends State<TransportCalendarScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 IconButton(
-                  icon: const Icon(Icons.chevron_left, color: Colors.black54),
+                  icon: Icon(Icons.chevron_left, color: Theme.of(context).colorScheme.onSurface),
                   onPressed: _previousMonth,
                 ),
                 Text(
-                  '$monthName ${_focusedDay.year}',
-                  style: const TextStyle(
+                  '$capitalizedMonthName ${_focusedDay.year}',
+                  style: TextStyle(
                     fontSize: 18,
-                    color: Colors.red,
+                    color: Theme.of(context).colorScheme.primary,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.chevron_right, color: Colors.black54),
+                  icon: Icon(Icons.chevron_right, color: Theme.of(context).colorScheme.onSurface),
                   onPressed: _nextMonth,
                 ),
               ],
@@ -120,33 +122,45 @@ class _TransportCalendarScreenState extends State<TransportCalendarScreen> {
                     onTap: isCurrentMonth ? () => _onDaySelected(day) : null,
                     child: Container(
                       margin: const EdgeInsets.all(2),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: isCurrentMonth ? Colors.red : Colors.grey.shade300,
-                          width: 1.5,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: isSelected
+                          ? Colors.red
+                          : (isCurrentMonth
+                              ? Theme.of(context).colorScheme.primary
+                              : AppThemes.black_600),
+                      width: isSelected ? 3.0 : 1.5,
+                    ),
+                    color: isSelected ? Colors.red : Colors.transparent,
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        day.day.toString(),
+                        style: TextStyle(
+                          color: isSelected
+                              ? Colors.white
+                              : (isCurrentMonth
+                                  ? Theme.of(context).colorScheme.primary
+                                  : AppThemes.black_600),
+                          fontWeight: FontWeight.bold,
                         ),
-                        color: isSelected ? Colors.red.shade100 : Colors.transparent,
                       ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            day.day.toString(),
-                            style: TextStyle(
-                              color: isCurrentMonth ? Colors.red : Colors.grey,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          Text(
-                            weekday,
-                            style: TextStyle(
-                              color: isCurrentMonth ? Colors.red : Colors.grey,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
+                      Text(
+                        weekday,
+                        style: TextStyle(
+                          color: isSelected
+                              ? Colors.white
+                              : (isCurrentMonth
+                                  ? Theme.of(context).colorScheme.primary
+                                  : AppThemes.black_700),
+                          fontSize: 12,
+                        ),
                       ),
+                    ],
+                  ),
                     ),
                   );
                 },
