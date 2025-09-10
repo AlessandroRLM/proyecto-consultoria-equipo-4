@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import 'package:mobile/adapters/transport/driven/providers/transport_reservations_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:mobile/adapters/core/driven/app_routes.dart';
@@ -12,6 +13,13 @@ import 'package:intl/date_symbol_data_local.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  String accessToken = const String.fromEnvironment('ACCESS_TOKEN');
+  if (accessToken.isEmpty) {
+    throw Exception('MapBox ACCESS_TOKEN not found');
+  }
+  MapboxOptions.setAccessToken(accessToken);
+
   
   await initializeDateFormatting(Intl.getCurrentLocale(), null);
   

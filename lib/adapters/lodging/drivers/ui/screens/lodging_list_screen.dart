@@ -38,9 +38,10 @@ class LodgingListScreen extends StatelessWidget {
     ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => context.go('/lodging/new'),
+        onPressed: () => context.go('/lodging_reservation'),
         label: const Text("Reservar"),
         icon: const Icon(Icons.calendar_today),
+        heroTag: 'reserve_lodging_button',
       ),
     );
   }

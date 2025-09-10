@@ -1,5 +1,5 @@
 import 'package:mobile/adapters/auth/driven/services/user_mock_service.dart';
-import 'package:mobile/domain/entities/user.dart';
+import 'package:mobile/domain/core/user.dart';
 import 'package:mobile/ports/auth/driven/for_authenticating_user.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 

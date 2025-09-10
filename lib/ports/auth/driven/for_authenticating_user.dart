@@ -1,4 +1,4 @@
-import 'package:mobile/domain/entities/user.dart';
+import 'package:mobile/domain/core/user.dart';
 
 abstract class ForAuthenticatingUser {
   bool get isAuthenticated;

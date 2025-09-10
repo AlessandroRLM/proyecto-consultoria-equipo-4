@@ -3,12 +3,12 @@ import 'package:go_router/go_router.dart';
 import 'package:mobile/adapters/auth/drivers/screens/login_screen.dart';
 import 'package:mobile/adapters/core/drivers/ui/layouts/app_layout.dart';
 import 'package:mobile/adapters/core/drivers/ui/layouts/home_layout.dart';
+import 'package:mobile/adapters/core/drivers/ui/screens/clinics_map_screen.dart';
 import 'package:mobile/adapters/credentials/driven/image_services.dart';
 import 'package:mobile/adapters/credentials/drivers/ui/screens/credential_screen.dart';
 import 'package:mobile/adapters/credentials/drivers/ui/screens/new_credential_screen.dart';
 import 'package:mobile/adapters/credentials/drivers/ui/screens/photo_credencial_screen.dart';
 import 'package:mobile/adapters/lodging/drivers/ui/screens/lodging_list_screen.dart';
-import 'package:mobile/adapters/lodging/drivers/ui/screens/lodging_map_screen.dart';
 import 'package:mobile/adapters/lodging/drivers/ui/screens/lodging_reservation_screen.dart';
 import 'package:mobile/adapters/transport/drivers/ui/screens/map_screen.dart';
 import 'package:mobile/adapters/transport/drivers/ui/screens/reservation_screen.dart';
@@ -47,7 +47,8 @@ final GoRouter appRoutes = GoRouter(
               builder: (context, state, navigationShell) =>
                   HomeLayout(navigationShell: navigationShell),
               branches: [
-                StatefulShellBranch( //Rutas de credenciales
+                StatefulShellBranch(
+                  //Rutas de credenciales
                   routes: [
                     GoRoute(
                       path: '/credentials',
@@ -55,43 +56,58 @@ final GoRouter appRoutes = GoRouter(
                       routes: [
                         GoRoute(
                           path: 'new-credential',
-                          builder: (context, state) => const NewCredentialScreen(),
-                          routes:[
+                          builder: (context, state) =>
+                              const NewCredentialScreen(),
+                          routes: [
                             GoRoute(
                               path: 'photo-camera',
-                              builder: (context, state) => PhotoCredencialScreen(onTakePhoto: () => ImageService.pickFromCamera(), fromCamera: true),
+                              builder: (context, state) =>
+                                  PhotoCredencialScreen(
+                                    onTakePhoto: () =>
+                                        ImageService.pickFromCamera(),
+                                    fromCamera: true,
+                                  ),
                             ),
                             GoRoute(
                               path: 'photo-gallery',
-                              builder: (context, state) => PhotoCredencialScreen(onTakePhoto: () => ImageService.pickFromGallery(),fromCamera: false),
-                            )
-                          ]
-                        )
-                      ]
+                              builder: (context, state) =>
+                                  PhotoCredencialScreen(
+                                    onTakePhoto: () =>
+                                        ImageService.pickFromGallery(),
+                                    fromCamera: false,
+                                  ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   ],
                 ),
 
-                StatefulShellBranch( //Rutas de transporte
+                StatefulShellBranch(
+                  //Rutas de transporte
                   routes: [
                     GoRoute(
                       path: '/transport',
                       builder: (context, state) => const TransportScreen(),
-                      routes:[
+                      routes: [
                         GoRoute(
-                          path: 'reservation', 
-                          builder: (context, state) => const ReservationScreen(),
-                          routes:[
+                          path: 'reservation',
+                          builder: (context, state) =>
+                              const ReservationScreen(),
+                          routes: [
                             GoRoute(
                               path: 'map_screen',
-                              builder:(context, state) => const MapScreen()
-                              )
-                          ]),
+                              builder: (context, state) => const MapScreen(),
+                            ),
+                          ],
+                        ),
                         GoRoute(
-                          path: 'calendar', 
-                          builder: (context, state) => const TransportCalendarScreen(),
-                          ),
-                      ]
+                          path: 'calendar',
+                          builder: (context, state) =>
+                              const TransportCalendarScreen(),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -101,22 +117,20 @@ final GoRouter appRoutes = GoRouter(
                     GoRoute(
                       path: '/lodging',
                       builder: (context, state) => const LodgingListScreen(),
-                      routes: [
-                        GoRoute(
-                          path: 'new',
-                          builder: (context, state) =>
-                              const LodgingReservationScreen(),
-                        ),
-                        GoRoute(
-                          path: 'new',
-                          builder: (context, state) => const LodgingMapScreen(),
-                        ),
-                      ],
                     ),
                   ],
                 ),
               ],
-              
+            ),
+            GoRoute(
+              path: '/lodging_reservation',
+              builder: (context, state) => const LodgingReservationScreen(),
+              routes: [
+                GoRoute(
+                  path: '/lodging_map_screen',
+                  builder: (context, state) => const ClinicsMapScreen(),
+                ),
+              ],
             ),
           ],
         ),

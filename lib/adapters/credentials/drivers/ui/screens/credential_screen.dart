@@ -7,7 +7,7 @@ class CredentialScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return  Scaffold(
+    return Scaffold(
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
         child: Column(
@@ -17,25 +17,32 @@ class CredentialScreen extends StatelessWidget {
             Text(
               'Solicitud',
               style: TextStyle(
-                fontSize: 24, 
-                fontWeight: FontWeight.bold, 
-                color: Theme.of(context).colorScheme.onSurface)
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
             ),
             SizedBox(height: 16),
             Container(
               width: double.infinity,
               height: 50,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-              decoration: BoxDecoration(border: Border.all(
-                color: Theme.of(context).colorScheme.onSurface),
-                borderRadius: BorderRadius.circular(12)), 
-              child: Text(
-                'Aún no has realizado una solicitud')
-            )
-          ]
+              decoration: BoxDecoration(
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text('Aún no has realizado una solicitud'),
+            ),
+          ],
         ),
       ),
-      floatingActionButton: RequestButton(funcion: () => context.go( '/credentials/new-credential'),label: 'Solicitar Credencial'),
+      floatingActionButton: RequestButton(
+        funcion: () => context.go('/credentials/new-credential'),
+        label: 'Solicitar Credencial',
+        heroTag: 'request_credential_button',
+      ),
     );
   }
 }

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mobile/adapters/core/driven/app_themes.dart';
-import 'package:mobile/adapters/lodging/drivers/ui/screens/lodging_map_screen.dart';
+import 'package:mobile/domain/core/campus.dart';
+import 'package:mobile/ports/core/driven/for_querying_campus.dart';
+import 'package:mobile/service_locator.dart';
 
 class LodgingReservationScreen extends StatefulWidget {
   const LodgingReservationScreen({super.key});
@@ -12,19 +15,22 @@ class LodgingReservationScreen extends StatefulWidget {
 
 class _LodgingReservationScreenState extends State<LodgingReservationScreen> {
   final TextEditingController _searchController = TextEditingController();
+  final campusService = serviceLocator<ForQueryingCampus>();
+  List<Campus> _campusList = [];
 
-  final List<Map<String, String>> clinics = [
-    {
-      "name": "Centro Médico Andes Salud Talca",
-      "city": "Talca",
-      "address": "Cuatro Nte. 1656, 3467384 Talca, Maule",
-    },
-    {
-      "name": "Clínica Santa María",
-      "city": "Talca",
-      "address": "Calle Falsa 123, Talca, Maule",
-    },
-  ];
+  Future<void> _loadCampusData() async {
+    final campusList = await campusService.getCampus(null);
+    setState(() {
+      _campusList = campusList;
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    _loadCampusData();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -51,6 +57,15 @@ class _LodgingReservationScreenState extends State<LodgingReservationScreen> {
                   border: InputBorder.none,
                   icon: Icon(Icons.search, color: cs.onSurfaceVariant),
                 ),
+                onChanged: (value) async {
+                  setState(() {
+                    _campusList = [];
+                  });
+                  if (value == '') {
+                    _campusList = await campusService.getCampus(null);
+                  }
+                  _campusList = await campusService.getCampus(value);
+                },
               ),
             ),
           ),
@@ -59,19 +74,18 @@ class _LodgingReservationScreenState extends State<LodgingReservationScreen> {
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: ListView.builder(
-                itemCount: clinics.length,
-                itemBuilder: (_, index) {
-                  final clinic = clinics[index];
+                itemCount: _campusList.length,
+                itemBuilder: (context, index) {
+                  final clinic = _campusList[index];
                   return Container(
-                    margin: const EdgeInsets.only(bottom: 12),
+                    margin: const EdgeInsets.symmetric(vertical: 8),
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: cs.surface,
+                      color: cs.surfaceVariant,
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: cs.outlineVariant),
                       boxShadow: [
                         BoxShadow(
-                          color: cs.shadow.withOpacity(0.1),
+                          color: Colors.black.withOpacity(0.1),
                           blurRadius: 2,
                           offset: const Offset(0, 1),
                         ),
@@ -88,9 +102,9 @@ class _LodgingReservationScreenState extends State<LodgingReservationScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(clinic["name"]!, style: text.titleSmall),
-                              Text(clinic["city"]!, style: text.bodySmall),
-                              Text(clinic["address"]!, style: text.bodySmall),
+                              Text(clinic.name, style: text.titleSmall),
+                              Text(clinic.city, style: text.bodySmall),
+                              Text(clinic.commune, style: text.bodySmall),
                             ],
                           ),
                         ),
@@ -104,13 +118,11 @@ class _LodgingReservationScreenState extends State<LodgingReservationScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(builder: (context) => const LodgingMapScreen()),
-          );
-        },
+        onPressed: () =>
+            context.push('/lodging_reservation/lodging_map_screen'),
         label: const Text("Buscar en mapa"),
         icon: const Icon(Icons.map),
+        heroTag: 'reserve_lodging_map_button',
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );

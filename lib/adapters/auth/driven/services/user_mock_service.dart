@@ -1,4 +1,4 @@
-import 'package:mobile/domain/entities/user.dart';
+import 'package:mobile/domain/core/user.dart';
 
 class UserMockService {
   final List<User> _users = [
