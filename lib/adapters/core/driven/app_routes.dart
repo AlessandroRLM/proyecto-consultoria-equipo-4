@@ -118,6 +118,20 @@ final GoRouter appRoutes = GoRouter(
               ],
               
             ),
+            GoRoute(
+              path: 'new-credential',
+                builder: (context, state) => const NewCredentialScreen(),
+                  routes:[
+                    GoRoute(
+                      path: 'photo-camera',
+                      builder: (context, state) => PhotoCredencialScreen(onTakePhoto: () => ImageService.pickFromCamera(), fromCamera: true),
+                     ),
+                    GoRoute(
+                      path: 'photo-gallery',
+                       builder: (context, state) => PhotoCredencialScreen(onTakePhoto: () => ImageService.pickFromGallery(),fromCamera: false),
+                    )
+                   ]
+            )
           ],
         ),
         StatefulShellBranch(

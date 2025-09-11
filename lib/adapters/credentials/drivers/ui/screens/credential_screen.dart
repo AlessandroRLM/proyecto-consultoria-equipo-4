@@ -9,7 +9,7 @@ class CredentialScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return  Scaffold(
       body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -17,8 +17,8 @@ class CredentialScreen extends StatelessWidget {
             Text(
               'Solicitud',
               style: TextStyle(
-                fontSize: 24, 
-                fontWeight: FontWeight.bold, 
+                fontSize: 27, 
+                fontWeight: FontWeight.w500,
                 color: Theme.of(context).colorScheme.onSurface)
             ),
             SizedBox(height: 16),
