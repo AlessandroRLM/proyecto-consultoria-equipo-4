@@ -18,13 +18,13 @@ void main() async {
   if (accessToken.isEmpty) {
     throw Exception('MapBox ACCESS_TOKEN not found');
   }
-  MapboxOptions.setAccessToken(accessToken);
-
-  
-  await initializeDateFormatting(Intl.getCurrentLocale(), null);
-  
   setupServiceLocator();
   await serviceLocator<ForAuthenticatingUser>().initialize();
+
+  MapboxOptions.setAccessToken(accessToken);
+
+  await initializeDateFormatting(Intl.getCurrentLocale(), null);
+
 
   runApp(const MyApp());
 }

@@ -5,16 +5,23 @@ import 'package:mobile/domain/core/campus.dart';
 import 'package:mobile/ports/core/driven/for_querying_campus.dart';
 import 'package:mobile/service_locator.dart';
 
-class LodgingReservationScreen extends StatefulWidget {
-  const LodgingReservationScreen({super.key});
+class ClinicSelectionScreen extends StatefulWidget {
+  // pasar a origin 1 o 2: 1 para transporte y 2 para alojamiento 
+  final String? origin;
+
+  const ClinicSelectionScreen({
+    required this.origin,
+    super.key
+    });
 
   @override
-  State<LodgingReservationScreen> createState() =>
-      _LodgingReservationScreenState();
+  State<ClinicSelectionScreen> createState() =>
+      _ClinicSelectionScreenState();
 }
 
-class _LodgingReservationScreenState extends State<LodgingReservationScreen> {
+class _ClinicSelectionScreenState extends State<ClinicSelectionScreen> {
   final TextEditingController _searchController = TextEditingController();
+  
   final campusService = serviceLocator<ForQueryingCampus>();
   List<Campus> _campusList = [];
 
@@ -35,10 +42,12 @@ class _LodgingReservationScreenState extends State<LodgingReservationScreen> {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final text = Theme.of(context).textTheme;
+    final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Reservar")),
+      appBar: AppBar(
+        title: Text('Reservar'),
+      ),
       body: Column(
         children: [
           const SizedBox(height: 8),
@@ -47,7 +56,7 @@ class _LodgingReservationScreenState extends State<LodgingReservationScreen> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12),
               decoration: BoxDecoration(
-                color: cs.surfaceVariant,
+                color: cs.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: TextField(
@@ -78,14 +87,15 @@ class _LodgingReservationScreenState extends State<LodgingReservationScreen> {
                 itemBuilder: (context, index) {
                   final clinic = _campusList[index];
                   return Container(
+                    height: 84,
                     margin: const EdgeInsets.symmetric(vertical: 8),
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
-                      color: cs.surfaceVariant,
+                      color: cs.surfaceContainerHighest,
                       borderRadius: BorderRadius.circular(12),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
+                          color: Colors.black.withValues(alpha: 0.1),
                           blurRadius: 2,
                           offset: const Offset(0, 1),
                         ),
@@ -101,10 +111,13 @@ class _LodgingReservationScreenState extends State<LodgingReservationScreen> {
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Text(clinic.name, style: text.titleSmall),
-                              Text(clinic.city, style: text.bodySmall),
-                              Text(clinic.commune, style: text.bodySmall),
+                              Text(clinic.name, style: textTheme.bodyLarge),
+                              const SizedBox(width: 4),
+                              Text(clinic.city, style: textTheme.bodySmall),
+                              const SizedBox(width: 4),
+                              Text(clinic.commune, style: textTheme.labelLarge),
                             ],
                           ),
                         ),
@@ -119,10 +132,12 @@ class _LodgingReservationScreenState extends State<LodgingReservationScreen> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () =>
-            context.push('/lodging_reservation/lodging_map_screen'),
-        label: const Text("Buscar en mapa"),
+            context.push('/clinic_map_selection/${widget.origin}'),
+        label: Text("Buscar en mapa", style: textTheme.titleMedium!.copyWith(
+          color: cs.onPrimary,
+        )),
         icon: const Icon(Icons.map),
-        heroTag: 'reserve_lodging_map_button',
+        heroTag: 'reserve_clinic_map_button',
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );

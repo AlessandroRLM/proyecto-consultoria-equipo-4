@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/adapters/core/driven/app_themes.dart';
 import 'package:mobile/adapters/lodging/driven/providers/lodging_provider.dart';
-import 'package:mobile/adapters/lodging/drivers/ui/screens/lodging_map_screen.dart';
 
 class ReservationCard extends StatefulWidget {
   final LodgingReservation reservation;
@@ -96,31 +95,6 @@ class _ReservationCardState extends State<ReservationCard> {
                         ),
                       ),
                     ],
-                  ),
-                  // Botón Mapa a la derecha, alineado abajo
-                  FilledButton(
-                    style: FilledButton.styleFrom(
-                      backgroundColor: cs.primary,
-                      foregroundColor: cs.onPrimary,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 10,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      textStyle: text.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    onPressed: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const LodgingMapScreen(),
-                        ),
-                      );
-                    },
-                    child: const Text("Mapa"),
                   ),
                 ],
               ),

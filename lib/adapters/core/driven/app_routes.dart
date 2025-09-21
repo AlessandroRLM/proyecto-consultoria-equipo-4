@@ -9,7 +9,7 @@ import 'package:mobile/adapters/credentials/drivers/ui/screens/credential_screen
 import 'package:mobile/adapters/credentials/drivers/ui/screens/new_credential_screen.dart';
 import 'package:mobile/adapters/credentials/drivers/ui/screens/photo_credencial_screen.dart';
 import 'package:mobile/adapters/lodging/drivers/ui/screens/lodging_list_screen.dart';
-import 'package:mobile/adapters/lodging/drivers/ui/screens/lodging_reservation_screen.dart';
+import 'package:mobile/adapters/core/drivers/ui/screens/clinic_selection_screen.dart';
 import 'package:mobile/adapters/transport/drivers/ui/screens/map_screen.dart';
 import 'package:mobile/adapters/transport/drivers/ui/screens/reservation_screen.dart';
 import 'package:mobile/adapters/transport/drivers/ui/screens/transport_calendar_screen.dart';
@@ -20,10 +20,10 @@ import 'package:mobile/adapters/auth/drivers/screens/profile_screen.dart';
 
 final GoRouter appRoutes = GoRouter(
   initialLocation: '/credentials',
-  errorBuilder: (context, state) => Placeholder(),
+  errorBuilder: (BuildContext context, GoRouterState state) => Placeholder(),
 
   routes: <RouteBase>[
-    GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
+    GoRoute(path: '/login', builder: (BuildContext context, GoRouterState state) => const LoginScreen()),
 
     // Rutas protegidas, solo accesibles si el usuario está autenticado
     // Este StatefulShellRoute se encarga de ir entre el inicio y perfil
@@ -37,14 +37,14 @@ final GoRouter appRoutes = GoRouter(
         }
         return null;
       },
-      builder: (context, state, navigationShell) =>
+      builder: (BuildContext context, GoRouterState state, navigationShell) =>
           AppLayout(navigationShell: navigationShell),
       branches: [
         StatefulShellBranch(
           routes: [
             // Este StatefulShellRoute se encarga de ir entre credenciales, transporte y alojamiento
             StatefulShellRoute.indexedStack(
-              builder: (context, state, navigationShell) =>
+              builder: (BuildContext context, GoRouterState state, navigationShell) =>
                   HomeLayout(navigationShell: navigationShell),
               branches: [
                 StatefulShellBranch(
@@ -52,16 +52,16 @@ final GoRouter appRoutes = GoRouter(
                   routes: [
                     GoRoute(
                       path: '/credentials',
-                      builder: (context, state) => const CredentialScreen(),
+                      builder: (BuildContext context, GoRouterState state) => const CredentialScreen(),
                       routes: [
                         GoRoute(
                           path: 'new-credential',
-                          builder: (context, state) =>
+                          builder: (BuildContext context, GoRouterState state) =>
                               const NewCredentialScreen(),
                           routes: [
                             GoRoute(
                               path: 'photo-camera',
-                              builder: (context, state) =>
+                              builder: (BuildContext context, GoRouterState state) =>
                                   PhotoCredencialScreen(
                                     onTakePhoto: () =>
                                         ImageService.pickFromCamera(),
@@ -70,7 +70,7 @@ final GoRouter appRoutes = GoRouter(
                             ),
                             GoRoute(
                               path: 'photo-gallery',
-                              builder: (context, state) =>
+                              builder: (BuildContext context, GoRouterState state) =>
                                   PhotoCredencialScreen(
                                     onTakePhoto: () =>
                                         ImageService.pickFromGallery(),
@@ -89,22 +89,22 @@ final GoRouter appRoutes = GoRouter(
                   routes: [
                     GoRoute(
                       path: '/transport',
-                      builder: (context, state) => const TransportScreen(),
+                      builder: (BuildContext context, GoRouterState state) => const TransportScreen(),
                       routes: [
                         GoRoute(
                           path: 'reservation',
-                          builder: (context, state) =>
+                          builder: (BuildContext context, GoRouterState state) =>
                               const ReservationScreen(),
                           routes: [
                             GoRoute(
                               path: 'map_screen',
-                              builder: (context, state) => const MapScreen(),
+                              builder: (BuildContext context, GoRouterState state) => const MapScreen(),
                             ),
                           ],
                         ),
                         GoRoute(
                           path: 'calendar',
-                          builder: (context, state) =>
+                          builder: (BuildContext context, GoRouterState state) =>
                               const TransportCalendarScreen(),
                         ),
                       ],
@@ -116,29 +116,47 @@ final GoRouter appRoutes = GoRouter(
                   routes: [
                     GoRoute(
                       path: '/lodging',
-                      builder: (context, state) => const LodgingListScreen(),
+                      builder: (BuildContext context, GoRouterState state) => const LodgingListScreen(),
                     ),
                   ],
                 ),
               ],
             ),
+            
+            // Rutas de selección de clínica
+            // originId: Hace referencia al origen de la solicitud, puede ser 1 para transporte o 2 para alojamiento
             GoRoute(
-              path: '/lodging_reservation',
-              builder: (context, state) => const LodgingReservationScreen(),
-              routes: [
-                GoRoute(
-                  path: '/lodging_map_screen',
-                  builder: (context, state) => const ClinicsMapScreen(),
-                ),
-              ],
+              path: '/clinic_selection/:originId',
+              builder: (BuildContext context, GoRouterState state) => ClinicSelectionScreen(
+                origin: state.pathParameters['originId'],
+              )
             ),
+            GoRoute(
+              path: '/clinic_map_selection/:originId',
+              builder: (BuildContext context, GoRouterState state) => ClinicMapScreen(
+                origin: state.pathParameters['originId'],
+              ),
+            ),
+
+            // Rutas de reservas de servicios
+            // clinicId: Hace referencia al ID de la clínica seleccionada
+            GoRoute(path: '/transport_clinic_reservation/:clinicId',
+              builder: (BuildContext context, GoRouterState state) => Placeholder(
+              )
+            ),
+
+            GoRoute(path: '/lodging_clinic_reservation/:clinicId',
+              builder: (BuildContext context, GoRouterState state) => Placeholder(
+              )
+            ),
+
           ],
         ),
         StatefulShellBranch(
           routes: [
             GoRoute(
               path: '/profile',
-              builder: (context, state) => const ProfileScreen(),
+              builder: (BuildContext context, GoRouterState state) => const ProfileScreen(),
             ),
           ],
         ),
