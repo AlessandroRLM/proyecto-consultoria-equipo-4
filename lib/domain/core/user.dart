@@ -6,7 +6,7 @@ class User {
   final String rut;
   final int aCarrera;
   final String sede;
-  final String servicesId;
+  final int servicesId;     // Si es 0 acceso a credenciales, 1 acceso a transporte, 2 acceso a alojamiento y 3 a ambos
   final String? avatarUrl;
 
   User({

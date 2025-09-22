@@ -89,6 +89,19 @@ final GoRouter appRoutes = GoRouter(
                   routes: [
                     GoRoute(
                       path: '/transport',
+                      redirect: (BuildContext context, GoRouterState state) {
+                        final authService = serviceLocator<ForAuthenticatingUser>();
+                        final serviceId = authService.currentUser?.servicesId;
+
+                        if (serviceId != 1 && serviceId != 3) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('No tienes acceso a este servicio')),
+                          );
+                          return '/credentials';
+                        }
+                        
+                        return null;
+                      },
                       builder: (BuildContext context, GoRouterState state) => const TransportScreen(),
                       routes: [
                         GoRoute(
@@ -116,6 +129,20 @@ final GoRouter appRoutes = GoRouter(
                   routes: [
                     GoRoute(
                       path: '/lodging',
+                      
+                      redirect: (BuildContext context, GoRouterState state) {
+                        final authService = serviceLocator<ForAuthenticatingUser>();
+                        final serviceId = authService.currentUser?.servicesId;
+
+                        if (serviceId != 2 && serviceId != 3) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('No tienes acceso a este servicio')),
+                          );
+                          return '/credentials';
+                        }
+                        
+                        return null;
+                      },
                       builder: (BuildContext context, GoRouterState state) => const LodgingListScreen(),
                     ),
                   ],
