@@ -23,4 +23,9 @@ class UserLocation {
 
   @override
   int get hashCode => latitude.hashCode ^ longitude.hashCode;
+
+  @override
+  String toString() {
+    return 'UserLocation(latitude: $latitude, longitude: $longitude, accuracy: $accuracy, heading: $heading, timestamp: $timestamp)';
+  }
 }

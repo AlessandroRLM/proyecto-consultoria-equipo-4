@@ -133,16 +133,13 @@ class MapboxService {
     canvas.drawCircle(center.translate(1, 1), 12, paint);
 
     // Borde exterior
-    paint.color = Colors.white;
+    paint.color = AppThemes.primary_600.withValues(alpha: 0.4);
     canvas.drawCircle(center, 12, paint);
 
-    // Círculo interior azul
+    // Círculo interior
     paint.color = AppThemes.primary_600;
     canvas.drawCircle(center, 8, paint);
 
-    // Punto central
-    paint.color = Colors.white;
-    canvas.drawCircle(center, 3, paint);
 
     final picture = recorder.endRecording();
     final image = await picture.toImage(size.toInt(), size.toInt());
@@ -198,7 +195,7 @@ class MapboxService {
         PointAnnotationOptions(
           geometry: point,
           iconImage: "hospital-marker",
-          iconSize: 0.8,
+          iconSize: 1,
         ),
       );
 
@@ -229,7 +226,7 @@ class MapboxService {
   }
 
   /// Centra el mapa en una ubicación específica
-  Future<void> centerOnLocation(UserLocation location, {double zoom = 16.0}) async {
+  Future<void> centerOnLocation(UserLocation location, {double zoom = 14.0}) async {
     if (_mapboxMap == null) return;
 
     await _mapboxMap!.flyTo(
@@ -244,7 +241,7 @@ class MapboxService {
   }
 
   /// Centra el mapa en un campus específico
-  Future<void> centerOnCampus(Campus campus, {double zoom = 15.0}) async {
+  Future<void> centerOnCampus(Campus campus, {double zoom = 14.0}) async {
     if (_mapboxMap == null) return;
 
     await _mapboxMap!.flyTo(

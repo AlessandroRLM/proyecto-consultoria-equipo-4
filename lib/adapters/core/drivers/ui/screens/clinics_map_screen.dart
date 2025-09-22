@@ -63,6 +63,8 @@ class _ClinicMapScreenState extends State<ClinicMapScreen>
   void dispose() {
     _searchController.dispose();
     _locationSubscription?.cancel();
+    mapboxService.dispose();
+    locationService.dispose();
     super.dispose();
   }
 
@@ -144,8 +146,11 @@ class _ClinicMapScreenState extends State<ClinicMapScreen>
   }
 
   Future<void> _onMyLocationPressed() async {
+    print('Botón de mi ubicación presionado');
     final location = await locationService.getCurrentLocation();
+    print('Ubicación obtenida: $location');
     if (location != null) {
+      print('Moviendo cámara a: ${location.latitude}, ${location.longitude}');
       mapboxService.centerOnLocation(location);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -290,7 +295,6 @@ class _ClinicMapScreenState extends State<ClinicMapScreen>
                 Expanded(
                   child: ElevatedButton.icon(
                     onPressed: () {
-                      print('Consultar fechas para: ${campus.name} y origen: ${widget.origin}' );
                       
                       // Navegar a la pantalla de selección de fechas
                       if (widget.origin == '1') {
