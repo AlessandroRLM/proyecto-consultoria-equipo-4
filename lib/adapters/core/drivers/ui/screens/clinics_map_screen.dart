@@ -206,9 +206,13 @@ class _ClinicMapScreenState extends State<ClinicMapScreen>
                   onClear: _onSearchCleared,
                 ),
                 if (_showResults)
-                  MapResultsList(
-                    campusList: _campusList,
-                    onCampusSelected: onCampusSelected,
+                  Stack(
+                    children: [
+                      MapResultsList(
+                        campusList: _campusList,
+                        onCampusSelected: onCampusSelected,
+                      ),
+                    ],
                   ),
                 const Spacer(),
                 MapControlButtons(
