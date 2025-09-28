@@ -9,33 +9,52 @@ class LodgingListScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final reservations = context.watch<LodgingProvider>().reservations;
+    final provider = context.watch<LodgingProvider>();
+    final reservations = provider.reservations;
     final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
       body: Padding(
-        padding: EdgeInsetsGeometry.fromLTRB(16, 0, 16, 0),
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
         child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Reservas', style: TextStyle(fontSize: 27, fontWeight: FontWeight.w500),),
-          const SizedBox(height: 8),
-          Expanded(
-            child: reservations.isEmpty
-              ? Center(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 8),
+            const Text(
+              'Reservas',
+              style: TextStyle(fontSize: 27, fontWeight: FontWeight.w500),
+            ),
+            const SizedBox(height: 8),
+
+            if (provider.loading)
+              const Expanded(child: Center(child: CircularProgressIndicator()))
+            else if (provider.error != null)
+              Expanded(
+                child: Center(
                   child: Text(
-                    "No hay reservas aún",
-                    style: TextStyle(color: cs.onSurfaceVariant),
+                    "Error: ${provider.error}",
+                    style: TextStyle(color: cs.error),
                   ),
-                )
-              : ListView.builder(
-                  padding: EdgeInsetsGeometry.fromLTRB(0, 0, 0, 0),
-                  itemCount: reservations.length,
-                  itemBuilder: (context, index) =>
-                      ReservationCard(reservation: reservations[index]),
-                ),)
-        ],
-    ),
+                ),
+              )
+            else
+              Expanded(
+                child: reservations.isEmpty
+                    ? Center(
+                        child: Text(
+                          "No hay reservas aún",
+                          style: TextStyle(color: cs.onSurfaceVariant),
+                        ),
+                      )
+                    : ListView.builder(
+                        padding: EdgeInsets.zero,
+                        itemCount: reservations.length,
+                        itemBuilder: (context, index) =>
+                            ReservationCard(reservation: reservations[index]),
+                      ),
+              ),
+          ],
+        ),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.go('/lodging/new'),
