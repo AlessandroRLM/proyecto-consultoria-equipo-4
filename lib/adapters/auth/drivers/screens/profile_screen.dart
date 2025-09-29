@@ -18,7 +18,6 @@ class _ProfileScreen extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor:AppThemes.black_100 ,
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20.0),
