@@ -13,7 +13,9 @@ import 'package:mobile/adapters/lodging/drivers/ui/screens/lodging_reservation_s
 import 'package:mobile/adapters/transport/drivers/ui/screens/map_screen.dart';
 import 'package:mobile/adapters/transport/drivers/ui/screens/reservation_screen.dart';
 import 'package:mobile/adapters/transport/drivers/ui/screens/transport_calendar_screen.dart';
+import 'package:mobile/adapters/transport/drivers/ui/screens/transport_location_search_screen.dart';
 import 'package:mobile/adapters/transport/drivers/ui/screens/transport_screen.dart';
+import 'package:mobile/adapters/transport/drivers/ui/screens/transport_time_selection_screen.dart';
 import 'package:mobile/ports/auth/driven/for_authenticating_user.dart';
 import 'package:mobile/service_locator.dart';
 import 'package:mobile/adapters/auth/drivers/screens/profile_screen.dart';
@@ -85,12 +87,39 @@ final GoRouter appRoutes = GoRouter(
                             GoRoute(
                               path: 'map_screen',
                               builder:(context, state) => const MapScreen()
-                              )
+                              ),
+                            GoRoute(
+                              path: 'location-search',
+                              builder: (context, state) {
+                                final args = state.extra as Map<String, dynamic>? ?? {};
+                                return const TransportLocationSearchScreen();
+                              },
+                            ),
                           ]),
                         GoRoute(
                           path: 'calendar', 
                           builder: (context, state) => const TransportCalendarScreen(),
                           ),
+                        GoRoute(
+                          path: 'time-selection',
+                          builder: (context, state) {
+                            final args = state.extra as Map<String, dynamic>? ?? {};
+                            return TransportTimeSelectionScreen(
+                              location: args['location'],
+                              dateStr: args['dateStr'],
+                              fixedInitialDate: args['fixedInitialDate'],
+                              isOutbound: args['isOutbound'] ?? false,
+                            );
+                          },
+                        ),
+                        GoRoute(
+                          path: 'time-selection-return',
+                          builder: (context, state) {
+                            return const TransportTimeSelectionScreen(
+                              isOutbound: false,
+                            );
+                          },
+                        ),
                       ]
                     ),
                   ],

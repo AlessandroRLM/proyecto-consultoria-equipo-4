@@ -18,7 +18,7 @@ class RequestButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FloatingActionButton.extended(
-      onPressed: () {funcion;},
+      onPressed: funcion,
       backgroundColor: color ?? Theme.of(context).colorScheme.primary,
       label: Text(
         label,
