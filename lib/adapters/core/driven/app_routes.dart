@@ -91,7 +91,6 @@ final GoRouter appRoutes = GoRouter(
                             GoRoute(
                               path: 'location-search',
                               builder: (context, state) {
-                                final args = state.extra as Map<String, dynamic>? ?? {};
                                 return const TransportLocationSearchScreen();
                               },
                             ),

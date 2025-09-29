@@ -73,7 +73,7 @@ class _TransportScreenState extends State<TransportScreen> {
         color: theme.cardColor,
         boxShadow: [
           BoxShadow(
-            color: theme.shadowColor.withOpacity(0.2),
+            color: theme.shadowColor.withValues(alpha: 0.2),
             spreadRadius: 1,
             blurRadius: 4,
             offset: const Offset(0, 2),
@@ -99,7 +99,7 @@ class _TransportScreenState extends State<TransportScreen> {
                     Text(
                       originTime,
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.textTheme.bodyMedium?.color?.withOpacity(0.7),
+                        color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
                       ),
                       overflow: TextOverflow.ellipsis,
                       maxLines: 1,
@@ -107,25 +107,25 @@ class _TransportScreenState extends State<TransportScreen> {
                   ],
                 ),
               ),
-              Container(
-                width: 80,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.directions_bus, color: Colors.red, size: 24),
-                    const SizedBox(height: 4),
-                    Text(
-                      formattedDate,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.textTheme.bodySmall?.color?.withOpacity(0.7),
-                      ),
-                      textAlign: TextAlign.center,
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
+            SizedBox(
+              width: 80,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.directions_bus, color: Colors.red, size: 24),
+                  const SizedBox(height: 4),
+                  Text(
+                    formattedDate,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.7),
                     ),
-                  ],
-                ),
+                    textAlign: TextAlign.center,
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                  ),
+                ],
               ),
+            ),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
@@ -141,7 +141,7 @@ class _TransportScreenState extends State<TransportScreen> {
                     Text(
                       destTime,
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.textTheme.bodyMedium?.color?.withOpacity(0.7),
+                        color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
                       ),
                       overflow: TextOverflow.ellipsis,
                       maxLines: 1,
@@ -165,7 +165,6 @@ class _TransportScreenState extends State<TransportScreen> {
     final outboundTime = outbound['originTime'] as String? ?? '';
     final returnTime = returnTrip['originTime'] as String? ?? '';
     final outboundDate = formatDate(outbound['date']);
-    final returnDate = formatDate(returnTrip['date']);
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
       padding: const EdgeInsets.all(16),
@@ -175,7 +174,7 @@ class _TransportScreenState extends State<TransportScreen> {
         color: theme.cardColor,
         boxShadow: [
           BoxShadow(
-            color: theme.shadowColor.withOpacity(0.2),
+            color: theme.shadowColor.withValues(alpha: 0.2),
             spreadRadius: 1,
             blurRadius: 4,
             offset: const Offset(0, 2),
@@ -202,7 +201,7 @@ class _TransportScreenState extends State<TransportScreen> {
                     Text(
                       outboundTime,
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.textTheme.bodyMedium?.color?.withOpacity(0.7),
+                        color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
                       ),
                       overflow: TextOverflow.ellipsis,
                       maxLines: 1,
@@ -210,8 +209,8 @@ class _TransportScreenState extends State<TransportScreen> {
                   ],
                 ),
               ),
-              Expanded(
-                flex: 1,
+              SizedBox(
+                width: 80,
                 child: Column(
                   children: [
                     const Icon(Icons.directions_bus, color: Colors.red, size: 24),
@@ -219,7 +218,7 @@ class _TransportScreenState extends State<TransportScreen> {
                     Text(
                       outboundDate,
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.textTheme.bodySmall?.color?.withOpacity(0.7),
+                        color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.7),
                       ),
                       textAlign: TextAlign.center,
                       overflow: TextOverflow.ellipsis,
@@ -244,7 +243,7 @@ class _TransportScreenState extends State<TransportScreen> {
                     Text(
                       outbound['destinationTime'] as String? ?? '',
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.textTheme.bodyMedium?.color?.withOpacity(0.7),
+                        color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
                       ),
                       overflow: TextOverflow.ellipsis,
                       maxLines: 1,
@@ -284,7 +283,7 @@ class _TransportScreenState extends State<TransportScreen> {
                     Text(
                       returnTime,
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.textTheme.bodyMedium?.color?.withOpacity(0.7),
+                        color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
                       ),
                       overflow: TextOverflow.ellipsis,
                       maxLines: 1,
@@ -292,16 +291,7 @@ class _TransportScreenState extends State<TransportScreen> {
                   ],
                 ),
               ),
-              Expanded(
-                flex: 1,
-                child: Column(
-                  children: [
-                    const SizedBox(height: 24), 
-                    const SizedBox(height: 4),
-
-                  ],
-                ),
-              ),
+              const SizedBox(width: 80),
               Expanded(
                 flex: 2,
                 child: Column(
@@ -318,7 +308,7 @@ class _TransportScreenState extends State<TransportScreen> {
                     Text(
                       returnTrip['destinationTime'] as String? ?? '',
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.textTheme.bodyMedium?.color?.withOpacity(0.7),
+                        color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
                       ),
                       overflow: TextOverflow.ellipsis,
                       maxLines: 1,
@@ -336,7 +326,7 @@ class _TransportScreenState extends State<TransportScreen> {
   List<dynamic> getGroupedReservations(List<Map<String, dynamic>> reservations) {
     final Map<String, List<Map<String, dynamic>>> groups = {};
     for (final res in reservations) {
-      final groupId = res['groupId'] as String? ?? (res['date'].toString() + '_' + res['origin'] + '_' + res['destination']); // Fallback for singles
+      final groupId = res['groupId'] as String? ?? '${res['date'].toString()}_${res['origin']}_${res['destination']}'; // Fallback for singles
       groups.putIfAbsent(groupId, () => []).add(res);
     }
 

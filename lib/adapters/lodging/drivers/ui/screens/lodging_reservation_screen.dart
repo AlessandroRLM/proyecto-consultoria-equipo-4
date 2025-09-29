@@ -41,7 +41,7 @@ class _LodgingReservationScreenState extends State<LodgingReservationScreen> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12),
               decoration: BoxDecoration(
-                color: cs.surfaceVariant,
+                color: cs.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: TextField(
@@ -71,7 +71,7 @@ class _LodgingReservationScreenState extends State<LodgingReservationScreen> {
                       border: Border.all(color: cs.outlineVariant),
                       boxShadow: [
                         BoxShadow(
-                          color: cs.shadow.withOpacity(0.1),
+                          color: cs.shadow.withValues(alpha: 0.1),
                           blurRadius: 2,
                           offset: const Offset(0, 1),
                         ),

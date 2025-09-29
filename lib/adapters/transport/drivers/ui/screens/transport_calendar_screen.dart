@@ -3,7 +3,6 @@ import 'package:flutter/scheduler.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:mobile/adapters/core/driven/app_themes.dart';
 import 'package:mobile/adapters/transport/driven/providers/transport_reservations_provider.dart';
 
 class TransportCalendarScreen extends StatefulWidget {
@@ -262,7 +261,6 @@ class _TransportCalendarScreenState extends State<TransportCalendarScreen> {
                                   final dateStr = DateFormat('yyyy-MM-dd').format(day);
                                   final isReserved = transportProv.reservations.any((r) => getDateString(r) == dateStr);
                                   final isInSelectedWeek = _selectedWeekStart != null && day.isAfter(_selectedWeekStart!.subtract(const Duration(days: 1))) && day.isBefore(_selectedWeekStart!.add(const Duration(days: 7)));
-                                  final hasOptions = transportProv.hasAvailableOptions(dateStr);
                                   final isPast = day.isBefore(DateTime.now().subtract(const Duration(days: 1)));
                                   final isSelectable = (isCurrentMonth && !isReserved && !isPast) && (isNewFlow || (day.weekday == DateTime.monday && transportProv.isWeekAllowed(day)) || isInSelectedWeek);
 
@@ -274,10 +272,10 @@ class _TransportCalendarScreenState extends State<TransportCalendarScreen> {
                                     bgColor = Colors.red;
                                     textColor = Colors.white;
                                   } else if (isReserved) {
-                                    bgColor = Colors.green.withOpacity(0.3);
+                                    bgColor = Colors.green.withValues(alpha: 0.3);
                                     textColor = Colors.green;
                                   } else if (isPast) {
-                                    bgColor = Colors.grey.withOpacity(0.3);
+                                    bgColor = Colors.grey.withValues(alpha: 0.3);
                                     textColor = Colors.grey;
                                   } else {
                                     bgColor = null;
@@ -315,7 +313,7 @@ class _TransportCalendarScreenState extends State<TransportCalendarScreen> {
                                                     _weekdays[day.weekday - 1],
                                                     textAlign: TextAlign.center,
                                                     style: TextStyle(
-                                                      color: textColor.withOpacity(0.8),
+                                                      color: textColor.withValues(alpha: 0.8),
                                                       fontSize: 10,
                                                       fontWeight: FontWeight.w400,
                                                     ),

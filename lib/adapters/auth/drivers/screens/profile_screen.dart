@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile/adapters/core/driven/app_themes.dart';
 import 'package:mobile/domain/entities/user.dart';
@@ -87,17 +88,20 @@ class _ProfileScreen extends State<ProfileScreen> {
                       onPressed: () async {
                           final authService = serviceLocator<ForAuthenticatingUser>();
                           await authService.logout(); // 👈 Limpia el estado de autenticación
-                          if (!mounted) return;
-                          context.go('/login'); 
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Sesión cerrada correctamente'),
-                            backgroundColor:Colors.green,
-                            behavior: SnackBarBehavior.floating,
-                            margin: const EdgeInsets.all(10),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                            duration: const Duration(seconds: 3),
-                            )
-                            );
+                          SchedulerBinding.instance.addPostFrameCallback((_) {
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Sesión cerrada correctamente'),
+                                backgroundColor:Colors.green,
+                                behavior: SnackBarBehavior.floating,
+                                margin: const EdgeInsets.all(10),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                duration: const Duration(seconds: 3),
+                                )
+                                );
+                              context.go('/login');
+                            }
+                          });
                         },
                       style: ElevatedButton.styleFrom(
                         elevation: 3,
