@@ -20,4 +20,32 @@ class User {
     required this.servicesId,
     this.avatarUrl,
   });
+
+    factory User.fromJson(Map<String, dynamic> json) {
+    return User(
+      id: json['id'],
+      email: json['email'],
+      password: json['password'],
+      name: json['name'],
+      rut: json['rut'],
+      aCarrera: json['aCarrera'],
+      sede: json['sede'],
+      servicesId: json['servicesId'],
+      avatarUrl: json['avatarUrl'],
+    );
+  }
+
+    Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'email': email,
+      'password': password,
+      'name': name,
+      'rut': rut,
+      'aCarrera': aCarrera,
+      'sede': sede,
+      'servicesId': servicesId,
+      'avatarUrl': avatarUrl
+      };
+    }
 }

@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:mobile/adapters/auth/driven/services/user_mock_service.dart';
 import 'package:mobile/domain/core/user.dart';
 import 'package:mobile/ports/auth/driven/for_authenticating_user.dart';
@@ -19,7 +20,11 @@ class AuthMockService implements ForAuthenticatingUser {
   Future<void> initialize() async {
     final prefs = await SharedPreferences.getInstance();
     _isAuthenticated = prefs.getBool(_isAuthenticatedKey) ?? false;
-  }
+    final userJson = prefs.getString('current_user');
+    if (userJson != null) {
+      _currentUser = User.fromJson(jsonDecode(userJson));
+    }
+  } 
 
   @override
   Future<bool> authenticate({
@@ -56,10 +61,15 @@ class AuthMockService implements ForAuthenticatingUser {
   Future<void> _saveToStorage() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_isAuthenticatedKey, _isAuthenticated);
+    if (_currentUser != null) {
+    final userJson = jsonEncode(_currentUser!.toJson());
+    await prefs.setString('current_user', userJson);
+  }
   }
 
   Future<void> _clearStorage() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_isAuthenticatedKey);
+    await prefs.remove('current_user');
   }
 }
