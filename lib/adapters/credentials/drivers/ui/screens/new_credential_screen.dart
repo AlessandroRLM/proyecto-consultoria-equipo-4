@@ -14,11 +14,11 @@ class NewCredentialScreen extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          IconCredentialButton(funcion: () => context.go('/new-credential/photo-camera'), label: 'Tomar Foto', icon: Icons.photo_camera_outlined),
+          IconCredentialButton(funcion: () => context.go('/credentials/new-credential/photo-camera'), label: 'Tomar Foto', icon: Icons.photo_camera_outlined),
 
           SizedBox(height: 50),
 
-          IconCredentialButton(funcion: () => context.go('/new-credential/photo-gallery'), label: 'Seleccionar de Galeria', icon: Icons.add_photo_alternate_outlined,)
+          IconCredentialButton(funcion: () => context.go('/credentials/new-credential/photo-gallery'), label: 'Seleccionar de Galeria', icon: Icons.add_photo_alternate_outlined,)
         ]),
       ),
     );

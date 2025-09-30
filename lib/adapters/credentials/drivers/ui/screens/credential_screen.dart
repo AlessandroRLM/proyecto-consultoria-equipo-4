@@ -35,7 +35,7 @@ class CredentialScreen extends StatelessWidget {
           ]
         ),
       ),
-      floatingActionButton: RequestButton(funcion: () => context.go( '/new-credential'),label: 'Solicitar Credencial'),
+      floatingActionButton: RequestButton(funcion: () => context.go( '/credentials/new-credential'),label: 'Solicitar Credencial'),
     );
   }
 }

@@ -26,20 +26,6 @@ final GoRouter appRoutes = GoRouter(
   routes: <RouteBase>[
     GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
     GoRoute(path: '/home', builder: (context, state) => const HomeScreen()),
-    GoRoute(
-      path: '/new-credential',
-        builder: (context, state) => const NewCredentialScreen(),
-        routes:[
-          GoRoute(
-            path: 'photo-camera',
-            builder: (context, state) => PhotoCredencialScreen(onTakePhoto: () => ImageService.pickFromCamera(), fromCamera: true),
-          ),
-          GoRoute(
-            path: 'photo-gallery',
-            builder: (context, state) => PhotoCredencialScreen(onTakePhoto: () => ImageService.pickFromGallery(),fromCamera: false),
-          )
-        ]
-    ),
 
     // Rutas protegidas, solo accesibles si el usuario está autenticado
     // Este StatefulShellRoute se encarga de ir entre el inicio y perfil
