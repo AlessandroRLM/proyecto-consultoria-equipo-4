@@ -57,7 +57,7 @@ class _LoginScreenState extends State<LoginScreen> {
         if (mounted) {
           _showSnackBar('Inicio de sesión exitoso', false);
           // Navegar a la pantalla principal después del login exitoso
-          context.go('/credentials');
+          context.go('/home');
         }
       } else {
         setState(() {

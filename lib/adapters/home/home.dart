@@ -1,0 +1,1 @@
+export 'package:mobile/adapters/home/drivers/ui/screen/home_screen.dart';
