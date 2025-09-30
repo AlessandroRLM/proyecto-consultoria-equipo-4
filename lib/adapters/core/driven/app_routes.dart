@@ -96,10 +96,6 @@ final GoRouter appRoutes = GoRouter(
                             ),
                           ]),
                         GoRoute(
-                          path: 'calendar', 
-                          builder: (context, state) => const TransportCalendarScreen(),
-                          ),
-                        GoRoute(
                           path: 'time-selection',
                           builder: (context, state) {
                             final args = state.extra as Map<String, dynamic>? ?? {};

@@ -48,7 +48,7 @@ class _TransportLocationSearchScreenState extends State<TransportLocationSearchS
 
     final provider = Provider.of<TransportReservationsProvider>(context, listen: false);
     provider.selectedLocation = location['name'];
-    context.push('/transport/calendar');
+    context.push('/transport/time-selection', extra: {'isOutbound': true});
   }
 
   void _searchMap() {

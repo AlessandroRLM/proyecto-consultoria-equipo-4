@@ -25,6 +25,56 @@ class _TransportScreenState extends State<TransportScreen> {
     });
   }
 
+  void _showReservationDetailsDialog(BuildContext context, dynamic reservation) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Detalles de la Reserva'),
+          content: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: _buildDialogContent(reservation),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cerrar'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  List<Widget> _buildDialogContent(dynamic reservation) {
+    List<Widget> widgets = [];
+    if (reservation is Map<String, dynamic>) {
+      widgets.add(Text('Origen: ${getDisplayLocation(reservation['origin'])}'));
+      widgets.add(Text('Destino: ${getDisplayLocation(reservation['destination'])}'));
+      widgets.add(Text('Fecha: ${formatDate(reservation['date'])}'));
+      widgets.add(Text('Hora de salida: ${reservation['originTime']}'));
+      widgets.add(Text('Hora de llegada: ${reservation['destinationTime']}'));
+    } else if (reservation is List<Map<String, dynamic>>) {
+      widgets.add(const Text('Ida:', style: TextStyle(fontWeight: FontWeight.bold)));
+      widgets.add(Text('Origen: ${getDisplayLocation(reservation[0]['origin'])}'));
+      widgets.add(Text('Destino: ${getDisplayLocation(reservation[0]['destination'])}'));
+      widgets.add(Text('Fecha: ${formatDate(reservation[0]['date'])}'));
+      widgets.add(Text('Hora de salida: ${reservation[0]['originTime']}'));
+      widgets.add(Text('Hora de llegada: ${reservation[0]['destinationTime']}'));
+      widgets.add(const SizedBox(height: 10));
+      widgets.add(const Text('Vuelta:', style: TextStyle(fontWeight: FontWeight.bold)));
+      widgets.add(Text('Origen: ${getDisplayLocation(reservation[1]['origin'])}'));
+      widgets.add(Text('Destino: ${getDisplayLocation(reservation[1]['destination'])}'));
+      widgets.add(Text('Fecha: ${formatDate(reservation[1]['date'])}'));
+      widgets.add(Text('Hora de salida: ${reservation[1]['originTime']}'));
+      widgets.add(Text('Hora de llegada: ${reservation[1]['destinationTime']}'));
+    }
+    return widgets;
+  }
+
   String getDisplayLocation(String? location) {
     if (location == null) return 'Desconocido';
     switch (location) {
@@ -64,94 +114,97 @@ class _TransportScreenState extends State<TransportScreen> {
     final displayOrigin = getDisplayLocation(origin);
     final displayDest = getDisplayLocation(dest);
     final formattedDate = formatDate(reservation['date']);
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: theme.dividerColor),
-        color: theme.cardColor,
-        boxShadow: [
-          BoxShadow(
-            color: theme.shadowColor.withValues(alpha: 0.2),
-            spreadRadius: 1,
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      displayOrigin,
-                      style: theme.textTheme.bodyLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                    ),
-                    Text(
-                      originTime,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                    ),
-                  ],
-                ),
-              ),
-            SizedBox(
-              width: 80,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.directions_bus, color: Colors.red, size: 24),
-                  const SizedBox(height: 4),
-                  Text(
-                    formattedDate,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.7),
-                    ),
-                    textAlign: TextAlign.center,
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 1,
-                  ),
-                ],
-              ),
+    return InkWell(
+      onTap: () => _showReservationDetailsDialog(context, reservation),
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: theme.dividerColor),
+          color: theme.cardColor,
+          boxShadow: [
+            BoxShadow(
+              color: theme.shadowColor.withValues(alpha: 0.2),
+              spreadRadius: 1,
+              blurRadius: 4,
+              offset: const Offset(0, 2),
             ),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      displayDest,
-                      style: theme.textTheme.bodyLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
+          ],
+        ),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        displayOrigin,
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
                       ),
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                    ),
-                    Text(
-                      destTime,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
+                      Text(
+                        originTime,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
                       ),
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            ],
-          ),
-        ],
+                SizedBox(
+                  width: 80,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.directions_bus, color: Colors.red, size: 24),
+                      const SizedBox(height: 4),
+                      Text(
+                        formattedDate,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.7),
+                        ),
+                        textAlign: TextAlign.center,
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        displayDest,
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
+                      Text(
+                        destTime,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -165,7 +218,9 @@ class _TransportScreenState extends State<TransportScreen> {
     final outboundTime = outbound['originTime'] as String? ?? '';
     final returnTime = returnTrip['originTime'] as String? ?? '';
     final outboundDate = formatDate(outbound['date']);
-    return Container(
+    return InkWell(
+      onTap: () => _showReservationDetailsDialog(context, [outbound, returnTrip]),
+      child: Container(
       margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -320,8 +375,9 @@ class _TransportScreenState extends State<TransportScreen> {
           ),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
 
   List<dynamic> getGroupedReservations(List<Map<String, dynamic>> reservations) {
     final Map<String, List<Map<String, dynamic>>> groups = {};
@@ -384,28 +440,11 @@ class _TransportScreenState extends State<TransportScreen> {
           // CustomTabBar Credencial, Transporte y Alojamiento.
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Reservas',
-                  style: theme.textTheme.headlineLarge?.copyWith(
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                GestureDetector(
-                  onTap: () { context.go('/transport/calendar');
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.red, width: 2),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(Icons.calendar_today, color: Colors.red, size: 20),
-                  ),
-                ),
-              ],
+            child: Text(
+              'Reservas',
+              style: theme.textTheme.headlineLarge?.copyWith(
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
           Expanded(

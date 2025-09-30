@@ -56,6 +56,8 @@ class _TransportTimeSelectionScreenState extends State<TransportTimeSelectionScr
   String? _selectedLocation;
   DateTime? _focusedWeekStart;
   DateTime? _selectedDate;
+  DateTime? _allowedStart;
+  DateTime? _allowedEnd;
   bool _isOutbound = true;
   int _selectedTabIndex = 0;
   List<Map<String, dynamic>> _availableOptions = [];
@@ -75,7 +77,18 @@ class _TransportTimeSelectionScreenState extends State<TransportTimeSelectionScr
     setState(() {
       _selectedTabIndex = index;
       _isOutbound = index == 0;
-      _selectedOption = null; 
+      _selectedOption = null;
+      if (index == 0) {
+        DateTime now = DateTime.now();
+        DateTime today = DateTime(now.year, now.month, now.day);
+        DateTime nextMonday = getMondayOfWeek(today.add(Duration(days: 7)));
+        if (now.weekday <= DateTime.thursday) {
+          _allowedStart = nextMonday;
+        } else {
+          _allowedStart = nextMonday.add(Duration(days: 7));
+        }
+        _allowedEnd = _allowedStart!.add(Duration(days: 365));
+      }
       if (!_isOutbound && (_transportProvider.selectedDate == null || _transportProvider.selectedOutboundTime == null)) {
         SchedulerBinding.instance.addPostFrameCallback((_) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -91,6 +104,8 @@ class _TransportTimeSelectionScreenState extends State<TransportTimeSelectionScr
 
       if (!_isOutbound && _transportProvider.selectedDate != null) {
         final outboundDate = DateTime.parse(_transportProvider.selectedDate!);
+        _allowedStart = outboundDate;
+        _allowedEnd = outboundDate.add(Duration(days: 7));
         _focusedWeekStart = getMondayOfWeek(outboundDate);
         _selectedDate ??= outboundDate;
       }
@@ -105,7 +120,7 @@ class _TransportTimeSelectionScreenState extends State<TransportTimeSelectionScr
   List<DateTime> _getDaysInWeek() {
     if (_focusedWeekStart == null) return [];
     List<DateTime> days = [];
-    for (int i = 0; i < 7; i++) { 
+    for (int i = 0; i < 7; i++) {
       final day = _focusedWeekStart!.add(Duration(days: i));
       days.add(day);
     }
@@ -135,6 +150,14 @@ class _TransportTimeSelectionScreenState extends State<TransportTimeSelectionScr
       });
       return;
     }
+    if (day.isBefore(_allowedStart!) || day.isAfter(_allowedEnd!)) {
+      SchedulerBinding.instance.addPostFrameCallback((_) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Fecha fuera del rango permitido')),
+        );
+      });
+      return;
+    }
     if (!_isOutbound) {
       if (_transportProvider.selectedDate != null) {
         final outboundDate = DateTime.parse(_transportProvider.selectedDate!);
@@ -151,6 +174,11 @@ class _TransportTimeSelectionScreenState extends State<TransportTimeSelectionScr
     setState(() {
       _selectedDate = day;
       _focusedWeekStart = getMondayOfWeek(day);
+      if (_isOutbound) {
+        _transportProvider.selectedDate = DateFormat('yyyy-MM-dd').format(day);
+      } else {
+        _transportProvider.selectedReturnDate = DateFormat('yyyy-MM-dd').format(day);
+      }
     });
     _loadAvailableOptions();
   }
@@ -168,12 +196,11 @@ class _TransportTimeSelectionScreenState extends State<TransportTimeSelectionScr
       }
       setState(() {});
     } else {
-      // Default fecha hoy si no hay una seleccionada.
-      final now = DateTime.now();
-      final dateStr = DateFormat('yyyy-MM-dd').format(now);
+      final defaultDate = _allowedStart ?? DateTime.now();
+      final dateStr = DateFormat('yyyy-MM-dd').format(defaultDate);
       setState(() {
-        _selectedDate = now;
-        _focusedWeekStart = getMondayOfWeek(now);
+        _selectedDate = defaultDate;
+        _focusedWeekStart = getMondayOfWeek(defaultDate);
         _availableOptions = _transportProvider.getAvailableOptionsForDate(dateStr);
       });
     }
@@ -181,7 +208,11 @@ class _TransportTimeSelectionScreenState extends State<TransportTimeSelectionScr
 
   void _onTimeSelected(Map<String, dynamic> option) {
     setState(() {
-      _selectedOption = option;
+      if (_selectedOption != null && _selectedOption!['time'] == option['time']) {
+        _selectedOption = null;
+      } else {
+        _selectedOption = option;
+      }
     });
   }
   
@@ -244,7 +275,15 @@ class _TransportTimeSelectionScreenState extends State<TransportTimeSelectionScr
     _transportProvider = Provider.of<TransportReservationsProvider>(context, listen: false);
     _selectedLocation = (widget.location != null && widget.location!.isNotEmpty) ? widget.location : _transportProvider.selectedLocation;
     DateTime now = DateTime.now();
-    _focusedWeekStart = getMondayOfWeek(now);
+    DateTime today = DateTime(now.year, now.month, now.day);
+    DateTime nextMonday = getMondayOfWeek(today.add(Duration(days: 7)));
+    if (now.weekday <= DateTime.thursday) {
+      _allowedStart = nextMonday;
+    } else {
+      _allowedStart = nextMonday.add(Duration(days: 7));
+    }
+    _allowedEnd = _allowedStart!.add(Duration(days: 365));
+    _focusedWeekStart = _allowedStart;
     if (widget.fixedInitialDate != null && widget.fixedInitialDate!.isNotEmpty) {
       final fixedDate = DateTime.parse(widget.fixedInitialDate!);
       _selectedDate = fixedDate;
@@ -263,6 +302,10 @@ class _TransportTimeSelectionScreenState extends State<TransportTimeSelectionScr
       _focusedWeekStart = getMondayOfWeek(outboundDate);
       if (widget.fixedInitialDate != null) {
         _selectedDate = DateTime.parse(widget.fixedInitialDate!);
+      } else if (_transportProvider.selectedReturnDate != null) {
+        _selectedDate = DateTime.parse(_transportProvider.selectedReturnDate!);
+      } else {
+        _selectedDate = outboundDate;
       }
     }
     _fetchData();
@@ -486,7 +529,7 @@ class WeekCalendarWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final capitalizedMonth = DateFormat('MMMM yyyy', 'es_ES').format(selectedDate ?? focusedWeekStart);
+    final capitalizedMonth = DateFormat('MMMM yyyy', 'es_ES').format(focusedWeekStart);
     final capitalizedMonthFormatted = capitalizedMonth[0].toUpperCase() + capitalizedMonth.substring(1);
 
     return Column(
@@ -500,7 +543,7 @@ class WeekCalendarWidget extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 IconButton(
-                  icon: Icon(Icons.chevron_left, color: primaryColor),
+                  icon: Icon(Icons.chevron_left, color: primaryColor.withValues(alpha: 0.3)),
                   onPressed: previousWeek,
                 ),
                 Expanded(
@@ -516,7 +559,7 @@ class WeekCalendarWidget extends StatelessWidget {
                   ),
                 ),
                 IconButton(
-                  icon: Icon(Icons.chevron_right, color: primaryColor),
+                  icon: Icon(Icons.chevron_right, color: primaryColor.withValues(alpha: 0.3)),
                   onPressed: nextWeek,
                 ),
               ],
@@ -541,11 +584,21 @@ class WeekCalendarWidget extends StatelessWidget {
                 final isSelected = selectedDate != null && selectedDate!.isAtSameMomentAs(day);
                 final isSelectable = !isPast && !isReserved && hasOptions;
 
+                final isOutboundDate = !isOutbound && transportProvider.selectedDate != null && DateTime.parse(transportProvider.selectedDate!).isAtSameMomentAs(day);
+                final isHighlighted = isSelected || isOutboundDate;
                 return Material(
                   color: Colors.transparent,
                   child: GestureDetector(
                     behavior: HitTestBehavior.opaque,
                     onTap: (isSelectable && !( !isOutbound && selectedDate != null)) ? () {
+                      if (isOutboundDate && !isSelected) {
+                        SchedulerBinding.instance.addPostFrameCallback((_) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Esta es la fecha de ida seleccionada.')),
+                          );
+                        });
+                        return;
+                      }
                       if (!isOutbound && selectedDate != null) {
                         SchedulerBinding.instance.addPostFrameCallback((_) {
                           ScaffoldMessenger.of(context).showSnackBar(
@@ -560,7 +613,7 @@ class WeekCalendarWidget extends StatelessWidget {
                       width: 50,
                       height: 60,
                       decoration: BoxDecoration(
-                        color: isSelected
+                        color: isHighlighted
                             ? primaryColor
                             : isReserved
                                 ? Colors.green.withValues(alpha: 0.3)
@@ -569,7 +622,7 @@ class WeekCalendarWidget extends StatelessWidget {
                                     : null,
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                          color: primaryColor,
+                          color: day.weekday == DateTime.thursday ? Colors.orange : primaryColor,
                           width: 1.0,
                         ),
                       ),
@@ -585,7 +638,7 @@ class WeekCalendarWidget extends StatelessWidget {
                                   day.day.toString(),
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
-                                    color: isSelected
+                                    color: isHighlighted
                                         ? onPrimaryColor
                                         : isReserved
                                             ? Colors.green
@@ -601,7 +654,7 @@ class WeekCalendarWidget extends StatelessWidget {
                                   weekdays[index],
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
-                                    color: (isSelected
+                                    color: (isHighlighted
                                             ? onPrimaryColor
                                             : isReserved
                                                 ? Colors.green
