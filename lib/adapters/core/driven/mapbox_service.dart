@@ -15,17 +15,17 @@ class MapboxService {
   PointAnnotationManager? _campusMarkersManager;
   final List<PointAnnotation> _campusAnnotations = [];
   Cancelable? _tapEventsCancelable; // Para manejar la suscripción a eventos
-  Map<PointAnnotation, Campus> _campusAnnotationMap = {}; // Mapeo de anotaciones a campus
+  Map<PointAnnotation, Campus> _campusAnnotationMap =
+      {}; // Mapeo de anotaciones a campus
 
-  static const String defaultMapStyle =
-      'mapbox://styles/alessandrorlm/cmfbxp33m000d01s4az8dbz68';
+  static const List<String> mapStyles = [MapboxStyles.LIGHT, MapboxStyles.DARK];
 
   void initialize(MapboxMap mapboxMap) {
     _mapboxMap = mapboxMap;
     _initializeCustomIcons();
     _setupLocationComponent();
   }
-  
+
   Future<bool> requestLocationPermission() async {
     try {
       // Verificar primero si el servicio de ubicación está habilitado
@@ -59,16 +59,24 @@ class MapboxService {
   /// Configura el componente de ubicación nativo de Mapbox
   Future<void> _setupLocationComponent() async {
     if (_mapboxMap == null) return;
-    
+
     try {
       // Configurar el componente de ubicación de Mapbox
       await _mapboxMap!.location.updateSettings(
         LocationComponentSettings(
           enabled: true,
           showAccuracyRing: true,
+          pulsingEnabled: true,
+          pulsingColor: AppThemes.primary_600.toARGB32(),
+          pulsingMaxRadius: 20,
+          locationPuck: LocationPuck(
+            locationPuck2D: LocationPuck2D(
+              topImage: await _createLocationPuckIcon(),
+            ),
+          ),
         ),
       );
-      
+
       print('Componente de ubicación de Mapbox configurado');
     } catch (e) {
       print('Error al configurar el componente de ubicación de Mapbox: $e');
@@ -97,10 +105,16 @@ class MapboxService {
         [], // stretchY
         null, // content
       );
-
     } catch (e) {
       print('Error creando íconos personalizados: $e');
     }
+  }
+
+  Future<Uint8List> _createLocationPuckIcon() async {
+    final ByteData bytes = await rootBundle.load(
+      'assets/images/location_puck/location_puck.png'
+    );
+    return bytes.buffer.asUint8List();
   }
 
   /// Crea un ícono personalizado para hospitales/clínicas
@@ -150,8 +164,6 @@ class MapboxService {
     return byteData!.buffer.asUint8List();
   }
 
-
-
   /// Agrega todos los marcadores de campus al mapa
   Future<void> addCampusMarkers(List<Campus> campusList) async {
     if (_mapboxMap == null) return;
@@ -189,7 +201,6 @@ class MapboxService {
       print('Error creando manager de marcadores de campus: $e');
     }
   }
-
 
   /// Filtra los marcadores de campus basado en una búsqueda
   Future<void> filterCampusMarkers(List<Campus> filteredCampusList) async {
@@ -235,7 +246,9 @@ class MapboxService {
 
       await _mapboxMap!.flyTo(
         CameraOptions(
-          center: Point(coordinates: Position(location.longitude!, location.latitude!)),
+          center: Point(
+            coordinates: Position(location.longitude!, location.latitude!),
+          ),
           zoom: zoom,
         ),
         MapAnimationOptions(duration: 500),
@@ -244,6 +257,7 @@ class MapboxService {
       print('Error centrando mapa en ubicación del usuario: $e');
     }
   }
+
   /// Configura eventos de tap en los marcadores usando la nueva API
   void setupMarkerTapEvents(Function(Campus) onCampusMarkerTapped) {
     // Cancelar eventos anteriores si existen
@@ -283,14 +297,18 @@ class MapboxService {
     _mapboxMap!.setCamera(CameraOptions(zoom: currentZoom - 1));
   }
 
-  Future<void> dispose() async{
+  Future<void> dispose() async {
     _tapEventsCancelable?.cancel();
     try {
       if (_userLocationManager != null) {
-        await _mapboxMap?.annotations.removeAnnotationManager(_userLocationManager!);
+        await _mapboxMap?.annotations.removeAnnotationManager(
+          _userLocationManager!,
+        );
       }
       if (_campusMarkersManager != null) {
-        await _mapboxMap?.annotations.removeAnnotationManager(_campusMarkersManager!);
+        await _mapboxMap?.annotations.removeAnnotationManager(
+          _campusMarkersManager!,
+        );
       }
     } catch (e) {
       print('Error al limpiar managers de Mapbox: $e');

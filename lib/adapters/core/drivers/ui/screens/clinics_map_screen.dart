@@ -313,8 +313,12 @@ class _ClinicMapScreenState extends State<ClinicMapScreen>
   }
 
   Widget _buildMap() {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return MapWidget(
-      styleUri: MapboxService.defaultMapStyle,
+      styleUri: colorScheme.brightness == Brightness.light
+          ? MapboxService.mapStyles[0]
+          : MapboxService.mapStyles[1],
       cameraOptions: cameraOptions,
       onMapCreated: (MapboxMap mapboxMap) async {
         mapboxService.initialize(mapboxMap);
