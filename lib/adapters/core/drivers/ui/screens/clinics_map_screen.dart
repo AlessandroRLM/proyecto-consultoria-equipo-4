@@ -8,8 +8,6 @@ import 'package:mobile/adapters/core/drivers/ui/widgets/map_search_bar.dart';
 import 'package:mobile/adapters/core/drivers/ui/widgets/map_results_list.dart';
 import 'package:mobile/adapters/core/drivers/ui/widgets/map_control_buttons.dart';
 import 'package:mobile/domain/core/campus.dart';
-import 'package:mobile/domain/core/user_location.dart';
-import 'package:mobile/ports/core/driven/for_locating_user.dart';
 import 'package:mobile/ports/core/driven/for_querying_campus.dart';
 import 'package:mobile/ports/core/drivers/for_mapping_interactions.dart';
 import 'package:mobile/service_locator.dart';
@@ -31,7 +29,6 @@ class _ClinicMapScreenState extends State<ClinicMapScreen>
     implements ForMappingInteractions {
   // Servicioss
   final campusService = serviceLocator<ForQueryingCampus>();
-  final locationService = serviceLocator<ForLocatingUser>();
   final mapboxService = serviceLocator<MapboxService>();
 
   // Estados de UI
@@ -45,7 +42,6 @@ class _ClinicMapScreenState extends State<ClinicMapScreen>
   static const double initialLat = -33.4489;
   static const double initialLng = -70.6693;
   late final CameraOptions cameraOptions;
-  StreamSubscription<UserLocation>? _locationSubscription;
 
   @override
   void initState() {
@@ -62,21 +58,16 @@ class _ClinicMapScreenState extends State<ClinicMapScreen>
   @override
   void dispose() {
     _searchController.dispose();
-    _locationSubscription?.cancel();
     mapboxService.dispose();
-    locationService.dispose();
     super.dispose();
   }
 
   // Inicializacion
   Future<void> _initializeServices() async {
-    final hasPermission = await locationService.requestLocationPermission();
+    final hasPermission = await mapboxService.requestLocationPermission();
 
-    if (hasPermission) {
-      onLocationPermissionGranted();
-    } else {
-      onLocationPermissionDenied();
-    }
+    if (!hasPermission) onLocationPermissionDenied();
+
   }
 
   Future<void> _loadCampusData() async {
@@ -87,24 +78,10 @@ class _ClinicMapScreenState extends State<ClinicMapScreen>
     });
   }
 
-  @override
-  void onLocationPermissionGranted() {
-    locationService.startTracking();
-
-    _locationSubscription = locationService.locationStream.listen(
-      onLocationUpdated,
-      onError: (error) => print('Error en ubicación: $error'),
-    );
-  }
 
   @override
   void onLocationPermissionDenied() {
     _showPermissionDialog();
-  }
-
-  @override
-  void onLocationUpdated(UserLocation location) {
-    mapboxService.updateUserLocation(location);
   }
 
   @override
@@ -143,20 +120,6 @@ class _ClinicMapScreenState extends State<ClinicMapScreen>
       _isSearching = false;
       _showResults = false;
     });
-  }
-
-  Future<void> _onMyLocationPressed() async {
-    print('Botón de mi ubicación presionado');
-    final location = await locationService.getCurrentLocation();
-    print('Ubicación obtenida: $location');
-    if (location != null) {
-      print('Moviendo cámara a: ${location.latitude}, ${location.longitude}');
-      mapboxService.centerOnLocation(location);
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No se pudo obtener la ubicación actual')),
-      );
-    }
   }
 
   void _onCampusMarkerClicked(Campus campus) {
@@ -218,7 +181,7 @@ class _ClinicMapScreenState extends State<ClinicMapScreen>
                 MapControlButtons(
                   onZoomIn: mapboxService.zoomIn,
                   onZoomOut: mapboxService.zoomOut,
-                  onMyLocation: _onMyLocationPressed,
+                  onMyLocation: mapboxService.centerOnUserLocation,
                 ),
               ],
             ),
@@ -302,7 +265,7 @@ class _ClinicMapScreenState extends State<ClinicMapScreen>
                       
                       // Navegar a la pantalla de selección de fechas
                       if (widget.origin == '1') {
-                        context.push('transport_clinic_reservation/${campus.id}');
+                        context.push('/ytransport_clinic_reservation/${campus.id}');
                       } else if (widget.origin == '2') {
                         context.push('/lodging_clinic_reservation/${campus.id}');
                       }
