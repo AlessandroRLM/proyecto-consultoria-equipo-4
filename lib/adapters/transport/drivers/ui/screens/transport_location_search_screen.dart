@@ -65,7 +65,8 @@ class _TransportLocationSearchScreenState extends State<TransportLocationSearchS
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
     final text = Theme.of(context).textTheme;
 
     return Scaffold(
@@ -84,7 +85,7 @@ class _TransportLocationSearchScreenState extends State<TransportLocationSearchS
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12),
               decoration: BoxDecoration(
-                color: cs.surfaceContainerHighest,
+                color: theme.brightness == Brightness.light ? AppThemes.black_300 : AppThemes.black_900,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: TextField(
@@ -93,7 +94,7 @@ class _TransportLocationSearchScreenState extends State<TransportLocationSearchS
                 decoration: InputDecoration(
                   hintText: "Buscar campo clinico",
                   border: InputBorder.none,
-                  icon: Icon(Icons.search, color: cs.onSurfaceVariant),
+                  icon: Icon(Icons.search, color: theme.brightness == Brightness.light ? AppThemes.black_700 : AppThemes.black_400),
                 ),
               ),
             ),
@@ -117,7 +118,7 @@ class _TransportLocationSearchScreenState extends State<TransportLocationSearchS
                             border: Border.all(color: cs.outlineVariant),
                             boxShadow: [
                               BoxShadow(
-                                color: cs.shadow.withValues(alpha: 0.1),
+                                color: AppThemes.black_1300.withValues(alpha: 0.1),
                                 blurRadius: 2,
                                 offset: const Offset(0, 1),
                               ),

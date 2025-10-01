@@ -19,29 +19,33 @@ class LodgingReservation {
 }
 
 class LodgingProvider with ChangeNotifier {
-  final List<LodgingReservation> _reservations = [
-    LodgingReservation(
-      area: "Santiago - Pudahuel",
-      name: "Hostal Familiar S&G",
-      address: "Diagonal Norte 8912 Pudahuel",
-      room: "PRC-662",
-      checkIn: "LUN 10/09",
-      checkOut: "MIE 17/09",
-    ),
-    LodgingReservation(
-      area: "Santiago - Centro",
-      name: "Casa Bonita",
-      address: "San Martín 120, Stgo",
-      room: "STD-105",
-      checkIn: "MAR 12/09",
-      checkOut: "JUE 19/09",
-    ),
-  ];
+  final List<LodgingReservation> _reservations = [];
 
   List<LodgingReservation> get reservations => _reservations;
 
   void addReservation(LodgingReservation reservation) {
     _reservations.add(reservation);
     notifyListeners();
+  }
+
+  final List<Map<String, String>> clinics = [
+    {
+      "name": "Centro Médico Andes Salud Talca",
+      "city": "Talca",
+      "address": "Cuatro Nte. 1656, 3467384 Talca, Maule",
+    },
+    {
+      "name": "Clínica Santa María",
+      "city": "Talca",
+      "address": "Calle Falsa 123, Talca, Maule",
+    },
+  ];
+  
+  Map<String, String>? getClinicInfoByName(String area) {
+    try {
+      return clinics.firstWhere((clinic) => clinic["name"] == area);
+    } catch (e) {
+      return null;
+    }
   }
 }

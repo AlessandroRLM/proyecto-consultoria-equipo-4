@@ -10,29 +10,35 @@ class LodgingListScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final reservations = context.watch<LodgingProvider>().reservations;
-    final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
       body: Padding(
-        padding: EdgeInsetsGeometry.fromLTRB(16, 0, 16, 0),
+        padding: EdgeInsetsGeometry.fromLTRB(8, 0, 16, 0),
         child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Reservas', style: TextStyle(fontSize: 27, fontWeight: FontWeight.w500),),
+          Padding(
+            padding: const EdgeInsets.only(left: 8, top: 12, bottom: 12),
+            child: Text('Reservas', style: Theme.of(context).textTheme.headlineLarge?.copyWith(fontWeight: FontWeight.w500),),
+          ),
           const SizedBox(height: 8),
           Expanded(
             child: reservations.isEmpty
               ? Center(
                   child: Text(
-                    "No hay reservas aún",
-                    style: TextStyle(color: cs.onSurfaceVariant),
+                    'Aún no hay reservas disponibles.',
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      color: Theme.of(context).disabledColor,
+                    ),
                   ),
                 )
               : ListView.builder(
                   padding: EdgeInsetsGeometry.fromLTRB(0, 0, 0, 0),
                   itemCount: reservations.length,
-                  itemBuilder: (context, index) =>
-                      ReservationCard(reservation: reservations[index]),
+                  itemBuilder: (context, index) {
+                    final reservation = reservations[index];
+                    return ReservationCard(reservation: reservation);
+                  },
                 ),)
         ],
     ),

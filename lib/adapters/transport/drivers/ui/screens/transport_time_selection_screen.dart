@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:mobile/adapters/transport/driven/providers/transport_reservations_provider.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:mobile/adapters/core/driven/app_themes.dart';
 
 String formatTime(String timeStr) {
   if (timeStr.contains('AM') || timeStr.contains('PM')) {
@@ -319,7 +320,7 @@ class _TransportTimeSelectionScreenState extends State<TransportTimeSelectionScr
     final onSurface = theme.colorScheme.onSurface;
     final primary = theme.colorScheme.primary;
     final onPrimary = theme.colorScheme.onPrimary;
-    final surfaceContainerHighest = theme.colorScheme.surfaceContainerHighest;
+    final surfaceContainerHighest = theme.brightness == Brightness.light ? AppThemes.black_300 : AppThemes.black_900;
 
     final timeLabel = _isOutbound ? 'ida' : 'vuelta';
 

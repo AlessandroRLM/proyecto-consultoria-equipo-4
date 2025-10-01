@@ -7,12 +7,12 @@ import 'package:mobile/adapters/credentials/driven/image_services.dart';
 import 'package:mobile/adapters/credentials/drivers/ui/screens/credential_screen.dart';
 import 'package:mobile/adapters/credentials/drivers/ui/screens/new_credential_screen.dart';
 import 'package:mobile/adapters/credentials/drivers/ui/screens/photo_credencial_screen.dart';
+import 'package:mobile/adapters/lodging/drivers/ui/screens/lodging_calendar_screen.dart';
 import 'package:mobile/adapters/lodging/drivers/ui/screens/lodging_list_screen.dart';
 import 'package:mobile/adapters/lodging/drivers/ui/screens/lodging_map_screen.dart';
 import 'package:mobile/adapters/lodging/drivers/ui/screens/lodging_reservation_screen.dart';
 import 'package:mobile/adapters/transport/drivers/ui/screens/map_screen.dart';
 import 'package:mobile/adapters/transport/drivers/ui/screens/reservation_screen.dart';
-import 'package:mobile/adapters/transport/drivers/ui/screens/transport_calendar_screen.dart';
 import 'package:mobile/adapters/transport/drivers/ui/screens/transport_location_search_screen.dart';
 import 'package:mobile/adapters/transport/drivers/ui/screens/transport_screen.dart';
 import 'package:mobile/adapters/transport/drivers/ui/screens/transport_time_selection_screen.dart';
@@ -132,8 +132,12 @@ final GoRouter appRoutes = GoRouter(
                               const LodgingReservationScreen(),
                         ),
                         GoRoute(
-                          path: 'new',
+                          path: 'map',
                           builder: (context, state) => const LodgingMapScreen(),
+                        ),
+                        GoRoute(
+                          path: 'calendar',
+                          builder: (context, state) => LodgingCalendarScreen(selectedLocation: (state.extra as Map<String, dynamic>?)?['selectedLocation'] ?? "Ubicación no especificada"),
                         ),
                       ],
                     ),
