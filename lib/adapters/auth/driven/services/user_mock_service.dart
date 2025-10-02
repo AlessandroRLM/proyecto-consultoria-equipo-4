@@ -1,4 +1,4 @@
-import 'package:mobile/domain/entities/user.dart';
+import 'package:mobile/domain/core/user.dart';
 
 class UserMockService {
   final List<User> _users = [
@@ -10,7 +10,7 @@ class UserMockService {
       rut: '12.345.678-9',
       aCarrera: 3,
       sede: 'Santiago',
-      servicesId: 'svc001',
+      servicesId: 3,
     ),
     User(
       id: 'u002',
@@ -20,17 +20,17 @@ class UserMockService {
       rut: '11.1111.111-1',
       aCarrera: 2,
       sede: 'Temuco',
-      servicesId: 'svc002',
+      servicesId: 0,
     ),
     User(
       id: 'u003',
-      email: 'user3@user2.com',
+      email: 'user2@user2.com',
       password: '123456',
       name: 'Carla Méndez',
       rut: '22.222.222-2',
       aCarrera: 4,
       sede: 'El Llano',
-      servicesId: 'svc003',
+      servicesId: 1,
     ),
     User(
       id: 'u004',
@@ -40,7 +40,7 @@ class UserMockService {
       rut: '33.333.333-3',
       aCarrera: 1,
       sede: 'Provicencia',
-      servicesId: 'svc004'
+      servicesId: 2
     ),
   ];
 

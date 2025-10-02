@@ -175,10 +175,11 @@ class _TransportScreenState extends State<TransportScreen> {
         ],
       ),
       floatingActionButton: RequestButton(
-        funcion: () => context.go('/transport/reservation'),
+        funcion: () => context.push('/clinic_selection/1'),
         label: 'Reservar', 
-        icon: Icons.calendar_today),
-      
+        icon: Icons.calendar_today,
+        heroTag: 'reserve_transport_button',
+      ),
     );
   }
 }

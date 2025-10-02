@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class AppThemes {
   // Tonalidades de rojo
@@ -28,7 +29,84 @@ class AppThemes {
   static const Color black_1200 = Color.fromARGB(255, 20, 20, 20);
   static const Color black_1300 = Color.fromARGB(255, 0, 0, 0);
 
+  // Estilos de texto 
+  static TextTheme get textTheme => TextTheme(
+    displayLarge: GoogleFonts.openSans(
+      fontSize: 34,
+      fontWeight: FontWeight.w600,
+      height: 40.8 / 34,
+      letterSpacing: 0,
+    ), // h1
+    displayMedium: GoogleFonts.openSans(
+      fontSize: 27,
+      fontWeight: FontWeight.w600,
+      height: 32.4 / 27,
+      letterSpacing: 0,
+    ), // h2
+    displaySmall: GoogleFonts.openSans(
+      fontSize: 22,
+      fontWeight: FontWeight.w600,
+      height: 26.4 / 22,
+      letterSpacing: 0,
+    ), // h3
+    headlineMedium: GoogleFonts.openSans(
+      fontSize: 18,
+      fontWeight: FontWeight.w600,
+      height: 21.6 / 18,
+      letterSpacing: 0,
+    ), // h4
+    titleLarge: GoogleFonts.openSans(
+      fontSize: 16,
+      fontWeight: FontWeight.w600,
+      height: 19.2 / 16,
+      letterSpacing: 0,
+    ), // largeBodyStrong
+    titleMedium: GoogleFonts.openSans(
+      fontSize: 16,
+      fontWeight: FontWeight.w400,
+      height: 110 / 16,
+      letterSpacing: 0,
+    ), // largeBody
+    bodyLarge: GoogleFonts.openSans(
+      fontSize: 14,
+      fontWeight: FontWeight.w600,
+      height: 16.8 / 14,
+      letterSpacing: 0,
+    ), // bodyStrong
+    bodyMedium: GoogleFonts.openSans(
+      fontSize: 14,
+      fontWeight: FontWeight.w400,
+      height: 15.4 / 14,
+      letterSpacing: 0,
+    ), // body
+    bodySmall: GoogleFonts.openSans(
+      fontSize: 11,
+      fontWeight: FontWeight.w600,
+      height: 13.2 / 11,
+      letterSpacing: 0,
+    ), // smallBodyStrong
+    labelLarge: GoogleFonts.openSans(
+      fontSize: 11,
+      fontWeight: FontWeight.w400,
+      height: 12.1 / 11,
+      letterSpacing: 0,
+    ), // smallBody
+    labelMedium: GoogleFonts.openSans(
+      fontSize: 9,
+      fontWeight: FontWeight.w600,
+      height: 10.8 / 9,
+      letterSpacing: 0,
+    ), // extraSmallBodyStrong
+    labelSmall: GoogleFonts.openSans(
+      fontSize: 9,
+      fontWeight: FontWeight.w400,
+      height: 110 / 9, 
+      letterSpacing: 0,
+    ), // extraSmallBody
+  );
+
   static final ThemeData light = ThemeData(
+    textTheme: textTheme,
     colorScheme: ColorScheme(
       brightness: Brightness.light,
       primary: primary_600,
@@ -42,7 +120,9 @@ class AppThemes {
       outlineVariant: black_500,
     ),
   );
+
   static final ThemeData dark = ThemeData(
+    textTheme: textTheme,
     colorScheme: ColorScheme(
       brightness: Brightness.dark,
       primary: primary_600,

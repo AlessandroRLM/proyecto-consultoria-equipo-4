@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile/adapters/core/driven/app_themes.dart';
-import 'package:mobile/domain/entities/user.dart';
+import 'package:mobile/domain/core/user.dart';
 import 'package:mobile/ports/auth/driven/for_authenticating_user.dart';
 import 'package:mobile/service_locator.dart';
 
@@ -18,7 +18,6 @@ class _ProfileScreen extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor:AppThemes.black_100 ,
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20.0),

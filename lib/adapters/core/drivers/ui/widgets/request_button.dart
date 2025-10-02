@@ -4,7 +4,8 @@ class RequestButton extends StatelessWidget {
   final String label;
   final Color? color;
   final IconData? icon;
-  final Color? textColor; 
+  final Color? textColor;
+  final String? heroTag;
 
   const RequestButton({
     super.key,
@@ -12,7 +13,8 @@ class RequestButton extends StatelessWidget {
     required this.label,
     this.color,
     this.icon,
-    this.textColor
+    this.textColor,
+    this.heroTag,
   });
 
   @override
@@ -29,6 +31,7 @@ class RequestButton extends StatelessWidget {
       icon: icon != null
           ? Icon(icon, color: textColor ?? Theme.of(context).colorScheme.onPrimary)
           : null,
+      heroTag: heroTag ?? 'request_button',
     );
   }
 }

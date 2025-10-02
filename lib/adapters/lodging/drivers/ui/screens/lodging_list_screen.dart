@@ -11,6 +11,7 @@ class LodgingListScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final reservations = context.watch<LodgingProvider>().reservations;
     final cs = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
       body: Padding(
@@ -18,14 +19,14 @@ class LodgingListScreen extends StatelessWidget {
         child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Reservas', style: TextStyle(fontSize: 27, fontWeight: FontWeight.w500),),
+          Text('Reservas', style: textTheme.displayMedium,),
           const SizedBox(height: 8),
           Expanded(
             child: reservations.isEmpty
               ? Center(
                   child: Text(
                     "No hay reservas aún",
-                    style: TextStyle(color: cs.onSurfaceVariant),
+                    style: textTheme.displaySmall
                   ),
                 )
               : ListView.builder(
@@ -38,9 +39,12 @@ class LodgingListScreen extends StatelessWidget {
     ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => context.go('/lodging/new'),
-        label: const Text("Reservar"),
+        onPressed: () => context.push('/clinic_selection/2'),
+        label: Text("Reservar", style: textTheme.titleMedium!.copyWith(
+          color: cs.onPrimary,
+        ),),
         icon: const Icon(Icons.calendar_today),
+        heroTag: 'reserve_lodging_button',
       ),
     );
   }
