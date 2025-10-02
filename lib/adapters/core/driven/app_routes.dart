@@ -17,13 +17,15 @@ import 'package:mobile/adapters/transport/drivers/ui/screens/transport_screen.da
 import 'package:mobile/ports/auth/driven/for_authenticating_user.dart';
 import 'package:mobile/service_locator.dart';
 import 'package:mobile/adapters/auth/drivers/screens/profile_screen.dart';
+import 'package:mobile/adapters/home/home.dart';
 
 final GoRouter appRoutes = GoRouter(
-  initialLocation: '/credentials',
-  errorBuilder: (BuildContext context, GoRouterState state) => Placeholder(),
+  initialLocation: '/home',
+  errorBuilder: (context, state) => Placeholder(),
 
   routes: <RouteBase>[
-    GoRoute(path: '/login', builder: (BuildContext context, GoRouterState state) => const LoginScreen()),
+    GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
+    GoRoute(path: '/home', builder: (context, state) => const HomeScreen()),
 
     // Rutas protegidas, solo accesibles si el usuario está autenticado
     // Este StatefulShellRoute se encarga de ir entre el inicio y perfil

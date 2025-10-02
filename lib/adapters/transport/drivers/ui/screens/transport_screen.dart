@@ -127,9 +127,8 @@ class _TransportScreenState extends State<TransportScreen> {
                 const Text(
                   'Reservas',
                   style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 20,
-                    color: Colors.black,
+                    fontWeight: FontWeight.w500,
+                    fontSize: 27,
                   ),
                 ),
                 GestureDetector(
