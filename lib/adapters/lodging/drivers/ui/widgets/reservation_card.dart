@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/adapters/core/driven/app_themes.dart';
 import 'package:mobile/adapters/lodging/driven/providers/lodging_provider.dart';
+import 'package:mobile/adapters/lodging/drivers/ui/screens/lodging_map_screen.dart';
+import 'package:mobile/domain/models/lodging/lodging_reservation_model.dart';
 
 class ReservationCard extends StatefulWidget {
   final LodgingReservation reservation;
