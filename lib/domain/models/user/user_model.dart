@@ -10,7 +10,7 @@ class UserModel {
   final String rut;
   final int aCarrera;
   final String sede;
-  final String servicesId;
+  final int servicesId;
   final String? avatarUrl;
 
   const UserModel({
@@ -33,7 +33,7 @@ class UserModel {
     rut: json['rut'] as String,
     aCarrera: (json['a_carrera'] ?? json['aCarrera']) as int,
     sede: json['sede'] as String,
-    servicesId: (json['services_id'] ?? json['servicesId']).toString(),
+    servicesId: (json['services_id'] ?? json['servicesId']) as int,
     avatarUrl: (json['avatar_url'] ?? json['avatarUrl']) as String?,
   );
 

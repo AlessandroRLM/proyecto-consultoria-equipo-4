@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'package:mobile/adapters/auth/driven/services/user_mock_service.dart';
-import 'package:mobile/domain/core/user.dart';
 import 'package:mobile/domain/models/user/user_model.dart';
 import 'package:mobile/ports/auth/driven/for_authenticating_user.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -23,7 +22,7 @@ class AuthMockService implements ForAuthenticatingUser {
     _isAuthenticated = prefs.getBool(_isAuthenticatedKey) ?? false;
     final userJson = prefs.getString('current_user');
     if (userJson != null) {
-      _currentUser = User.fromJson(jsonDecode(userJson));
+      _currentUser = UserModel.fromJson(jsonDecode(userJson));
     }
   } 
 

@@ -12,22 +12,33 @@ class HomeLayout extends StatefulWidget {
 }
 
 class _HomeLayoutState extends State<HomeLayout> {
+  bool _shouldShowTabBar(BuildContext context) {
+    final location = GoRouterState.of(context).uri.toString();
+
+    // Solo mostramos el TabBar en las rutas raíz
+    return location == '/credentials' ||
+        location == '/transport' ||
+        location == '/lodging';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Column(
         children: [
-          const SizedBox(height: 8),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16.0, 52.0, 16.0, 0),
-            child: HomeTabBar(
-              currentIndex: widget.navigationShell.currentIndex,
-              onTap: (index) {
-                widget.navigationShell.goBranch(index);
-              },
+          if (_shouldShowTabBar(context)) ...[
+            const SizedBox(height: 8),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16.0, 52.0, 16.0, 0),
+              child: HomeTabBar(
+                currentIndex: widget.navigationShell.currentIndex,
+                onTap: (index) {
+                  widget.navigationShell.goBranch(index);
+                },
+              ),
             ),
-          ),
-          const SizedBox(height: 16),
+            const SizedBox(height: 16),
+          ],
           Expanded(
             child: widget.navigationShell,
           ),

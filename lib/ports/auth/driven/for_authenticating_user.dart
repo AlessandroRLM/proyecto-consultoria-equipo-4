@@ -1,4 +1,3 @@
-import 'package:mobile/domain/core/user.dart';
 import 'package:mobile/domain/models/user/user_model.dart';
 
 abstract class ForAuthenticatingUser {
@@ -7,8 +6,6 @@ abstract class ForAuthenticatingUser {
 
   /// Estado de sesión
   bool get isAuthenticated;
-  User? get currentUser;
-  
 
   /// Cargas iniciales (tokens, restaurar sesión, etc.)
   Future<void> initialize();

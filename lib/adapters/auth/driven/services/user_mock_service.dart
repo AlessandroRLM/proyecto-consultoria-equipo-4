@@ -1,4 +1,3 @@
-import 'package:mobile/domain/core/user.dart';
 import 'package:mobile/domain/models/user/user_model.dart';
 
 class UserMockService {
@@ -44,7 +43,7 @@ class UserMockService {
       rut: '33.333.333-3',
       aCarrera: 1,
       sede: 'Providencia',
-      servicesId: 'svc004',
+      servicesId: 4,
     ),
   ];
 
