@@ -9,7 +9,7 @@ import 'package:mobile/service_locator.dart';
 import 'package:mobile/adapters/lodging/driven/providers/lodging_provider.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
-
+import 'package:mobile/adapters/lodging/driven/providers/lodging_availability_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -37,11 +37,12 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         // Inicializamos el proveedor vacío, sin datos aún
+        ChangeNotifierProvider(create: (_) => TransportReservationsProvider()),
         ChangeNotifierProvider(
-          create: (_) => TransportReservationsProvider(),
+          create: (_) => LodgingProvider()..fetchReservations(),
         ),
         ChangeNotifierProvider(
-          create: (_) => LodgingProvider()
+          create: (_) => LodgingAvailabilityProvider()..fetchAvailability(),
         ),
       ],
       child: MaterialApp.router(

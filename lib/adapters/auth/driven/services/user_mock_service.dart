@@ -1,8 +1,12 @@
 import 'package:mobile/domain/core/user.dart';
+import 'package:mobile/domain/models/user/user_model.dart';
 
 class UserMockService {
-  final List<User> _users = [
-    User(
+  const UserMockService();
+
+  // Lista inmutable para un mock más seguro.
+  static const List<UserModel> _users = [
+    UserModel(
       id: 'u001',
       email: 'test@test.com',
       password: '123456',
@@ -12,17 +16,17 @@ class UserMockService {
       sede: 'Santiago',
       servicesId: 3,
     ),
-    User(
+    UserModel(
       id: 'u002',
       email: 'user1@user1.com',
       password: '123456',
       name: 'Benjamín Soto',
-      rut: '11.1111.111-1',
+      rut: '11.111.111-1',
       aCarrera: 2,
       sede: 'Temuco',
       servicesId: 0,
     ),
-    User(
+    UserModel(
       id: 'u003',
       email: 'user2@user2.com',
       password: '123456',
@@ -32,28 +36,34 @@ class UserMockService {
       sede: 'El Llano',
       servicesId: 1,
     ),
-    User(
+    UserModel(
       id: 'u004',
       email: 'user3@user3.com',
       password: '123456',
       name: 'Diego Rivas',
       rut: '33.333.333-3',
       aCarrera: 1,
-      sede: 'Provicencia',
-      servicesId: 2
+      sede: 'Providencia',
+      servicesId: 'svc004',
     ),
   ];
 
-  User? login(String email, String password) {
-    return _users.firstWhere(
-      (user) => user.email == email && user.password == password,
-    );
+  /// Devuelve el usuario si coincide email+password; null si no hay match.
+  UserModel? login(String email, String password) {
+    for (final u in _users) {
+      if (u.email == email && u.password == password) return u;
+    }
+    return null;
   }
 
-  User? getUserByEmail(String email) {
-    return _users.firstWhere(
-      (user) => user.email == email,
-    );
+  /// Busca por email exacto; null si no existe.
+  UserModel? getUserByEmail(String email) {
+    for (final u in _users) {
+      if (u.email == email) return u;
+    }
+    return null;
   }
 
+  /// Útil para tests o listados.
+  List<UserModel> all() => _users;
 }

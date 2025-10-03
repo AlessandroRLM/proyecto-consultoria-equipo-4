@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:mobile/adapters/auth/driven/services/user_mock_service.dart';
 import 'package:mobile/domain/core/user.dart';
+import 'package:mobile/domain/models/user/user_model.dart';
 import 'package:mobile/ports/auth/driven/for_authenticating_user.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -9,12 +10,12 @@ class AuthMockService implements ForAuthenticatingUser {
   final UserMockService _userService = UserMockService();
 
   bool _isAuthenticated = false;
-  User? _currentUser;
+  UserModel? _currentUser;
 
   @override
   bool get isAuthenticated => _isAuthenticated;
   @override
-  User? get currentUser => _currentUser;
+  UserModel? get currentUser => _currentUser;
 
   @override
   Future<void> initialize() async {
@@ -46,7 +47,7 @@ class AuthMockService implements ForAuthenticatingUser {
   @override
   Future<void> initRecoverPassword({required String email}) async {
     final user = _userService.getUserByEmail(email);
-    if (user!=null) {
+    if (user != null) {
       return;
     }
     throw Exception('Email not found');
