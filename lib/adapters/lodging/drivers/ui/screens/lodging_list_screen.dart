@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mobile/adapters/core/drivers/ui/layouts/base_screen_layout.dart';
 import 'package:mobile/adapters/lodging/driven/providers/lodging_provider.dart';
 import 'package:mobile/adapters/lodging/drivers/ui/widgets/reservation_card.dart';
 import 'package:provider/provider.dart';
@@ -14,30 +15,28 @@ class LodgingListScreen extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
-    return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
+    return BaseScreenLayout(
+      title: "Reservas",
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => context.push('/clinic_selection/2'),
+        label: Text(
+          "Reservar",
+          style: textTheme.titleMedium!.copyWith(color: cs.onPrimary),
+        ),
+        icon: const Icon(Icons.calendar_today),
+        heroTag: 'reserve_lodging_button',
+      ),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 8),
-            const Text(
-              'Reservas',
-              style: TextStyle(fontSize: 27, fontWeight: FontWeight.w500),
-            ),
-            const SizedBox(height: 8),
-
             if (provider.loading)
-              const Expanded(child: Center(child: CircularProgressIndicator()))
+              const Center(child: CircularProgressIndicator())
             else if (provider.error != null)
-              Expanded(
-                child: Center(
+              Center(
                   child: Text(
                     "Error: ${provider.error}",
                     style: TextStyle(color: cs.error),
                   ),
-                ),
-              )
+                )
             else
               Expanded(
                 child: reservations.isEmpty
@@ -56,15 +55,6 @@ class LodgingListScreen extends StatelessWidget {
               ),
           ],
         ),
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => context.push('/clinic_selection/2'),
-        label: Text("Reservar", style: textTheme.titleMedium!.copyWith(
-          color: cs.onPrimary,
-        ),),
-        icon: const Icon(Icons.calendar_today),
-        heroTag: 'reserve_lodging_button',
-      ),
     );
   }
 }
