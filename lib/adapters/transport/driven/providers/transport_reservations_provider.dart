@@ -5,7 +5,7 @@ import 'dart:convert';
 
 class TransportReservationsProvider extends ChangeNotifier {
   List<Map<String, dynamic>> _reservations = [];
-  Map<String, List<Map<String, dynamic>>> _optionsByDate = {}; 
+  final Map<String, List<Map<String, dynamic>>> _optionsByDate = {}; 
 
   String? _selectedLocation;
   String? _selectedOutboundTime;
@@ -69,22 +69,8 @@ class TransportReservationsProvider extends ChangeNotifier {
     return null;
   }
 
-  // Mock data 
+  // Mock data
   Future<void> fetchReservations() async {
-    final now = DateTime.now();
-    _optionsByDate = {};
-    for (int i = 0; i < 30; i++) {
-      final date = now.add(Duration(days: i));
-      final dateStr = DateFormat('yyyy-MM-dd').format(date);
-      List<Map<String, dynamic>> options = [];
-      final transportTimes = ['10:00 AM', '12:00 PM', '6:00 PM'];
-      for (final time in transportTimes) {
-        final available = true; 
-        options.add({'service': 'Bus', 'time': time, 'available': available, 'details': 'Inicio/Periferia'});
-      }
-      _optionsByDate[dateStr] = options;
-    }
-
     final prefs = await SharedPreferences.getInstance();
     final jsonString = prefs.getString('transport_reservations');
     if (jsonString != null) {
@@ -108,8 +94,8 @@ class TransportReservationsProvider extends ChangeNotifier {
     return daysDiff <= 7 && daysDiff >= 1;
   }
 
-  List<Map<String, dynamic>> getAvailableOptionsForDate(String dateStr) {
-    return getOptionsForDate(dateStr).where((opt) => opt['available'] == true).toList();
+  List<Map<String, dynamic>> getAvailableOptionsForDate(String dateStr, {bool isOutbound = true}) {
+    return getOptionsForDate(dateStr, isOutbound: isOutbound).where((opt) => opt['available'] == true).toList();
   }
 
   bool isWeekAllowed(DateTime monday) {
@@ -121,12 +107,14 @@ class TransportReservationsProvider extends ChangeNotifier {
     return !monday.isBefore(minReservableMonday);
   }
 
-  List<Map<String, dynamic>> getOptionsForDate(String dateStr) {
-    return _optionsByDate[dateStr] ?? [
-      {'service': 'Bus', 'time': '10:00 AM', 'available': true, 'details': 'Inicio/Periferia'},
-      {'service': 'Bus', 'time': '12:00 PM', 'available': true, 'details': 'Inicio/Periferia'},
-      {'service': 'Bus', 'time': '6:00 PM', 'available': true, 'details': 'Inicio/Periferia'},
-    ];
+  List<Map<String, dynamic>> getOptionsForDate(String dateStr, {bool isOutbound = true}) {
+    if (_optionsByDate[dateStr] != null) {
+      return _optionsByDate[dateStr]!;
+    }
+    final transportTimes = isOutbound
+        ? ['07:00 AM', '08:00 AM', '09:00 AM']
+        : ['13:00 PM', '15:00 PM', '17:00 PM'];
+    return transportTimes.map((time) => {'service': 'Bus', 'time': time, 'available': true, 'details': 'Inicio/Periferia'}).toList();
   }
 
   bool hasAvailableOptions(String dateStr) {
@@ -137,8 +125,8 @@ class TransportReservationsProvider extends ChangeNotifier {
   void updateReservations(List<Map<String, dynamic>> newReservations) async {
     _reservations = newReservations;
     sortReservations();
-    notifyListeners();
     await saveReservations();
+    notifyListeners();
   }
 
   void sortReservations() {
@@ -174,18 +162,8 @@ class TransportReservationsProvider extends ChangeNotifier {
     reservation['details'] ??= '';
     _reservations.add(reservation);
     sortReservations();
-    notifyListeners();
     await saveReservations();
-  }
-
-  // Método para eliminar una reserva
-  void removeReservation(int index) async {
-    if (index >= 0 && index < _reservations.length) {
-      _reservations.removeAt(index);
-      sortReservations();
-      notifyListeners();
-      await saveReservations();
-    }
+    notifyListeners();
   }
 
   void addWeekReservation(Map<String, dynamic> baseReservation, DateTime weekStart) async {
@@ -201,8 +179,8 @@ class TransportReservationsProvider extends ChangeNotifier {
       }
     }
     sortReservations();
-    notifyListeners();
     await saveReservations();
+    notifyListeners();
   }
 
   String? get selectedLocation => _selectedLocation;
@@ -268,7 +246,7 @@ class TransportReservationsProvider extends ChangeNotifier {
     }
     final outboundDate = DateTime.parse(outboundDateStr);
     final returnDate = DateTime.parse(returnDateStr);
-    if (returnDate.isAfter(outboundDate.add(const Duration(days: 6)))) {
+    if (returnDate.isAfter(outboundDate.add(const Duration(days: 7)))) {
       return;
     }
 
@@ -280,11 +258,10 @@ class TransportReservationsProvider extends ChangeNotifier {
     final outboundReservation = {
       'type': 'transport',
       'date': outboundDateStr,
-      'origin': 'Santiago',
+      'origin': 'Campus Universidad',
       'destination': _selectedLocation,
       'originTime': _formatTime(outboundTime),
-      'destinationTime': _formatTime(outboundTime.add(const Duration(hours: 1))), // 1 hora de viaje
-      'details': 'Universidad a Campo Clínico',
+      'details': 'Campus Universidad a Campo Clínico (IDA)',
       'highlighted': true,
       'groupId': groupId,
     };
@@ -293,11 +270,10 @@ class TransportReservationsProvider extends ChangeNotifier {
       'type': 'transport',
       'date': returnDateStr,
       'origin': _selectedLocation,
-      'destination': 'Santiago',
+      'destination': 'Campus Universidad',
       'originTime': _formatTime(returnTime),
-      'destinationTime': _formatTime(returnTime.add(const Duration(hours: 1))),
       'service': _selectedService ?? 'Transporte',
-      'details': 'Campo Clínico a Universidad',
+      'details': 'Campo Clínico a Campus Universidad (REGRESO)',
       'highlighted': true,
       'groupId': groupId,
     };
@@ -305,8 +281,8 @@ class TransportReservationsProvider extends ChangeNotifier {
     _reservations.add(outboundReservation);
     _reservations.add(returnReservation);
     sortReservations();
-    notifyListeners();
     await saveReservations();
+    notifyListeners();
 
     _selectedLocation = null;
     _selectedOutboundTime = null;
@@ -317,12 +293,32 @@ class TransportReservationsProvider extends ChangeNotifier {
   }
 
   DateTime _parseTime(String timeStr) {
-    final format = DateFormat('h:mm a');
-    final parsed = format.parse(timeStr);
-    return DateTime(0, 1, 1, parsed.hour, parsed.minute);
+    final parts = timeStr.split(':');
+    if (parts.length == 2) {
+      final second = parts[1];
+      final ampmMatch = RegExp(r'(am|pm)', caseSensitive: false).firstMatch(second);
+      int hour = 0;
+      int minute = 0;
+      if (ampmMatch != null) {
+        final ampm = ampmMatch.group(0)!.toLowerCase();
+        final minuteStr = second.substring(0, ampmMatch.start).trim();
+        minute = int.tryParse(minuteStr) ?? 0;
+        hour = int.tryParse(parts[0]) ?? 0;
+        if (ampm == 'pm' && hour < 12) {
+          hour += 12;
+        } else if (ampm == 'am' && hour == 12) {
+          hour = 0;
+        }
+      } else {
+        hour = int.tryParse(parts[0]) ?? 0;
+        minute = int.tryParse(second) ?? 0;
+      }
+      return DateTime(0, 1, 1, hour, minute);
+    }
+    return DateTime(0, 1, 1, 0, 0);
   }
 
   String _formatTime(DateTime time) {
-    return DateFormat('h:mm a').format(time);
+    return DateFormat('HH:mm').format(time);
   }
 }

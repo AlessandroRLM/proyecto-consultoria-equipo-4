@@ -49,38 +49,35 @@ class _TransportScreenState extends State<TransportScreen> {
     );
   }
 
-  List<Widget> _buildDialogContent(dynamic reservation) {
-    List<Widget> widgets = [];
-    if (reservation is Map<String, dynamic>) {
-      widgets.add(Text('Origen: ${getDisplayLocation(reservation['origin'])}'));
-      widgets.add(Text('Destino: ${getDisplayLocation(reservation['destination'])}'));
-      widgets.add(Text('Fecha: ${formatDate(reservation['date'])}'));
-      widgets.add(Text('Hora de salida: ${reservation['originTime']}'));
-      widgets.add(Text('Hora de llegada: ${reservation['destinationTime']}'));
-    } else if (reservation is List<Map<String, dynamic>>) {
-      widgets.add(const Text('Ida:', style: TextStyle(fontWeight: FontWeight.bold)));
-      widgets.add(Text('Origen: ${getDisplayLocation(reservation[0]['origin'])}'));
-      widgets.add(Text('Destino: ${getDisplayLocation(reservation[0]['destination'])}'));
-      widgets.add(Text('Fecha: ${formatDate(reservation[0]['date'])}'));
-      widgets.add(Text('Hora de salida: ${reservation[0]['originTime']}'));
-      widgets.add(Text('Hora de llegada: ${reservation[0]['destinationTime']}'));
-      widgets.add(const SizedBox(height: 10));
-      widgets.add(const Text('Vuelta:', style: TextStyle(fontWeight: FontWeight.bold)));
-      widgets.add(Text('Origen: ${getDisplayLocation(reservation[1]['origin'])}'));
-      widgets.add(Text('Destino: ${getDisplayLocation(reservation[1]['destination'])}'));
-      widgets.add(Text('Fecha: ${formatDate(reservation[1]['date'])}'));
-      widgets.add(Text('Hora de salida: ${reservation[1]['originTime']}'));
-      widgets.add(Text('Hora de llegada: ${reservation[1]['destinationTime']}'));
-    }
-    return widgets;
+  List<Widget> _buildDialogContent(Map<String, dynamic> reservation) {
+    final origin = reservation['origin'] as String? ?? 'Origen no disponible';
+    final destination = reservation['destination'] as String? ?? 'Destino no disponible';
+    final originTime = reservation['originTime'] as String? ?? 'Hora no disponible';
+    final service = reservation['service'] as String? ?? 'Servicio no disponible';
+    final date = reservation['date'] as String?;
+    final formattedDate = date != null ? formatDate(DateTime.parse(date)) : 'Fecha no disponible';
+    final details = reservation['details'] as String? ?? 'Detalles no disponibles';
+    final isReturn = details.toLowerCase().contains('regreso');
+    final isOutbound = details.toLowerCase().contains('ida');
+    final tipo = isReturn ? 'REGRESO' : (isOutbound ? 'IDA' : 'Desconocido');
+
+    return [
+      Text('Tipo: $tipo'),
+      Text('Origen: $origin'),
+      Text('Destino: $destination'),
+      Text('Fecha: $formattedDate'),
+      Text('Hora de salida: ${formatTime(originTime)}'),
+      Text('Servicio: $service'),
+      Text('Detalles: $details'),
+    ];
   }
 
   String getDisplayLocation(String? location) {
     if (location == null) return 'Desconocido';
     switch (location) {
-      case 'Santiago':
-        return 'Universidad';
-      case 'Concepción':
+      case 'Campus Universitario':
+        return 'Campus Universidad';
+      case 'Campo Clínico':
         return 'Campo Clínico';
       default:
         return location;
@@ -104,104 +101,122 @@ class _TransportScreenState extends State<TransportScreen> {
     return DateFormat('EEE dd/MM', 'es_ES').format(parsedDate);
   }
 
+  String formatTime(String? timeStr) {
+    if (timeStr == null) return 'Hora no disponible';
+    try {
+      final timeParts = timeStr.split(':');
+      if (timeParts.length == 2) {
+        final second = timeParts[1];
+        final ampmMatch = RegExp(r'(am|pm)', caseSensitive: false).firstMatch(second);
+        int hour = 0;
+        int minute = 0;
+        String ampm = '';
+        if (ampmMatch != null) {
+          ampm = ampmMatch.group(0)!.toUpperCase();
+          final minuteStr = second.substring(0, ampmMatch.start).trim();
+          minute = int.tryParse(minuteStr) ?? 0;
+          hour = int.tryParse(timeParts[0]) ?? 0;
+          if (ampm.toLowerCase() == 'pm' && hour < 12) {
+            hour += 12;
+          } else if (ampm.toLowerCase() == 'am' && hour == 12) {
+            hour = 0;
+          }
+        } else {
+          hour = int.tryParse(timeParts[0]) ?? 0;
+          minute = int.tryParse(second) ?? 0;
+          ampm = hour >= 12 ? 'PM' : 'AM';
+        }
+        return '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')} $ampm';
+      }
+      return timeStr; 
+    } catch (e) {
+      return timeStr; 
+    }
+  }
+
 
   Widget buildHighlightedReservationCard(Map<String, dynamic> reservation) {
     final theme = Theme.of(context);
-    final origin = reservation['origin'] as String? ?? 'N/A';
-    final dest = reservation['destination'] as String? ?? 'N/A';
-    final originTime = reservation['originTime'] as String? ?? '';
-    final destTime = reservation['destinationTime'] as String? ?? '';
-    final displayOrigin = getDisplayLocation(origin);
-    final displayDest = getDisplayLocation(dest);
-    final formattedDate = formatDate(reservation['date']);
+    final origin = reservation['origin'] as String? ?? 'Origen no disponible';
+    final destination = reservation['destination'] as String? ?? 'Destino no disponible';
+    final originTime = reservation['originTime'] as String? ?? 'Hora no disponible';
+    final date = reservation['date'] as String?;
+    final formattedDate = date != null ? formatDate(DateTime.parse(date)) : 'Fecha no disponible';
+    final details = reservation['details'] as String? ?? '';
+    final isReturn = details.toLowerCase().contains('regreso');
+    final isOutbound = details.toLowerCase().contains('ida');
+
     return InkWell(
       onTap: () => _showReservationDetailsDialog(context, reservation),
       child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: theme.dividerColor),
-          color: theme.cardColor,
-          boxShadow: [
-            BoxShadow(
-              color: theme.shadowColor.withValues(alpha: 0.2),
-              spreadRadius: 1,
-              blurRadius: 4,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Column(
+        margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 16),
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: theme.dividerColor),
+            color: theme.cardColor,
+            boxShadow: [
+              BoxShadow(
+                color: theme.shadowColor.withValues(alpha: 0.15),
+                spreadRadius: 1,
+                blurRadius: 6,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+        child: Row(
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        displayOrigin,
-                        style: theme.textTheme.bodyLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: 1,
+            const Padding(
+              padding: EdgeInsets.only(right: 12),
+              child: Icon(Icons.directions_bus, color: Colors.red, size: 28),
+            ),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              getDisplayLocation(origin),
+                              style: theme.textTheme.bodyLarge?.copyWith(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 16,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                            ),
+                          ),
+                          const Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 4),
+                            child: Icon(Icons.arrow_forward, size: 18, color: Colors.grey),
+                          ),
+                          Expanded(
+                            child: Text(
+                              getDisplayLocation(destination),
+                              style: theme.textTheme.bodyLarge?.copyWith(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 16,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                            ),
+                          ),
+                        ],
                       ),
-                      Text(
-                        originTime,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: 1,
-                      ),
-                    ],
+
+                  Text(
+                    '$formattedDate - ${formatTime(originTime)}',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w400,
+                      fontSize: 14,
+                      color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
                   ),
-                ),
-                SizedBox(
-                  width: 80,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.directions_bus, color: Colors.red, size: 24),
-                      const SizedBox(height: 4),
-                      Text(
-                        formattedDate,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.7),
-                        ),
-                        textAlign: TextAlign.center,
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: 1,
-                      ),
-                    ],
-                  ),
-                ),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        displayDest,
-                        style: theme.textTheme.bodyLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: 1,
-                      ),
-                      Text(
-                        destTime,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: 1,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
           ],
         ),
@@ -209,224 +224,58 @@ class _TransportScreenState extends State<TransportScreen> {
     );
   }
 
-  Widget buildRoundTripCard(Map<String, dynamic> outbound, Map<String, dynamic> returnTrip) {
-    final theme = Theme.of(context);
-    final outboundOrigin = getDisplayLocation(outbound['origin'] as String? ?? 'N/A');
-    final outboundDest = getDisplayLocation(outbound['destination'] as String? ?? 'N/A');
-    final returnOrigin = getDisplayLocation(returnTrip['origin'] as String? ?? 'N/A');
-    final returnDest = getDisplayLocation(returnTrip['destination'] as String? ?? 'N/A');
-    final outboundTime = outbound['originTime'] as String? ?? '';
-    final returnTime = returnTrip['originTime'] as String? ?? '';
-    final outboundDate = formatDate(outbound['date']);
-    return InkWell(
-      onTap: () => _showReservationDetailsDialog(context, [outbound, returnTrip]),
-      child: Container(
-      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: theme.dividerColor),
-        color: theme.cardColor,
-        boxShadow: [
-          BoxShadow(
-            color: theme.shadowColor.withValues(alpha: 0.2),
-            spreadRadius: 1,
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Expanded(
-                flex: 2,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      outboundOrigin,
-                      style: theme.textTheme.bodyLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                    ),
-                    Text(
-                      outboundTime,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(
-                width: 80,
-                child: Column(
-                  children: [
-                    const Icon(Icons.directions_bus, color: Colors.red, size: 24),
-                    const SizedBox(height: 4),
-                    Text(
-                      outboundDate,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.7),
-                      ),
-                      textAlign: TextAlign.center,
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                    ),
-                  ],
-                ),
-              ),
-              Expanded(
-                flex: 2,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      outboundDest,
-                      style: theme.textTheme.bodyLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                    ),
-                    Text(
-                      outbound['destinationTime'] as String? ?? '',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
 
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.arrow_forward, color: Colors.red, size: 16),
-              const SizedBox(width: 8),
-              const Icon(Icons.arrow_forward, color: Colors.red, size: 16),
-            ],
-          ),
-          const SizedBox(height: 12),
 
-          Row(
-            children: [
-              Expanded(
-                flex: 2,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      returnOrigin,
-                      style: theme.textTheme.bodyLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                    ),
-                    Text(
-                      returnTime,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 80),
-              Expanded(
-                flex: 2,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      returnDest,
-                      style: theme.textTheme.bodyLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                    ),
-                    Text(
-                      returnTrip['destinationTime'] as String? ?? '',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    ),
-  );
-}
+  List<Map<String, dynamic>> getGroupedReservations(List<Map<String, dynamic>> reservations) {
+    final sortedReservations = List<Map<String, dynamic>>.from(reservations);
 
-  List<dynamic> getGroupedReservations(List<Map<String, dynamic>> reservations) {
-    final Map<String, List<Map<String, dynamic>>> groups = {};
-    for (final res in reservations) {
-      final groupId = res['groupId'] as String? ?? '${res['date'].toString()}_${res['origin']}_${res['destination']}'; // Fallback for singles
-      groups.putIfAbsent(groupId, () => []).add(res);
+    int compareReservations(Map<String, dynamic> a, Map<String, dynamic> b) {
+      DateTime parseDateTime(String? dateStr, String? timeStr) {
+        if (dateStr == null || timeStr == null) {
+          return DateTime(2100); 
+        }
+        try {
+          final date = DateTime.parse(dateStr);
+          final timeParts = timeStr.split(':');
+          int hour = 0;
+          int minute = 0;
+          if (timeParts.length >= 2) {
+            hour = int.tryParse(timeParts[0]) ?? 0;
+            minute = int.tryParse(timeParts[1]) ?? 0;
+          }
+          return DateTime(date.year, date.month, date.day, hour, minute);
+        } catch (e) {
+          return DateTime(2100);
+        }
+      }
+
+      final dateA = a['date'] as String?;
+      final timeA = a['originTime'] as String?;
+      final dateB = b['date'] as String?;
+      final timeB = b['originTime'] as String?;
+
+      final dateTimeA = parseDateTime(dateA, timeA);
+      final dateTimeB = parseDateTime(dateB, timeB);
+
+      final dateCompare = dateTimeA.compareTo(dateTimeB);
+      if (dateCompare != 0) {
+        return dateCompare;
+      }
+
+      final detailsA = (a['details'] as String?)?.toLowerCase() ?? '';
+      final detailsB = (b['details'] as String?)?.toLowerCase() ?? '';
+
+      if (detailsA.contains('ida') && detailsB.contains('regreso')) {
+        return -1;
+      } else if (detailsA.contains('regreso') && detailsB.contains('ida')) {
+        return 1;
+      }
+      return dateTimeA.compareTo(dateTimeB);
     }
 
-    final List<dynamic> grouped = [];
-    groups.forEach((groupId, groupRes) {
-      if (groupRes.length == 2) {
-        final outbound = groupRes.firstWhere((r) => r['origin'] == 'Santiago', orElse: () => groupRes[0]);
-        final returnTrip = groupRes.firstWhere((r) => r['origin'] != 'Santiago', orElse: () => groupRes[1]);
-        grouped.add([outbound, returnTrip]);
-      } else {
-        grouped.add(groupRes[0]);
-      }
-    });
+    sortedReservations.sort(compareReservations);
 
-    // Fechas más cercanas primero
-    grouped.sort((a, b) {
-      DateTime dateA;
-      if (a is List) {
-        final dates = a.map((r) {
-          dynamic d = r['date'];
-          if (d is DateTime) return d;
-          return DateTime.parse(d as String);
-        }).toList();
-        dateA = dates.reduce((prev, current) => prev.isBefore(current) ? prev : current);
-      } else {
-        dynamic d = (a as Map)['date'];
-        dateA = d is DateTime ? d : DateTime.parse(d as String);
-      }
-      DateTime dateB;
-      if (b is List) {
-        final dates = b.map((r) {
-          dynamic d = r['date'];
-          if (d is DateTime) return d;
-          return DateTime.parse(d as String);
-        }).toList();
-        dateB = dates.reduce((prev, current) => prev.isBefore(current) ? prev : current);
-      } else {
-        dynamic d = (b as Map)['date'];
-        dateB = d is DateTime ? d : DateTime.parse(d as String);
-      }
-      return dateA.compareTo(dateB);
-    });
-
-    return grouped;
+    return sortedReservations;
   }
 
 
@@ -465,14 +314,8 @@ class _TransportScreenState extends State<TransportScreen> {
                 return ListView.builder(
                   itemCount: grouped.length,
                   itemBuilder: (context, index) {
-                    final group = grouped[index];
-                    if (group is List<Map<String, dynamic>>) {
-                      final outbound = group[0];
-                      final returnTrip = group[1];
-                      return buildRoundTripCard(outbound, returnTrip);
-                    } else {
-                      return buildHighlightedReservationCard(group as Map<String, dynamic>);
-                    }
+                    final reservation = grouped[index];
+                    return buildHighlightedReservationCard(reservation);
                   },
                 );
               },

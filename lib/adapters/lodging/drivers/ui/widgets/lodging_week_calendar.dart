@@ -26,10 +26,10 @@ class LodgingWeekCalendar extends StatefulWidget {
   });
 
   @override
-  _LodgingWeekCalendarState createState() => _LodgingWeekCalendarState();
+  LodgingWeekCalendarState createState() => LodgingWeekCalendarState();
 }
 
-class _LodgingWeekCalendarState extends State<LodgingWeekCalendar> {
+class LodgingWeekCalendarState extends State<LodgingWeekCalendar> {
   late DateTime _focusedWeekStart;
   DateTime? _selectedStartDate;
   DateTime? _selectedEndDate;

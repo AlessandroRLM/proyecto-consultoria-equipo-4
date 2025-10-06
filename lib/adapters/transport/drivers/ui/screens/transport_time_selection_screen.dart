@@ -7,16 +7,7 @@ import 'package:flutter/scheduler.dart';
 import 'package:mobile/adapters/core/driven/app_themes.dart';
 
 String formatTime(String timeStr) {
-  if (timeStr.contains('AM') || timeStr.contains('PM')) {
-    return timeStr;
-  }
-  final parts = timeStr.split(':');
-  if (parts.length != 2) return timeStr;
-  int hour = int.parse(parts[0]);
-  String period = hour >= 12 ? 'PM' : 'AM';
-  hour = hour % 12;
-  if (hour == 0) hour = 12;
-  return '${hour.toString().padLeft(2, '0')}:${parts[1]} $period';
+  return timeStr;
 }
 
 String? getDateString(Map<String, dynamic> r) {
@@ -184,10 +175,11 @@ class _TransportTimeSelectionScreenState extends State<TransportTimeSelectionScr
     _loadAvailableOptions();
   }
 
-  void _loadAvailableOptions() {
+  void _loadAvailableOptions({bool? isOutbound}) {
+    final outbound = isOutbound ?? _isOutbound;
     if (_selectedDate != null) {
       final dateStr = DateFormat('yyyy-MM-dd').format(_selectedDate!);
-      _availableOptions = _transportProvider.getAvailableOptionsForDate(dateStr);
+      _availableOptions = _transportProvider.getAvailableOptionsForDate(dateStr, isOutbound: outbound);
       if (_availableOptions.isEmpty) {
         SchedulerBinding.instance.addPostFrameCallback((_) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -202,7 +194,7 @@ class _TransportTimeSelectionScreenState extends State<TransportTimeSelectionScr
       setState(() {
         _selectedDate = defaultDate;
         _focusedWeekStart = getMondayOfWeek(defaultDate);
-        _availableOptions = _transportProvider.getAvailableOptionsForDate(dateStr);
+        _availableOptions = _transportProvider.getAvailableOptionsForDate(dateStr, isOutbound: outbound);
       });
     }
   }
