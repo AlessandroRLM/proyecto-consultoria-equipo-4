@@ -4,7 +4,7 @@ import 'package:mobile/adapters/lodging/driven/providers/lodging_provider.dart';
 import 'package:provider/provider.dart';
 
 class ReservationCard extends StatefulWidget {
-  final LodgingReservation reservation;
+  final Map<String, dynamic> reservation;
   const ReservationCard({super.key, required this.reservation});
 
   @override
@@ -36,9 +36,9 @@ class _ReservationCardState extends State<ReservationCard> {
     final cs = Theme.of(context).colorScheme;
     final text = Theme.of(context).textTheme;
     final lodgingProvider = Provider.of<LodgingProvider>(context, listen: false);
-    final clinicInfo = lodgingProvider.getClinicInfoByName(widget.reservation.area);
+    final clinicInfo = lodgingProvider.getClinicInfoByName(widget.reservation['area']);
     final city = clinicInfo != null ? clinicInfo["city"] : null;
-    final address = clinicInfo != null ? clinicInfo["address"] : widget.reservation.address;
+    final address = clinicInfo != null ? clinicInfo["address"] : widget.reservation['address'];
 
     return GestureDetector(
       onTap: () {
@@ -76,7 +76,7 @@ class _ReservationCardState extends State<ReservationCard> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          city != null ? "${widget.reservation.area} - $city." : widget.reservation.area,
+                          city != null ? "${widget.reservation['area']} - $city." : widget.reservation['area'],
                           style: text.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                         ),
                         Text(
@@ -98,15 +98,15 @@ class _ReservationCardState extends State<ReservationCard> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            "Entrada: ${_formatDateFull(widget.reservation.checkIn)}",
+                            "Entrada: ${_formatDateFull(widget.reservation['checkIn'])}",
                             style: text.bodySmall?.copyWith(fontWeight: FontWeight.bold),
                           ),
                           Text(
-                            "Salida: ${_formatDateFull(widget.reservation.checkOut)}",
+                            "Salida: ${_formatDateFull(widget.reservation['checkOut'])}",
                             style: text.bodySmall?.copyWith(fontWeight: FontWeight.bold),
                           ),
                           Text(
-                            "Habitación: ${widget.reservation.room.isNotEmpty ? widget.reservation.room : 'PRA-322'}",
+                            "Habitación: ${widget.reservation['room'].isNotEmpty ? widget.reservation['room'] : 'PRA-322'}",
                             style: text.bodySmall?.copyWith(fontWeight: FontWeight.bold),
                           ),
                         ],

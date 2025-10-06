@@ -31,6 +31,10 @@ class _LodgingCalendarScreenState extends State<LodgingCalendarScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final now = DateTime.now();
+    final minSelectableDate = DateTime(now.year, now.month, now.day).add(const Duration(days: 7));
+    final maxSelectableDate = DateTime(now.year, now.month, now.day).add(const Duration(days: 365));
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Seleccionar Fechas de Alojamiento'),
@@ -41,9 +45,9 @@ class _LodgingCalendarScreenState extends State<LodgingCalendarScreen> {
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: LodgingWeekCalendar(
-                focusedWeekStart: DateTime.now().add(const Duration(days: 7)),
-                allowedStart: DateTime.now().add(const Duration(days: 7)),
-                allowedEnd: DateTime.now().add(const Duration(days: 365)),
+                focusedWeekStart: minSelectableDate,
+                allowedStart: minSelectableDate,
+                allowedEnd: maxSelectableDate,
                 initialStartDate: _selectedStartDate,
                 initialEndDate: _selectedEndDate,
                 reservations: Provider.of<LodgingProvider>(context).reservations,
@@ -74,14 +78,14 @@ class _LodgingCalendarScreenState extends State<LodgingCalendarScreen> {
             onReserve: () {
               if (_selectedStartDate != null && _selectedEndDate != null) {
                 final lodgingProvider = Provider.of<LodgingProvider>(context, listen: false);
-                lodgingProvider.addReservation(LodgingReservation(
-                  area: widget.selectedLocation,
-                  name: widget.selectedLocation,
-                  address: '',
-                  room: '',
-                  checkIn: _selectedStartDate!.toIso8601String(),
-                  checkOut: _selectedEndDate!.toIso8601String(),
-                ));
+                lodgingProvider.addReservation({
+                  'area': widget.selectedLocation,
+                  'name': widget.selectedLocation,
+                  'address': '',
+                  'room': '',
+                  'checkIn': _selectedStartDate!.toIso8601String(),
+                  'checkOut': _selectedEndDate!.toIso8601String(),
+                });
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text('Reserva confirmada para el ${formatDate(_selectedStartDate!)} hasta ${formatDate(_selectedEndDate!)}'),

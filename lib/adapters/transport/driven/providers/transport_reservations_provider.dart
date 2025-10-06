@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
+import 'package:mobile/domain/entities/transport_reservation_status.dart';
 
 class TransportReservationsProvider extends ChangeNotifier {
   List<Map<String, dynamic>> _reservations = [];
@@ -76,6 +77,10 @@ class TransportReservationsProvider extends ChangeNotifier {
     if (jsonString != null) {
       final List<dynamic> jsonList = json.decode(jsonString);
       _reservations = jsonList.map((json) => Map<String, dynamic>.from(json)).toList();
+      // Actualizar el estado de cada reserva según la lógica definida
+      for (var reservation in _reservations) {
+        reservation['status'] = getStatusForReservation(reservation);
+      }
     }
 
     sortReservations();
@@ -160,6 +165,7 @@ class TransportReservationsProvider extends ChangeNotifier {
     }
     reservation['service'] ??= 'Transporte';
     reservation['details'] ??= '';
+    reservation['status'] ??= TransportReservationStatus.pendiente.displayName;
     _reservations.add(reservation);
     sortReservations();
     await saveReservations();
@@ -167,8 +173,9 @@ class TransportReservationsProvider extends ChangeNotifier {
   }
 
   void addWeekReservation(Map<String, dynamic> baseReservation, DateTime weekStart) async {
+    baseReservation['status'] ??= TransportReservationStatus.pendiente.displayName;
     final weekEnd = weekStart.add(const Duration(days: 6));
-    if (!isValidRange(weekStart, weekEnd)) return; 
+    if (!isValidRange(weekStart, weekEnd)) return;
     for (int i = 0; i < 7; i++) {
       final date = weekStart.add(Duration(days: i));
       final dateStr = DateFormat('yyyy-MM-dd').format(date);
@@ -261,9 +268,11 @@ class TransportReservationsProvider extends ChangeNotifier {
       'origin': 'Campus Universidad',
       'destination': _selectedLocation,
       'originTime': _formatTime(outboundTime),
+      'service': _selectedService ?? 'Transporte',
       'details': 'Campus Universidad a Campo Clínico (IDA)',
       'highlighted': true,
       'groupId': groupId,
+      'status': TransportReservationStatus.pendiente.displayName,
     };
 
     final returnReservation = {
@@ -276,6 +285,7 @@ class TransportReservationsProvider extends ChangeNotifier {
       'details': 'Campo Clínico a Campus Universidad (REGRESO)',
       'highlighted': true,
       'groupId': groupId,
+      'status': TransportReservationStatus.pendiente.displayName,
     };
 
     _reservations.add(outboundReservation);
@@ -320,5 +330,27 @@ class TransportReservationsProvider extends ChangeNotifier {
 
   String _formatTime(DateTime time) {
     return DateFormat('HH:mm').format(time);
+  }
+
+  String getStatusForReservation(Map<String, dynamic> reservation) {
+    final currentStatus = reservation['status'] as String?;
+    if (currentStatus == TransportReservationStatus.aceptada.displayName) {
+      // Apply date logic only for accepted reservations
+      final dateStr = reservation['date'] as String?;
+      if (dateStr == null) return TransportReservationStatus.pendiente.displayName;
+      final date = DateTime.parse(dateStr);
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      final resDate = DateTime(date.year, date.month, date.day);
+      if (resDate.isBefore(today)) {
+        return TransportReservationStatus.finalizada.displayName;
+      } else if (resDate.isAtSameMomentAs(today)) {
+        return TransportReservationStatus.iniciada.displayName;
+      } else {
+        return TransportReservationStatus.aceptada.displayName;
+      }
+    } else {
+      return currentStatus ?? TransportReservationStatus.pendiente.displayName;
+    }
   }
 }

@@ -1,30 +1,31 @@
 import 'package:flutter/material.dart';
-
-class LodgingReservation {
-  final String area;
-  final String name;
-  final String address;
-  final String room;
-  final String checkIn;
-  final String checkOut;
-
-  LodgingReservation({
-    required this.area,
-    required this.name,
-    required this.address,
-    required this.room,
-    required this.checkIn,
-    required this.checkOut,
-  });
-}
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 
 class LodgingProvider with ChangeNotifier {
-  final List<LodgingReservation> _reservations = [];
+  List<Map<String, dynamic>> _reservations = [];
 
-  List<LodgingReservation> get reservations => _reservations;
+  List<Map<String, dynamic>> get reservations => _reservations;
 
-  void addReservation(LodgingReservation reservation) {
+  Future<void> fetchReservations() async {
+    final prefs = await SharedPreferences.getInstance();
+    final jsonString = prefs.getString('lodging_reservations');
+    if (jsonString != null) {
+      final List<dynamic> jsonList = json.decode(jsonString);
+      _reservations = jsonList.map((json) => Map<String, dynamic>.from(json)).toList();
+    }
+    notifyListeners();
+  }
+
+  Future<void> saveReservations() async {
+    final prefs = await SharedPreferences.getInstance();
+    final jsonString = json.encode(_reservations.map((r) => Map<String, dynamic>.from(r)).toList());
+    await prefs.setString('lodging_reservations', jsonString);
+  }
+
+  void addReservation(Map<String, dynamic> reservation) {
     _reservations.add(reservation);
+    saveReservations();
     notifyListeners();
   }
 

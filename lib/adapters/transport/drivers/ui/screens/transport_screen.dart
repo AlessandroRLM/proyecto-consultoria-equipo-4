@@ -69,6 +69,7 @@ class _TransportScreenState extends State<TransportScreen> {
       Text('Hora de salida: ${formatTime(originTime)}'),
       Text('Servicio: $service'),
       Text('Detalles: $details'),
+      Text('Estado: ${reservation['status'] ?? 'Estado desconocido'}'),
     ];
   }
 
@@ -205,15 +206,31 @@ class _TransportScreenState extends State<TransportScreen> {
                         ],
                       ),
 
-                  Text(
-                    '$formattedDate - ${formatTime(originTime)}',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w400,
-                      fontSize: 14,
-                      color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 1,
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          '$formattedDate - ${formatTime(originTime)}',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w400,
+                            fontSize: 14,
+                            color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                        ),
+                      ),
+                      Text(
+                        reservation['status'] as String? ?? 'Estado desconocido',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          fontWeight: FontWeight.w500,
+                          fontSize: 12,
+                          color: Colors.blue,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
+                    ],
                   ),
                 ],
               ),
