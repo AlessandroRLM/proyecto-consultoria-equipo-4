@@ -37,10 +37,20 @@ class _LodgingCalendarScreenState extends State<LodgingCalendarScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Seleccionar Fechas de Alojamiento'),
+        title: const Text('Reservar'),
       ),
       body: Column(
         children: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Text(
+              'Seleccione la fecha del alojamiento',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
           Expanded(
             child: Padding(
               padding: const EdgeInsets.all(16.0),
@@ -132,7 +142,7 @@ class ReservationButtonWidget extends StatelessWidget {
         color: theme.colorScheme.surface,
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withValues(alpha: 0.05),
+            color: theme.shadowColor.withValues(alpha: 0.05),
             spreadRadius: 0,
             blurRadius: 2,
             offset: const Offset(0, 1),
@@ -170,8 +180,8 @@ class ReservationButtonWidget extends StatelessWidget {
             child: ElevatedButton(
               onPressed: onReserve,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
-                foregroundColor: Colors.white,
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                foregroundColor: Theme.of(context).colorScheme.onPrimary,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),

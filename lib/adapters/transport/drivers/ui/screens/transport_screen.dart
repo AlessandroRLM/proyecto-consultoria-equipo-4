@@ -167,9 +167,9 @@ class _TransportScreenState extends State<TransportScreen> {
           ),
         child: Row(
           children: [
-            const Padding(
-              padding: EdgeInsets.only(right: 12),
-              child: Icon(Icons.directions_bus, color: Colors.red, size: 28),
+            Padding(
+              padding: const EdgeInsets.only(right: 12),
+              child: Icon(Icons.directions_bus, color: theme.colorScheme.primary, size: 28),
             ),
             Expanded(
               child: Column(
@@ -188,9 +188,9 @@ class _TransportScreenState extends State<TransportScreen> {
                               maxLines: 1,
                             ),
                           ),
-                          const Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 4),
-                            child: Icon(Icons.arrow_forward, size: 18, color: Colors.grey),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 4),
+                            child: Icon(Icons.arrow_forward, size: 18, color: theme.colorScheme.onSurface.withValues(alpha: 0.5)),
                           ),
                           Expanded(
                             child: Text(
@@ -300,19 +300,12 @@ class _TransportScreenState extends State<TransportScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('Reservas'),
+      ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // CustomTabBar Credencial, Transporte y Alojamiento.
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-            child: Text(
-              'Reservas',
-              style: theme.textTheme.headlineLarge?.copyWith(
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
           Expanded(
             child: Consumer<TransportReservationsProvider>(
               builder: (context, provider, child) {

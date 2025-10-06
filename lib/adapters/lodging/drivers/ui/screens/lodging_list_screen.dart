@@ -12,15 +12,14 @@ class LodgingListScreen extends StatelessWidget {
     final reservations = context.watch<LodgingProvider>().reservations;
 
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('Reservas'),
+      ),
       body: Padding(
         padding: EdgeInsetsGeometry.fromLTRB(8, 0, 16, 0),
         child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.only(left: 8, top: 12, bottom: 12),
-            child: Text('Reservas', style: Theme.of(context).textTheme.headlineLarge?.copyWith(fontWeight: FontWeight.w500),),
-          ),
           const SizedBox(height: 8),
           Expanded(
             child: reservations.isEmpty

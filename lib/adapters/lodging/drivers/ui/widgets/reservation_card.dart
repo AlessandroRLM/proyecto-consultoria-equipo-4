@@ -68,7 +68,7 @@ class _ReservationCardState extends State<ReservationCard> {
                   Icon(
                     Icons.home,
                     size: 28,
-                    color: AppThemes.primary_600,
+                    color: cs.primary,
                   ),
                   const SizedBox(width: 12),
                   Expanded(
