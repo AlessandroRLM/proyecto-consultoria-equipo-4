@@ -525,163 +525,178 @@ class WeekCalendarWidget extends StatelessWidget {
     final capitalizedMonth = DateFormat('MMMM yyyy', 'es_ES').format(focusedWeekStart);
     final capitalizedMonthFormatted = capitalizedMonth[0].toUpperCase() + capitalizedMonth.substring(1);
 
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: SizedBox(
-            height: 48,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                IconButton(
-                  icon: Icon(Icons.chevron_left, color: primaryColor.withValues(alpha: 0.3)),
-                  onPressed: previousWeek,
-                ),
-                Expanded(
-                  child: Center(
-                    child: Text(
-                      capitalizedMonthFormatted,
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: primaryColor,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-                IconButton(
-                  icon: Icon(Icons.chevron_right, color: primaryColor.withValues(alpha: 0.3)),
-                  onPressed: nextWeek,
-                ),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(height: 16),
-        SizedBox(
-          height: 60,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: days.asMap().entries.map((entry) {
-                final int index = entry.key;
-                final day = entry.value;
-                final now = DateTime.now();
-                final dateStr = DateFormat('yyyy-MM-dd').format(day);
-                final isPast = day.isBefore(now.subtract(const Duration(days: 1)));
-                final isReserved = transportProvider.reservations.any((r) => getDateString(r) == dateStr);
-                final hasOptions = transportProvider.hasAvailableOptions(dateStr);
-                final isSelected = selectedDate != null && selectedDate!.isAtSameMomentAs(day);
-                final isSelectable = !isPast && !isReserved && hasOptions;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        double availableWidth = constraints.maxWidth;
+        double rowPaddingHorizontal = 32.0; 
+        double effectiveDayWidth = (availableWidth - rowPaddingHorizontal) / 7;
+        double dayHeight = effectiveDayWidth * (60.0 / 50.0);
+        double fontSize = effectiveDayWidth > 40 ? 16.0 : 14.0;
+        double smallFontSize = fontSize * 0.625;
+        double iconSize = 12.0;
+        double dayMargin = effectiveDayWidth > 50 ? 2.0 : 0.0;
 
-                final isOutboundDate = !isOutbound && transportProvider.selectedDate != null && DateTime.parse(transportProvider.selectedDate!).isAtSameMomentAs(day);
-                final isHighlighted = isSelected || isOutboundDate;
-                return Material(
-                  color: Colors.transparent,
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTap: (isSelectable && !( !isOutbound && selectedDate != null)) ? () {
-                      if (isOutboundDate && !isSelected) {
-                        SchedulerBinding.instance.addPostFrameCallback((_) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Esta es la fecha de ida seleccionada.')),
-                          );
-                        });
-                        return;
-                      }
-                      if (!isOutbound && selectedDate != null) {
-                        SchedulerBinding.instance.addPostFrameCallback((_) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('No se puede cambiar la fecha en la vuelta después de seleccionarla.')),
-                          );
-                        });
-                        return;
-                      }
-                      onDaySelected(day);
-                    } : null,
-                    child: Container(
-                      width: 50,
-                      height: 60,
-                      decoration: BoxDecoration(
-                        color: isHighlighted
-                            ? primaryColor
-                            : isReserved
-                                ? Colors.green.withValues(alpha: 0.3)
-                                : isPast || !hasOptions
-                                    ? onSurfaceContainerHighestColor.withValues(alpha: 0.3)
-                                    : null,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: day.weekday == DateTime.thursday ? Colors.orange : primaryColor,
-                          width: 1.0,
+        return Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: SizedBox(
+                height: 48,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    IconButton(
+                      icon: Icon(Icons.chevron_left, color: primaryColor.withValues(alpha: 0.3)),
+                      onPressed: previousWeek,
+                    ),
+                    Expanded(
+                      child: Center(
+                        child: Text(
+                          capitalizedMonthFormatted,
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: primaryColor,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
-                      child: Stack(
-                        children: [
-                          Align(
-                            alignment: Alignment.center,
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              mainAxisSize: MainAxisSize.min,
-                              children: <Widget>[
-                                Text(
-                                  day.day.toString(),
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    color: isHighlighted
-                                        ? onPrimaryColor
-                                        : isReserved
-                                            ? Colors.green
-                                            : isPast || !hasOptions
-                                                ? Colors.grey
-                                                : primaryColor,
-                                    fontWeight: FontWeight.w500,
-                                    fontSize: 16,
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.chevron_right, color: primaryColor.withValues(alpha: 0.3)),
+                      onPressed: nextWeek,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              height: dayHeight,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Row(
+                  children: days.asMap().entries.map((entry) {
+                    final int index = entry.key;
+                    final day = entry.value;
+                    final now = DateTime.now();
+                    final dateStr = DateFormat('yyyy-MM-dd').format(day);
+                    final isPast = day.isBefore(now.subtract(const Duration(days: 1)));
+                    final isReserved = transportProvider.reservations.any((r) => getDateString(r) == dateStr);
+                    final hasOptions = transportProvider.hasAvailableOptions(dateStr);
+                    final isSelected = selectedDate != null && selectedDate!.isAtSameMomentAs(day);
+                    final isSelectable = !isPast && !isReserved && hasOptions;
+
+                    final isOutboundDate = !isOutbound && transportProvider.selectedDate != null && DateTime.parse(transportProvider.selectedDate!).isAtSameMomentAs(day);
+                    final isHighlighted = isSelected || isOutboundDate;
+                    return Expanded(
+                      child: Material(
+                        color: Colors.transparent,
+                        child: GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTap: (isSelectable && !( !isOutbound && selectedDate != null)) ? () {
+                            if (isOutboundDate && !isSelected) {
+                              SchedulerBinding.instance.addPostFrameCallback((_) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Esta es la fecha de ida seleccionada.')),
+                                );
+                              });
+                              return;
+                            }
+                            if (!isOutbound && selectedDate != null) {
+                              SchedulerBinding.instance.addPostFrameCallback((_) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('No se puede cambiar la fecha en la vuelta después de seleccionarla.')),
+                                );
+                              });
+                              return;
+                            }
+                            onDaySelected(day);
+                          } : null,
+                          child: Container(
+                            width: double.infinity,
+                            height: dayHeight,
+                            margin: EdgeInsets.symmetric(horizontal: dayMargin),
+                            decoration: BoxDecoration(
+                              color: isHighlighted
+                                  ? primaryColor
+                                  : isReserved
+                                      ? Colors.green.withValues(alpha: 0.3)
+                                      : isPast || !hasOptions
+                                          ? onSurfaceContainerHighestColor.withValues(alpha: 0.3)
+                                          : null,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: day.weekday == DateTime.thursday ? Colors.orange : primaryColor,
+                                width: 1.0,
+                              ),
+                            ),
+                            child: Stack(
+                              children: [
+                                Align(
+                                  alignment: Alignment.center,
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: <Widget>[
+                                      Text(
+                                        day.day.toString(),
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          color: isHighlighted
+                                              ? onPrimaryColor
+                                              : isReserved
+                                                  ? Colors.green
+                                                  : isPast || !hasOptions
+                                                      ? Colors.grey
+                                                      : primaryColor,
+                                          fontWeight: FontWeight.w500,
+                                          fontSize: fontSize,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        weekdays[index],
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          color: (isHighlighted
+                                                  ? onPrimaryColor
+                                                  : isReserved
+                                                      ? Colors.green
+                                                  : isPast || !hasOptions
+                                                      ? Colors.grey
+                                                      : primaryColor)
+                                              .withValues(alpha: 0.8),
+                                          fontSize: smallFontSize,
+                                          fontWeight: FontWeight.w400,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  weekdays[index],
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    color: (isHighlighted
-                                            ? onPrimaryColor
-                                            : isReserved
-                                                ? Colors.green
-                                                : isPast || !hasOptions
-                                                    ? Colors.grey
-                                                    : primaryColor)
-                                        .withValues(alpha: 0.8),
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w400,
+                                if (isReserved)
+                                  Positioned(
+                                    right: 2,
+                                    top: 2,
+                                    child: Icon(
+                                      Icons.check,
+                                      size: iconSize,
+                                      color: Colors.green,
+                                    ),
                                   ),
-                                ),
                               ],
                             ),
                           ),
-                          if (isReserved)
-                            Positioned(
-                              right: 2,
-                              top: 2,
-                              child: Icon(
-                                Icons.check,
-                                size: 12,
-                                color: Colors.green,
-                              ),
-                            ),
-                        ],
+                        ),
                       ),
-                    ),
-                  ),
-                );
-              }).toList(),
+                    );
+                  }).toList(),
+                ),
+              ),
             ),
-          ),
-        ),
-      ],
+          ],
+        );
+      },
     );
   }
 }
@@ -715,53 +730,79 @@ class TimeOptionsWidget extends StatelessWidget {
         final service = option['service'] as String;
         final isSelected = selectedOption != null && selectedOption!['time'] == time;
         return Expanded(
-          child: GestureDetector(
-            onTap: () => onTimeSelected(option),
-            child: Container(
-              height: 60,
-              margin: const EdgeInsets.symmetric(horizontal: 4),
-              decoration: BoxDecoration(
-                color: isSelected ? Colors.red : Colors.transparent,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: Colors.red,
-                  width: 1,
-                ),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.directions_bus,
-                    color: isSelected ? Colors.white : onSurface,
-                    size: 20,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              double buttonWidth = constraints.maxWidth;
+              double fontSize = buttonWidth > 80 ? 14.0 : 12.0;
+              double smallFontSize = buttonWidth > 80 ? 10.0 : 8.0;
+              double iconSize = buttonWidth > 80 ? 20.0 : 16.0;
+              double spacing = buttonWidth > 80 ? 8.0 : 4.0;
+              return GestureDetector(
+                onTap: () => onTimeSelected(option),
+                child: Container(
+                  height: 60,
+                  margin: const EdgeInsets.symmetric(horizontal: 4),
+                  decoration: BoxDecoration(
+                    color: isSelected ? Colors.red : Colors.transparent,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: Colors.red,
+                      width: 1,
+                    ),
                   ),
-                  const SizedBox(width: 8),
-                  Column(
+                  child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        formatTime(time),
-                        style: TextStyle(
-                          color: isSelected ? Colors.white : onSurface,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
+                      Icon(
+                        Icons.directions_bus,
+                        color: isSelected ? Colors.white : onSurface,
+                        size: iconSize,
                       ),
-                      Text(
-                        service,
-                        style: TextStyle(
-                          color: isSelected ? Colors.white : onSurface.withValues(alpha: 0.8),
-                          fontSize: 10,
-                          fontWeight: FontWeight.w400,
-                        ),
+                      SizedBox(width: spacing),
+                      Flexible(
+                        child: buttonWidth > 80
+                            ? Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    formatTime(time),
+                                    style: TextStyle(
+                                      color: isSelected ? Colors.white : onSurface,
+                                      fontSize: fontSize,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
+                                  ),
+                                  Text(
+                                    service,
+                                    style: TextStyle(
+                                      color: isSelected ? Colors.white : onSurface.withValues(alpha: 0.8),
+                                      fontSize: smallFontSize,
+                                      fontWeight: FontWeight.w400,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
+                                  ),
+                                ],
+                              )
+                            : Text(
+                                '${formatTime(time)} - $service',
+                                style: TextStyle(
+                                  color: isSelected ? Colors.white : onSurface,
+                                  fontSize: fontSize,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
+                              ),
                       ),
                     ],
                   ),
-                ],
-              ),
-            ),
+                ),
+              );
+            },
           ),
         );
       }).toList(),

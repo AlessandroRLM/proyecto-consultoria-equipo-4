@@ -145,150 +145,164 @@ class LodgingWeekCalendarState extends State<LodgingWeekCalendar> {
     final capitalizedMonth = DateFormat('MMMM yyyy', 'es_ES').format(_focusedMonth);
     final capitalizedMonthFormatted = capitalizedMonth[0].toUpperCase() + capitalizedMonth.substring(1);
 
-    List<Widget> rows = [];
-    for (int row = 0; row < 5; row++) {
-      List<Widget> rowWidgets = [];
-      for (int col = 0; col < 7; col++) {
-        final index = row * 7 + col;
-        final day = days[index];
-        final now = DateTime.now();
-        final isPast = day.isBefore(now.subtract(const Duration(days: 1)));
-        final isSelectable = _isSelectable(day);
-        final isSelected = _isSelected(day);
-        final isCurrentMonth = day.month == _focusedMonth.month;
-        final weekdayAbbr = weekdayLabels[day.weekday - 1];
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        double availableWidth = constraints.maxWidth;
+        double rowPaddingHorizontal = 32.0; 
+        double dayPadding = 8.0; 
+        double effectiveDayWidth = (availableWidth - rowPaddingHorizontal) / 7 - dayPadding;
+        double dayHeight = effectiveDayWidth * (55.0 / 40.0);
+        double fontSize = effectiveDayWidth > 30 ? 14.0 : 12.0;
+        double smallFontSize = fontSize * 0.8;
+        double iconSize = smallFontSize;
 
-        rowWidgets.add(
-          Padding(
-            padding: const EdgeInsets.all(4.0),
-            child: Material(
-              color: Colors.transparent,
-              child: Stack(
-                children: [
-                  GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTap: isSelectable ? () => _onDayTapped(day) : null,
-                    child: Container(
-                      width: 40,
-                      height: 55,
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? primaryColor
-                            : !isCurrentMonth || isPast || !isSelectable
-                                ? onSurfaceContainerHighestColor.withValues(alpha: 0.3)
-                                : null,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: primaryColor,
-                          width: 1.0,
-                        ),
-                      ),
-                      child: Align(
-                        alignment: Alignment.center,
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              day.day.toString(),
-                              style: TextStyle(
-                                color: isSelected
-                                    ? onPrimaryColor
-                                    : !isCurrentMonth || isPast || !isSelectable
-                                        ? onSurfaceColor.withValues(alpha: 0.5)
-                                        : primaryColor,
-                                fontWeight: FontWeight.w500,
-                                fontSize: 14,
+        List<Widget> rows = [];
+        for (int row = 0; row < 5; row++) {
+          List<Widget> rowWidgets = [];
+          for (int col = 0; col < 7; col++) {
+            final index = row * 7 + col;
+            final day = days[index];
+            final now = DateTime.now();
+            final isPast = day.isBefore(now.subtract(const Duration(days: 1)));
+            final isSelectable = _isSelectable(day);
+            final isSelected = _isSelected(day);
+            final isCurrentMonth = day.month == _focusedMonth.month;
+            final weekdayAbbr = weekdayLabels[day.weekday - 1];
+
+            rowWidgets.add(
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(4.0),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: Stack(
+                      children: [
+                        GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTap: isSelectable ? () => _onDayTapped(day) : null,
+                          child: Container(
+                            width: double.infinity,
+                            height: dayHeight,
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? primaryColor
+                                  : !isCurrentMonth || isPast || !isSelectable
+                                      ? onSurfaceContainerHighestColor.withValues(alpha: 0.3)
+                                      : null,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: primaryColor,
+                                width: 1.0,
                               ),
                             ),
-                            const SizedBox(height: 2),
-                            Text(
-                              weekdayAbbr,
-                              style: TextStyle(
-                                color: (isSelected
-                                        ? onPrimaryColor
-                                        : !isCurrentMonth || isPast || !isSelectable
-                                            ? onSurfaceColor.withValues(alpha: 0.5)
-                                            : primaryColor)
-                                    .withValues(alpha: 0.8),
-                                fontSize: 12,
-                                fontWeight: FontWeight.w400,
+                            child: Align(
+                              alignment: Alignment.center,
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    day.day.toString(),
+                                    style: TextStyle(
+                                      color: isSelected
+                                          ? onPrimaryColor
+                                          : !isCurrentMonth || isPast || !isSelectable
+                                              ? onSurfaceColor.withValues(alpha: 0.5)
+                                              : primaryColor,
+                                      fontWeight: FontWeight.w500,
+                                      fontSize: fontSize,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    weekdayAbbr,
+                                    style: TextStyle(
+                                      color: (isSelected
+                                              ? onPrimaryColor
+                                              : !isCurrentMonth || isPast || !isSelectable
+                                                  ? onSurfaceColor.withValues(alpha: 0.5)
+                                                  : primaryColor)
+                                          .withValues(alpha: 0.8),
+                                      fontSize: smallFontSize,
+                                      fontWeight: FontWeight.w400,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                          ],
+                          ),
                         ),
-                      ),
+                        if (isCurrentMonth && widget.reservations.any((reservation) {
+                          final checkIn = DateTime.parse(reservation['checkIn']);
+                          final checkOut = DateTime.parse(reservation['checkOut']);
+                          return !day.isBefore(checkIn) && !day.isAfter(checkOut);
+                        }))
+                          Positioned(
+                            right: 2,
+                            top: 2,
+                            child: Icon(
+                              Icons.confirmation_num,
+                              size: iconSize,
+                              color: theme.colorScheme.primary,
+                            ),
+                          ),
+                      ],
                     ),
                   ),
-                  if (isCurrentMonth && widget.reservations.any((reservation) {
-                    final checkIn = DateTime.parse(reservation['checkIn']);
-                    final checkOut = DateTime.parse(reservation['checkOut']);
-                    return !day.isBefore(checkIn) && !day.isAfter(checkOut);
-                  }))
-                    Positioned(
-                      right: 2,
-                      top: 2,
-                      child: Icon(
-                        Icons.confirmation_num,
-                        size: 12,
-                        color: theme.colorScheme.primary,
-                      ),
-                    ),
-                ],
+                ),
+              ),
+            );
+          }
+          rows.add(
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                children: rowWidgets,
               ),
             ),
-          ),
-        );
-      }
-      rows.add(
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: rowWidgets,
-          ),
-        ),
-      );
-    }
+          );
+        }
 
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: SizedBox(
-            height: 48,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                IconButton(
-                  icon: Icon(Icons.chevron_left, color: primaryColor.withValues(alpha: 0.3)),
-                  onPressed: _previousMonth,
-                ),
-                Expanded(
-                  child: Center(
-                    child: Text(
-                      capitalizedMonthFormatted,
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: primaryColor,
-                        fontWeight: FontWeight.bold,
+        return Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: SizedBox(
+                height: 48,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    IconButton(
+                      icon: Icon(Icons.chevron_left, color: primaryColor.withValues(alpha: 0.3)),
+                      onPressed: _previousMonth,
+                    ),
+                    Expanded(
+                      child: Center(
+                        child: Text(
+                          capitalizedMonthFormatted,
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: primaryColor,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
                     ),
-                  ),
+                    IconButton(
+                      icon: Icon(Icons.chevron_right, color: primaryColor.withValues(alpha: 0.3)),
+                      onPressed: _nextMonth,
+                    ),
+                  ],
                 ),
-                IconButton(
-                  icon: Icon(Icons.chevron_right, color: primaryColor.withValues(alpha: 0.3)),
-                  onPressed: _nextMonth,
-                ),
-              ],
+              ),
             ),
-          ),
-        ),
-        const SizedBox(height: 16),
-        Column(
-          children: rows,
-        ),
-      ],
+            const SizedBox(height: 16),
+            Column(
+              children: rows,
+            ),
+          ],
+        );
+      },
     );
   }
 }
