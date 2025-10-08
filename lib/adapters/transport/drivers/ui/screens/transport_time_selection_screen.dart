@@ -290,7 +290,7 @@ class _TransportTimeSelectionScreenState extends State<TransportTimeSelectionScr
 
   DateTime? _getLatestReservationDate() {
     if (_transportProvider.reservations.isEmpty) return null;
-    DateTime? latest = null;
+    DateTime? latest;
     for (var res in _transportProvider.reservations) {
       DateTime? outboundDate;
       if (res['outbound'] != null && res['outbound']['date'] != null) {
@@ -623,13 +623,10 @@ class WeekCalendarWidget extends StatelessWidget {
                     final now = DateTime.now();
                     final dateStr = DateFormat('yyyy-MM-dd').format(day);
                     final isPast = day.isBefore(now.subtract(const Duration(days: 1)));
-                    final direction = isOutbound ? 'IDA' : 'REGRESO';
                     final isReserved = isOutbound ? transportProvider.hasOutboundOnDate(dateStr) : transportProvider.hasReturnOnDate(dateStr);
                     final hasOptions = transportProvider.hasAvailableOptions(dateStr);
                     final isSelected = selectedDate != null && selectedDate!.isAtSameMomentAs(day);
                     final isSelectable = !isPast && !isReserved && hasOptions && !day.isBefore(allowedStart!) && !day.isAfter(allowedEnd!);
-
-                    final isOutboundDate = !isOutbound && transportProvider.selectedDate != null && DateTime.parse(transportProvider.selectedDate!).isAtSameMomentAs(day);
                     final isHighlighted = isSelected;
                     return Expanded(
                       child: Material(

@@ -30,7 +30,9 @@ class TransportReservationsProvider extends ChangeNotifier {
       }
     }
     var futureRes = allLegs.where((r) {
-      if (r['date'] == null) return false;
+      if (r['date'] == null) {
+        return false;
+      }
       dynamic dateValue = r['date'];
       DateTime date;
       if (dateValue is DateTime) {
@@ -45,7 +47,9 @@ class TransportReservationsProvider extends ChangeNotifier {
     futureRes.sort((a, b) {
       dynamic dateValueA = a['date'];
       dynamic dateValueB = b['date'];
-      if (dateValueA == null || dateValueB == null) return 0;
+      if (dateValueA == null || dateValueB == null) {
+        return 0;
+      }
       DateTime dateA;
       if (dateValueA is DateTime) {
         dateA = dateValueA;
@@ -61,7 +65,9 @@ class TransportReservationsProvider extends ChangeNotifier {
       final resDateA = DateTime(dateA.year, dateA.month, dateA.day);
       final resDateB = DateTime(dateB.year, dateB.month, dateB.day);
       int dateCompare = resDateA.compareTo(resDateB);
-      if (dateCompare != 0) return dateCompare;
+      if (dateCompare != 0) {
+        return dateCompare;
+      }
       final detailsA = (a['details'] as String?)?.toLowerCase() ?? '';
       final detailsB = (b['details'] as String?)?.toLowerCase() ?? '';
       if (detailsA.contains('ida') && detailsB.contains('regreso')) {
@@ -117,7 +123,9 @@ class TransportReservationsProvider extends ChangeNotifier {
   }
 
   bool isValidRange(DateTime start, DateTime end) {
-    if (start.isAfter(end)) return false;
+    if (start.isAfter(end)) {
+      return false;
+    }
     final daysDiff = end.difference(start).inDays + 1;
     return daysDiff <= 7 && daysDiff >= 1;
   }
@@ -127,8 +135,10 @@ class TransportReservationsProvider extends ChangeNotifier {
   }
 
   bool isWeekAllowed(DateTime monday) {
-    if (monday.weekday != DateTime.monday) return false;
-    const int cutoffWeekday = 3; 
+    if (monday.weekday != DateTime.monday) {
+      return false;
+    }
+    const int cutoffWeekday = 3;
     final now = DateTime.now();
     final todayWeekday = now.weekday;
     final daysToNextMonday = (DateTime.monday - todayWeekday + 7) % 7;
@@ -172,9 +182,15 @@ class TransportReservationsProvider extends ChangeNotifier {
     _reservations.sort((a, b) {
       DateTime? dateA = _getEarliestDate(a);
       DateTime? dateB = _getEarliestDate(b);
-      if (dateA == null && dateB == null) return 0;
-      if (dateA == null) return 1;
-      if (dateB == null) return -1;
+      if (dateA == null && dateB == null) {
+        return 0;
+      }
+      if (dateA == null) {
+        return 1;
+      }
+      if (dateB == null) {
+        return -1;
+      }
       return dateB.compareTo(dateA);
     });
   }
@@ -223,7 +239,9 @@ class TransportReservationsProvider extends ChangeNotifier {
   void addWeekReservation(Map<String, dynamic> baseReservation, DateTime weekStart) async {
     baseReservation['status'] ??= TransportReservationStatus.pendiente.displayName;
     final weekEnd = weekStart.add(const Duration(days: 6));
-    if (!isValidRange(weekStart, weekEnd)) return;
+    if (!isValidRange(weekStart, weekEnd)) {
+      return;
+    }
     for (int i = 0; i < 7; i++) {
       final date = weekStart.add(Duration(days: i));
       final dateStr = DateFormat('yyyy-MM-dd').format(date);
@@ -283,7 +301,9 @@ class TransportReservationsProvider extends ChangeNotifier {
   }
 
   void addOutboundReservation() async {
-    if (_selectedDate == null || _selectedLocation == null || _selectedOutboundTime == null) return;
+    if (_selectedDate == null || _selectedLocation == null || _selectedOutboundTime == null) {
+      return;
+    }
 
     dynamic selectedDateValue = _selectedDate;
     String outboundDateStr;
@@ -293,7 +313,9 @@ class TransportReservationsProvider extends ChangeNotifier {
       outboundDateStr = selectedDateValue as String;
     }
 
-    if (hasOutboundOnDate(outboundDateStr)) return;
+    if (hasOutboundOnDate(outboundDateStr)) {
+      return;
+    }
 
     final outboundTime = _parseTime(_selectedOutboundTime!);
 
@@ -324,7 +346,9 @@ class TransportReservationsProvider extends ChangeNotifier {
   }
 
   void addReturnReservation() async {
-    if (_selectedReturnDate == null || _selectedLocation == null || _selectedReturnTime == null) return;
+    if (_selectedReturnDate == null || _selectedLocation == null || _selectedReturnTime == null) {
+      return;
+    }
 
     dynamic returnDateValue = _selectedReturnDate;
     String returnDateStr;
@@ -334,7 +358,9 @@ class TransportReservationsProvider extends ChangeNotifier {
       returnDateStr = returnDateValue as String;
     }
 
-    if (hasReturnOnDate(returnDateStr)) return;
+    if (hasReturnOnDate(returnDateStr)) {
+      return;
+    }
 
     final returnTime = _parseTime(_selectedReturnTime!);
 
@@ -371,7 +397,9 @@ class TransportReservationsProvider extends ChangeNotifier {
 
   void addRoundTripReservation() async {
     if (_selectedDate == null || _selectedLocation == null || _selectedOutboundTime == null ||
-        _selectedReturnDate == null || _selectedReturnTime == null) return;
+        _selectedReturnDate == null || _selectedReturnTime == null) {
+      return;
+    }
 
     dynamic outboundDateValue = _selectedDate;
     String outboundDateStr;
@@ -389,7 +417,9 @@ class TransportReservationsProvider extends ChangeNotifier {
       returnDateStr = returnDateValue as String;
     }
 
-    if (hasReturnOnDate(returnDateStr)) return;
+    if (hasReturnOnDate(returnDateStr)) {
+      return;
+    }
 
     final outboundTime = _parseTime(_selectedOutboundTime!);
     final returnTime = _parseTime(_selectedReturnTime!);
@@ -513,10 +543,12 @@ class TransportReservationsProvider extends ChangeNotifier {
 
   String getStatusForReservation(Map<String, dynamic> reservation) {
     final currentStatus = reservation['status'] as String?;
-    if (currentStatus == TransportReservationStatus.aceptada.displayName) {
-      final dateStr = reservation['date'] as String?;
-      if (dateStr == null) return TransportReservationStatus.pendiente.displayName;
-      final date = DateTime.parse(dateStr);
+  if (currentStatus == TransportReservationStatus.aceptada.displayName) {
+    final dateStr = reservation['date'] as String?;
+    if (dateStr == null) {
+      return TransportReservationStatus.pendiente.displayName;
+    }
+    final date = DateTime.parse(dateStr);
       final now = DateTime.now();
       final today = DateTime(now.year, now.month, now.day);
       final resDate = DateTime(date.year, date.month, date.day);

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../../../driven/providers/lodging_provider.dart';
 import 'package:mobile/adapters/core/driven/app_themes.dart';
 
 typedef DateRangeSelectedCallback = void Function(DateTime? start, DateTime? end);
