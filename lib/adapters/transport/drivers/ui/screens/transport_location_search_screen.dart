@@ -19,16 +19,16 @@ class _TransportLocationSearchScreenState extends State<TransportLocationSearchS
   // Datos simulados de ubicaciones
   final List<Map<String, String>> _locations = [
     {
-      'name': 'Servicio de Urgencia Hospital Clínico Universidad',
-      'address': 'Concepción, Chile',
+      'name': 'Clínica Santa María',
+      'address': 'Av. Sta. María 0500, Providencia, Santiago',
     },
     {
-      'name': 'Centro Médico Andes Salud Talca',
-      'address': 'Talca, Chile',
+      'name': 'Clinica Redsalud Providencia',
+      'address': 'Av. Salvador N°1000, Providencia, Santiago',
     },
     {
-      'name': 'Centro Médico Inmunomedica Talca',
-      'address': 'Talca, Chile',
+      'name': 'Hospital Barros Luco Trudeau',
+      'address': 'Gran Av. José Miguel Carrera 3204, San Miguel, Santiago',
     },
   ];
 
@@ -47,7 +47,7 @@ class _TransportLocationSearchScreenState extends State<TransportLocationSearchS
     });
 
     final provider = Provider.of<TransportReservationsProvider>(context, listen: false);
-    provider.selectedLocation = location['name'];
+    provider.selectedLocation = location;
     context.push('/transport/time-selection', extra: {'isOutbound': true});
   }
 

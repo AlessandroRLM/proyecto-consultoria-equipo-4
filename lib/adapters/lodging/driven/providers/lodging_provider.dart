@@ -49,4 +49,19 @@ class LodgingProvider with ChangeNotifier {
       return null;
     }
   }
+
+  DateTime getMinReservableDate() {
+    const int cutoffWeekday = 3; 
+    final now = DateTime.now();
+    final todayWeekday = now.weekday;
+    final daysToNextMonday = (DateTime.monday - todayWeekday + 7) % 7;
+    final nextMonday = now.add(Duration(days: daysToNextMonday == 0 ? 7 : daysToNextMonday));
+    DateTime minReservableDate;
+    if (todayWeekday < cutoffWeekday) {
+      minReservableDate = nextMonday;
+    } else {
+      minReservableDate = nextMonday.add(const Duration(days: 7));
+    }
+    return minReservableDate;
+  }
 }

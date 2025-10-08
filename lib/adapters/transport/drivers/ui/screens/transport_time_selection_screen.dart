@@ -69,37 +69,19 @@ class _TransportTimeSelectionScreenState extends State<TransportTimeSelectionScr
     setState(() {
       _selectedTabIndex = index;
       _isOutbound = index == 0;
-      _selectedOption = null;
       if (index == 0) {
-        DateTime now = DateTime.now();
-        DateTime today = DateTime(now.year, now.month, now.day);
-        DateTime nextMonday = getMondayOfWeek(today.add(Duration(days: 7)));
-        if (now.weekday <= DateTime.thursday) {
-          _allowedStart = nextMonday;
-        } else {
-          _allowedStart = nextMonday.add(Duration(days: 7));
-        }
+        _allowedStart = _transportProvider.getMinReservableDate();
         _allowedEnd = _allowedStart!.add(Duration(days: 365));
-      }
-      if (!_isOutbound && (_transportProvider.selectedDate == null || _transportProvider.selectedOutboundTime == null)) {
-        SchedulerBinding.instance.addPostFrameCallback((_) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Primero seleccione fecha y hora de ida.')),
-          );
-        });
-        setState(() {
-          _selectedTabIndex = 0;
-          _isOutbound = true;
-        });
-        return;
-      }
-
-      if (!_isOutbound && _transportProvider.selectedDate != null) {
-        final outboundDate = DateTime.parse(_transportProvider.selectedDate!);
-        _allowedStart = outboundDate;
-        _allowedEnd = outboundDate.add(Duration(days: 7));
-        _focusedWeekStart = getMondayOfWeek(outboundDate);
-        _selectedDate ??= outboundDate;
+      } else if (!_isOutbound) {
+        _allowedStart = _transportProvider.getMinReservableDate();
+        _allowedEnd = _allowedStart!.add(Duration(days: 365));
+        if (_transportProvider.selectedDate != null) {
+          final outboundDate = DateTime.parse(_transportProvider.selectedDate!);
+          _focusedWeekStart = getMondayOfWeek(outboundDate);
+        }
+        _selectedDate = null;
+        _selectedOption = null;
+        _transportProvider.selectedReturnTime = null;
       }
 
       if (index == 1 && widget.fixedInitialDate != null && widget.fixedInitialDate!.isNotEmpty) {
@@ -134,14 +116,23 @@ class _TransportTimeSelectionScreenState extends State<TransportTimeSelectionScr
   }
 
   void _onDaySelected(DateTime day) {
-    if (_selectedOption != null) {
-      SchedulerBinding.instance.addPostFrameCallback((_) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No se puede cambiar la fecha ya seleccionada anteriormente')),
-        );
+    if (_selectedDate != null && _selectedDate!.isAtSameMomentAs(day)) {
+      setState(() {
+        _selectedDate = null;
+        if (_isOutbound) {
+          _transportProvider.selectedDate = null;
+          _transportProvider.selectedOutboundTime = null;
+        } else {
+          _transportProvider.selectedReturnDate = null;
+          _transportProvider.selectedReturnTime = null;
+        }
+        _selectedOption = null;
+        _transportProvider.selectedService = null;
+        _availableOptions = [];
       });
       return;
     }
+
     if (day.isBefore(_allowedStart!) || day.isAfter(_allowedEnd!)) {
       SchedulerBinding.instance.addPostFrameCallback((_) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -150,27 +141,18 @@ class _TransportTimeSelectionScreenState extends State<TransportTimeSelectionScr
       });
       return;
     }
-    if (!_isOutbound) {
-      if (_transportProvider.selectedDate != null) {
-        final outboundDate = DateTime.parse(_transportProvider.selectedDate!);
-        if (day.isBefore(outboundDate)) {
-          SchedulerBinding.instance.addPostFrameCallback((_) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('La fecha de vuelta no puede ser anterior a la fecha de ida.')),
-            );
-          });
-          return;
-        }
-      }
-    }
     setState(() {
       _selectedDate = day;
       _focusedWeekStart = getMondayOfWeek(day);
       if (_isOutbound) {
         _transportProvider.selectedDate = DateFormat('yyyy-MM-dd').format(day);
+        _transportProvider.selectedOutboundTime = null;
       } else {
         _transportProvider.selectedReturnDate = DateFormat('yyyy-MM-dd').format(day);
+        _transportProvider.selectedReturnTime = null;
       }
+      _selectedOption = null;
+      _transportProvider.selectedService = null;
     });
     _loadAvailableOptions();
   }
@@ -189,10 +171,21 @@ class _TransportTimeSelectionScreenState extends State<TransportTimeSelectionScr
       }
       setState(() {});
     } else {
-      final defaultDate = _allowedStart ?? DateTime.now();
+      DateTime defaultDate = _allowedStart ?? DateTime.now();
+      final latestDate = _getLatestReservationDate();
+      if (latestDate != null && outbound) {
+        defaultDate = latestDate.add(Duration(days: 1));
+        if (defaultDate.isBefore(_allowedStart!)) {
+          defaultDate = _allowedStart!;
+        }
+      } else if (_transportProvider.selectedDate != null) {
+        defaultDate = DateTime.parse(_transportProvider.selectedDate!);
+        if (defaultDate.isBefore(_allowedStart!)) {
+          defaultDate = _allowedStart!;
+        }
+      }
       final dateStr = DateFormat('yyyy-MM-dd').format(defaultDate);
       setState(() {
-        _selectedDate = defaultDate;
         _focusedWeekStart = getMondayOfWeek(defaultDate);
         _availableOptions = _transportProvider.getAvailableOptionsForDate(dateStr, isOutbound: outbound);
       });
@@ -203,13 +196,33 @@ class _TransportTimeSelectionScreenState extends State<TransportTimeSelectionScr
     setState(() {
       if (_selectedOption != null && _selectedOption!['time'] == option['time']) {
         _selectedOption = null;
+        if (_isOutbound) {
+          _transportProvider.selectedOutboundTime = null;
+        } else {
+          _transportProvider.selectedReturnTime = null;
+        }
+        _transportProvider.selectedService = null;
       } else {
         _selectedOption = option;
+        if (_isOutbound) {
+          _transportProvider.selectedOutboundTime = option['time'];
+        } else {
+          _transportProvider.selectedReturnTime = option['time'];
+        }
+        _transportProvider.selectedService = option['service'];
       }
     });
   }
   
   void _onReservar() {
+    if (_selectedLocation == null) {
+      SchedulerBinding.instance.addPostFrameCallback((_) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Por favor, seleccione una ubicación primero.')),
+        );
+      });
+      return;
+    }
     if (_selectedDate == null) {
       SchedulerBinding.instance.addPostFrameCallback((_) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -233,28 +246,69 @@ class _TransportTimeSelectionScreenState extends State<TransportTimeSelectionScr
       _transportProvider.selectedDate = dateStr;
       _transportProvider.selectedOutboundTime = _selectedOption!['time'];
       _transportProvider.selectedService = _selectedOption!['service'];
-      _onTabSelected(1);
-    } else {
-      if (_transportProvider.selectedOutboundTime == _selectedOption!['time']) {
-        SchedulerBinding.instance.addPostFrameCallback((_) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('La hora de vuelta no puede ser la misma que la de ida.')),
-          );
-        });
-        return;
-      }
-      final returnDateStr = dateStr;
-      _transportProvider.selectedReturnDate = returnDateStr;
-      _transportProvider.selectedReturnTime = _selectedOption!['time'];
-      _transportProvider.selectedService = _selectedOption!['service'];
-      _transportProvider.addRoundTripReservation();
+      _transportProvider.addOutboundReservation();
       SchedulerBinding.instance.addPostFrameCallback((_) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Reservas de ida y vuelta confirmadas.')),
+          const SnackBar(content: Text('Reserva confirmada con exito.')),
         );
       });
-      context.go('/transport');
+      _onTabSelected(1);
+    } else {
+      if (_transportProvider.selectedOutboundTime != null) {
+        if (dateStr != _transportProvider.selectedDate && _transportProvider.selectedOutboundTime == _selectedOption!['time']) {
+          SchedulerBinding.instance.addPostFrameCallback((_) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('La hora de vuelta no puede ser la misma que la de ida.')),
+            );
+          });
+          return;
+        }
+        _transportProvider.selectedReturnDate = dateStr;
+        _transportProvider.selectedReturnTime = _selectedOption!['time'];
+        _transportProvider.selectedService = _selectedOption!['service'];
+        _transportProvider.addRoundTripReservation();
+        SchedulerBinding.instance.addPostFrameCallback((_) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Reserva confirmada con exito.')),
+          );
+        });
+        context.go('/transport');
+      } else {
+        _transportProvider.selectedReturnDate = dateStr;
+        _transportProvider.selectedReturnTime = _selectedOption!['time'];
+        _transportProvider.selectedService = _selectedOption!['service'];
+        _transportProvider.addReturnReservation();
+        SchedulerBinding.instance.addPostFrameCallback((_) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Reserva confirmada con exito.')),
+          );
+        });
+        context.go('/transport');
+      }
     }
+  }
+
+  DateTime? _getLatestReservationDate() {
+    if (_transportProvider.reservations.isEmpty) return null;
+    DateTime? latest = null;
+    for (var res in _transportProvider.reservations) {
+      DateTime? outboundDate;
+      if (res['outbound'] != null && res['outbound']['date'] != null) {
+        outboundDate = DateTime.parse(res['outbound']['date']);
+      }
+      DateTime? returnDate;
+      if (res['return'] != null && res['return']['date'] != null) {
+        returnDate = DateTime.parse(res['return']['date']);
+      }
+      DateTime? resLatest = outboundDate;
+      if (returnDate != null && (resLatest == null || returnDate.isAfter(resLatest))) {
+        resLatest = returnDate;
+      }
+      if (resLatest != null && (latest == null || resLatest.isAfter(latest))) {
+        latest = resLatest;
+      }
+    }
+    return latest;
   }
 
   Future<void> _fetchData() async {
@@ -266,15 +320,8 @@ class _TransportTimeSelectionScreenState extends State<TransportTimeSelectionScr
   void didChangeDependencies() {
     super.didChangeDependencies();
     _transportProvider = Provider.of<TransportReservationsProvider>(context, listen: false);
-    _selectedLocation = (widget.location != null && widget.location!.isNotEmpty) ? widget.location : _transportProvider.selectedLocation;
-    DateTime now = DateTime.now();
-    DateTime today = DateTime(now.year, now.month, now.day);
-    DateTime nextMonday = getMondayOfWeek(today.add(Duration(days: 7)));
-    if (now.weekday <= DateTime.thursday) {
-      _allowedStart = nextMonday;
-    } else {
-      _allowedStart = nextMonday.add(Duration(days: 7));
-    }
+    _selectedLocation = _transportProvider.selectedLocation?['name'];
+    _allowedStart = _transportProvider.getMinReservableDate();
     _allowedEnd = _allowedStart!.add(Duration(days: 365));
     _focusedWeekStart = _allowedStart;
     if (widget.fixedInitialDate != null && widget.fixedInitialDate!.isNotEmpty) {
@@ -285,21 +332,6 @@ class _TransportTimeSelectionScreenState extends State<TransportTimeSelectionScr
       final selected = DateTime.parse(widget.dateStr!);
       _selectedDate = selected;
       _focusedWeekStart = getMondayOfWeek(selected);
-    }
-    if (_selectedDate == null && _transportProvider.selectedDate != null) {
-      _selectedDate = DateTime.parse(_transportProvider.selectedDate!);
-      _focusedWeekStart = getMondayOfWeek(_selectedDate!);
-    }
-    if (!_isOutbound && _transportProvider.selectedDate != null) {
-      final outboundDate = DateTime.parse(_transportProvider.selectedDate!);
-      _focusedWeekStart = getMondayOfWeek(outboundDate);
-      if (widget.fixedInitialDate != null) {
-        _selectedDate = DateTime.parse(widget.fixedInitialDate!);
-      } else if (_transportProvider.selectedReturnDate != null) {
-        _selectedDate = DateTime.parse(_transportProvider.selectedReturnDate!);
-      } else {
-        _selectedDate = outboundDate;
-      }
     }
     _fetchData();
   }
@@ -363,16 +395,19 @@ class _TransportTimeSelectionScreenState extends State<TransportTimeSelectionScr
                     transportProvider: _transportProvider,
                     weekdays: _weekdays,
                     isOutbound: _isOutbound,
+                    allowedStart: _allowedStart,
+                    allowedEnd: _allowedEnd,
                   ),
-                  const SizedBox(height: 16), 
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: TimeOptionsWidget(
-                      availableOptions: _availableOptions,
-                      selectedOption: _selectedOption,
-                      onTimeSelected: _onTimeSelected,
+                  const SizedBox(height: 16),
+                  if (_selectedDate != null)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: TimeOptionsWidget(
+                        availableOptions: _availableOptions,
+                        selectedOption: _selectedOption,
+                        onTimeSelected: _onTimeSelected,
+                      ),
                     ),
-                  ),
                 ],
               ),
             ),
@@ -381,6 +416,7 @@ class _TransportTimeSelectionScreenState extends State<TransportTimeSelectionScr
           ReservationButtonWidget(
             isOutbound: _isOutbound,
             selectedLocation: _selectedLocation,
+            selectedOption: _selectedOption,
             onReservar: _onReservar,
           ),
         ],
@@ -417,29 +453,29 @@ class TabsWidget extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 decoration: BoxDecoration(
-                  color: selectedTabIndex == 0 ? primaryColor : Colors.transparent,
+                  color: selectedTabIndex == 0 ? AppThemes.primary_300 : Colors.transparent,
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: primaryColor,
+                    color: AppThemes.black_500,
                     width: 1,
                   ),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
+                    Icon(
+                      Icons.arrow_upward,
+                      color: selectedTabIndex == 0 ? AppThemes.primary_600 : onSurfaceColor,
+                      size: 14,
+                    ),
+                    const SizedBox(width: 4),
                     Text(
                       'Ida',
                       style: TextStyle(
-                        color: selectedTabIndex == 0 ? onPrimaryColor : onSurfaceColor,
+                        color: selectedTabIndex == 0 ? AppThemes.primary_600 : onSurfaceColor,
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
                       ),
-                    ),
-                    const SizedBox(width: 4),
-                    Icon(
-                      Icons.arrow_upward,
-                      color: selectedTabIndex == 0 ? onPrimaryColor : onSurfaceColor,
-                      size: 14,
                     ),
                   ],
                 ),
@@ -453,29 +489,29 @@ class TabsWidget extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 decoration: BoxDecoration(
-                  color: selectedTabIndex == 1 ? primaryColor : Colors.transparent,
+                  color: selectedTabIndex == 1 ? AppThemes.primary_300 : Colors.transparent,
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: primaryColor,
+                    color: AppThemes.black_500,
                     width: 1,
                   ),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
+                    Icon(
+                      Icons.arrow_downward,
+                      color: selectedTabIndex == 1 ? AppThemes.primary_600 : onSurfaceColor,
+                      size: 14,
+                    ),
+                    const SizedBox(width: 4),
                     Text(
                       'Vuelta',
                       style: TextStyle(
-                        color: selectedTabIndex == 1 ? onPrimaryColor : onSurfaceColor,
+                        color: selectedTabIndex == 1 ? AppThemes.primary_600 : onSurfaceColor,
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
                       ),
-                    ),
-                    const SizedBox(width: 4),
-                    Icon(
-                      Icons.arrow_downward,
-                      color: selectedTabIndex == 1 ? onPrimaryColor : onSurfaceColor,
-                      size: 14,
                     ),
                   ],
                 ),
@@ -502,6 +538,8 @@ class WeekCalendarWidget extends StatelessWidget {
   final TransportReservationsProvider transportProvider;
   final List<String> weekdays;
   final bool isOutbound;
+  final DateTime? allowedStart;
+  final DateTime? allowedEnd;
 
   const WeekCalendarWidget({
     super.key,
@@ -518,10 +556,13 @@ class WeekCalendarWidget extends StatelessWidget {
     required this.transportProvider,
     required this.weekdays,
     required this.isOutbound,
+    required this.allowedStart,
+    required this.allowedEnd,
   });
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final capitalizedMonth = DateFormat('MMMM yyyy', 'es_ES').format(focusedWeekStart);
     final capitalizedMonthFormatted = capitalizedMonth[0].toUpperCase() + capitalizedMonth.substring(1);
 
@@ -582,37 +623,20 @@ class WeekCalendarWidget extends StatelessWidget {
                     final now = DateTime.now();
                     final dateStr = DateFormat('yyyy-MM-dd').format(day);
                     final isPast = day.isBefore(now.subtract(const Duration(days: 1)));
-                    final isReserved = transportProvider.reservations.any((r) => getDateString(r) == dateStr);
+                    final direction = isOutbound ? 'IDA' : 'REGRESO';
+                    final isReserved = isOutbound ? transportProvider.hasOutboundOnDate(dateStr) : transportProvider.hasReturnOnDate(dateStr);
                     final hasOptions = transportProvider.hasAvailableOptions(dateStr);
                     final isSelected = selectedDate != null && selectedDate!.isAtSameMomentAs(day);
-                    final isSelectable = !isPast && !isReserved && hasOptions;
+                    final isSelectable = !isPast && !isReserved && hasOptions && !day.isBefore(allowedStart!) && !day.isAfter(allowedEnd!);
 
                     final isOutboundDate = !isOutbound && transportProvider.selectedDate != null && DateTime.parse(transportProvider.selectedDate!).isAtSameMomentAs(day);
-                    final isHighlighted = isSelected || isOutboundDate;
+                    final isHighlighted = isSelected;
                     return Expanded(
                       child: Material(
                         color: Colors.transparent,
                         child: GestureDetector(
                           behavior: HitTestBehavior.opaque,
-                          onTap: (isSelectable && !( !isOutbound && selectedDate != null)) ? () {
-                            if (isOutboundDate && !isSelected) {
-                              SchedulerBinding.instance.addPostFrameCallback((_) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('Esta es la fecha de ida seleccionada.')),
-                                );
-                              });
-                              return;
-                            }
-                            if (!isOutbound && selectedDate != null) {
-                              SchedulerBinding.instance.addPostFrameCallback((_) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('No se puede cambiar la fecha en la vuelta después de seleccionarla.')),
-                                );
-                              });
-                              return;
-                            }
-                            onDaySelected(day);
-                          } : null,
+                            onTap: isSelectable ? () => onDaySelected(day) : null,
                           child: Container(
                             width: double.infinity,
                             height: dayHeight,
@@ -620,14 +644,12 @@ class WeekCalendarWidget extends StatelessWidget {
                             decoration: BoxDecoration(
                               color: isHighlighted
                                   ? primaryColor
-                                  : isReserved
-                                      ? Colors.green.withValues(alpha: 0.3)
-                                      : isPast || !hasOptions
-                                          ? onSurfaceContainerHighestColor.withValues(alpha: 0.3)
-                                          : null,
+                                  : !isSelectable
+                                      ? onSurfaceContainerHighestColor.withValues(alpha: 0.3)
+                                      : null,
                               borderRadius: BorderRadius.circular(8),
                               border: Border.all(
-                                color: day.weekday == DateTime.thursday ? Colors.orange : primaryColor,
+                                color: isReserved ? Colors.green : (!isSelectable ? onSurfaceColor.withValues(alpha: 0.3) : (day.weekday == DateTime.thursday ? Colors.yellow.shade700 : primaryColor)),
                                 width: 1.0,
                               ),
                             ),
@@ -646,9 +668,9 @@ class WeekCalendarWidget extends StatelessWidget {
                                           color: isHighlighted
                                               ? onPrimaryColor
                                               : isReserved
-                                                  ? Colors.green
-                                                  : isPast || !hasOptions
-                                                      ? Colors.grey
+                                                  ? theme.colorScheme.onSurface
+                                                  : !isSelectable
+                                                      ? theme.colorScheme.onSurface.withValues(alpha: 0.5)
                                                       : primaryColor,
                                           fontWeight: FontWeight.w500,
                                           fontSize: fontSize,
@@ -662,9 +684,9 @@ class WeekCalendarWidget extends StatelessWidget {
                                           color: (isHighlighted
                                                   ? onPrimaryColor
                                                   : isReserved
-                                                      ? Colors.green
-                                                  : isPast || !hasOptions
-                                                      ? Colors.grey
+                                                      ? theme.colorScheme.onSurface
+                                                  : !isSelectable
+                                                      ? theme.colorScheme.onSurface.withValues(alpha: 0.5)
                                                       : primaryColor)
                                               .withValues(alpha: 0.8),
                                           fontSize: smallFontSize,
@@ -716,10 +738,10 @@ class TimeOptionsWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (availableOptions.isEmpty) {
-      return const Center(
+      return Center(
         child: Text(
           'No hay opciones disponibles',
-          style: TextStyle(color: Colors.grey),
+          style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5)),
         ),
       );
     }
@@ -743,10 +765,10 @@ class TimeOptionsWidget extends StatelessWidget {
                   height: 60,
                   margin: const EdgeInsets.symmetric(horizontal: 4),
                   decoration: BoxDecoration(
-                    color: isSelected ? Colors.red : Colors.transparent,
+                    color: isSelected ? AppThemes.primary_300 : Colors.transparent,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: Colors.red,
+                      color: AppThemes.black_500,
                       width: 1,
                     ),
                   ),
@@ -755,7 +777,7 @@ class TimeOptionsWidget extends StatelessWidget {
                     children: [
                       Icon(
                         Icons.directions_bus,
-                        color: isSelected ? Colors.white : onSurface,
+                        color: isSelected ? AppThemes.primary_600 : onSurface,
                         size: iconSize,
                       ),
                       SizedBox(width: spacing),
@@ -768,7 +790,7 @@ class TimeOptionsWidget extends StatelessWidget {
                                   Text(
                                     formatTime(time),
                                     style: TextStyle(
-                                      color: isSelected ? Colors.white : onSurface,
+                                      color: isSelected ? AppThemes.primary_600 : onSurface,
                                       fontSize: fontSize,
                                       fontWeight: FontWeight.w600,
                                     ),
@@ -778,7 +800,7 @@ class TimeOptionsWidget extends StatelessWidget {
                                   Text(
                                     service,
                                     style: TextStyle(
-                                      color: isSelected ? Colors.white : onSurface.withValues(alpha: 0.8),
+                                      color: isSelected ? AppThemes.primary_600 : onSurface.withValues(alpha: 0.8),
                                       fontSize: smallFontSize,
                                       fontWeight: FontWeight.w400,
                                     ),
@@ -790,7 +812,7 @@ class TimeOptionsWidget extends StatelessWidget {
                             : Text(
                                 '${formatTime(time)} - $service',
                                 style: TextStyle(
-                                  color: isSelected ? Colors.white : onSurface,
+                                  color: isSelected ? AppThemes.primary_600 : onSurface,
                                   fontSize: fontSize,
                                   fontWeight: FontWeight.w600,
                                 ),
@@ -813,12 +835,14 @@ class TimeOptionsWidget extends StatelessWidget {
 class ReservationButtonWidget extends StatelessWidget {
   final bool isOutbound;
   final String? selectedLocation;
+  final Map<String, dynamic>? selectedOption;
   final VoidCallback onReservar;
 
   const ReservationButtonWidget({
     super.key,
     required this.isOutbound,
     required this.selectedLocation,
+    required this.selectedOption,
     required this.onReservar,
   });
 
@@ -869,9 +893,9 @@ class ReservationButtonWidget extends StatelessWidget {
           SizedBox(
             height: 40,
             child: ElevatedButton(
-              onPressed: onReservar,
+              onPressed: selectedOption != null ? onReservar : null,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
+                backgroundColor: selectedOption != null ? AppThemes.primary_600 : theme.colorScheme.onSurface.withValues(alpha: 0.5),
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),

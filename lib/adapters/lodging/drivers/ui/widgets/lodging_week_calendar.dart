@@ -3,7 +3,7 @@ import 'package:intl/intl.dart';
 import '../../../driven/providers/lodging_provider.dart';
 import 'package:mobile/adapters/core/driven/app_themes.dart';
 
-typedef DateRangeSelectedCallback = void Function(DateTime start, DateTime end);
+typedef DateRangeSelectedCallback = void Function(DateTime? start, DateTime? end);
 
 class LodgingWeekCalendar extends StatefulWidget {
   final DateTime focusedWeekStart;
@@ -92,6 +92,17 @@ class LodgingWeekCalendarState extends State<LodgingWeekCalendar> {
     return true;
   }
 
+  bool _isReserved(DateTime day) {
+    for (var reservation in widget.reservations) {
+      final checkIn = DateTime.parse(reservation['checkIn']);
+      final checkOut = DateTime.parse(reservation['checkOut']);
+      if (!day.isBefore(checkIn) && !day.isAfter(checkOut)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   bool _isSelected(DateTime day) {
     if (_selectedStartDate == null) return false;
     if (_selectedEndDate == null) return day == _selectedStartDate;
@@ -107,6 +118,15 @@ class LodgingWeekCalendarState extends State<LodgingWeekCalendar> {
       if (!day.isBefore(checkIn) && !day.isAfter(checkOut)) {
         return;
       }
+    }
+
+    if (_isSelected(day)) {
+      setState(() {
+        _selectedStartDate = null;
+        _selectedEndDate = null;
+      });
+      widget.onDateRangeSelected(null, null);
+      return;
     }
 
     setState(() {
@@ -186,12 +206,12 @@ class LodgingWeekCalendarState extends State<LodgingWeekCalendar> {
                             decoration: BoxDecoration(
                               color: isSelected
                                   ? primaryColor
-                                  : !isCurrentMonth || isPast || !isSelectable
+                                  : !isCurrentMonth || isPast || (!isSelectable && !_isReserved(day))
                                       ? onSurfaceContainerHighestColor.withValues(alpha: 0.3)
                                       : null,
                               borderRadius: BorderRadius.circular(8),
                               border: Border.all(
-                                color: primaryColor,
+                                color: _isReserved(day) ? Colors.green : ((!isSelectable && !_isReserved(day)) ? onSurfaceColor.withValues(alpha: 0.3) : primaryColor),
                                 width: 1.0,
                               ),
                             ),
@@ -205,9 +225,9 @@ class LodgingWeekCalendarState extends State<LodgingWeekCalendar> {
                                     style: TextStyle(
                                       color: isSelected
                                           ? onPrimaryColor
-                                          : !isCurrentMonth || isPast || !isSelectable
+                                          : !isCurrentMonth || isPast || (!isSelectable && !_isReserved(day))
                                               ? onSurfaceColor.withValues(alpha: 0.5)
-                                              : primaryColor,
+                                              : onSurfaceColor,
                                       fontWeight: FontWeight.w500,
                                       fontSize: fontSize,
                                     ),
@@ -218,9 +238,9 @@ class LodgingWeekCalendarState extends State<LodgingWeekCalendar> {
                                     style: TextStyle(
                                       color: (isSelected
                                               ? onPrimaryColor
-                                              : !isCurrentMonth || isPast || !isSelectable
+                                              : !isCurrentMonth || isPast || (!isSelectable && !_isReserved(day))
                                                   ? onSurfaceColor.withValues(alpha: 0.5)
-                                                  : primaryColor)
+                                                  : onSurfaceColor)
                                           .withValues(alpha: 0.8),
                                       fontSize: smallFontSize,
                                       fontWeight: FontWeight.w400,
@@ -242,7 +262,7 @@ class LodgingWeekCalendarState extends State<LodgingWeekCalendar> {
                             child: Icon(
                               Icons.confirmation_num,
                               size: iconSize,
-                              color: theme.colorScheme.primary,
+                              color: isSelected ? onPrimaryColor : Colors.green,
                             ),
                           ),
                       ],

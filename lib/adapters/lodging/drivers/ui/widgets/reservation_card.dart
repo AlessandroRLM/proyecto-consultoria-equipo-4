@@ -48,16 +48,14 @@ class _ReservationCardState extends State<ReservationCard> {
       },
       child: Card(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        elevation: expanded ? 4 : 0,
+        elevation: 0,
         margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
-        color: expanded ? null : cs.surface,
+        color: null,
         child: Container(
-          decoration: expanded
-              ? null
-              : BoxDecoration(
-                  border: Border.all(color: cs.outline),
-                  borderRadius: BorderRadius.circular(12),
-                ),
+          decoration: BoxDecoration(
+            border: Border.all(color: AppThemes.black_500.withValues(alpha: 0.4)),
+            borderRadius: BorderRadius.circular(12),
+          ),
           padding: const EdgeInsets.all(14),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -122,10 +120,10 @@ class _ReservationCardState extends State<ReservationCard> {
                       ),
                       onPressed: () {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('El mapa aún no está implementado.')),
+                          const SnackBar(content: Text('Pantalla aún no implementada.')),
                         );
                       },
-                      child: const Text("Mapa"),
+                      child: const Text("Ver"),
                     ),
                   ],
                 ),

@@ -6,9 +6,9 @@ import 'package:mobile/domain/entities/transport_reservation_status.dart';
 
 class TransportReservationsProvider extends ChangeNotifier {
   List<Map<String, dynamic>> _reservations = [];
-  final Map<String, List<Map<String, dynamic>>> _optionsByDate = {}; 
+  final Map<String, Map<bool, List<Map<String, dynamic>>>> _optionsByDate = {};
 
-  String? _selectedLocation;
+  Map<String, String>? _selectedLocation;
   String? _selectedOutboundTime;
   String? _selectedReturnTime;
   String? _selectedDate;
@@ -20,7 +20,16 @@ class TransportReservationsProvider extends ChangeNotifier {
   List<Map<String, dynamic>> get futureReservations {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    var futureRes = _reservations.where((r) {
+    List<Map<String, dynamic>> allLegs = [];
+    for (var reservation in _reservations) {
+      if (reservation['outbound'] != null) {
+        allLegs.add(reservation['outbound']);
+      }
+      if (reservation['return'] != null) {
+        allLegs.add(reservation['return']);
+      }
+    }
+    var futureRes = allLegs.where((r) {
       if (r['date'] == null) return false;
       dynamic dateValue = r['date'];
       DateTime date;
@@ -51,11 +60,20 @@ class TransportReservationsProvider extends ChangeNotifier {
       }
       final resDateA = DateTime(dateA.year, dateA.month, dateA.day);
       final resDateB = DateTime(dateB.year, dateB.month, dateB.day);
-      return resDateA.compareTo(resDateB); 
+      int dateCompare = resDateA.compareTo(resDateB);
+      if (dateCompare != 0) return dateCompare;
+      final detailsA = (a['details'] as String?)?.toLowerCase() ?? '';
+      final detailsB = (b['details'] as String?)?.toLowerCase() ?? '';
+      if (detailsA.contains('ida') && detailsB.contains('regreso')) {
+        return -1;
+      } else if (detailsA.contains('regreso') && detailsB.contains('ida')) {
+        return 1;
+      }
+      return 0;
     });
     return futureRes;
   }
-  Map<String, List<Map<String, dynamic>>> get optionsByDate => _optionsByDate;
+  Map<String, Map<bool, List<Map<String, dynamic>>>> get optionsByDate => _optionsByDate;
 
   String? get nextAvailableDate {
     final now = DateTime.now();
@@ -79,7 +97,12 @@ class TransportReservationsProvider extends ChangeNotifier {
       _reservations = jsonList.map((json) => Map<String, dynamic>.from(json)).toList();
       // Actualizar el estado de cada reserva según la lógica definida
       for (var reservation in _reservations) {
-        reservation['status'] = getStatusForReservation(reservation);
+        if (reservation['outbound'] != null) {
+          reservation['outbound']['status'] = getStatusForReservation(reservation['outbound']);
+        }
+        if (reservation['return'] != null) {
+          reservation['return']['status'] = getStatusForReservation(reservation['return']);
+        }
       }
     }
 
@@ -104,22 +127,33 @@ class TransportReservationsProvider extends ChangeNotifier {
   }
 
   bool isWeekAllowed(DateTime monday) {
-    if (monday.weekday != DateTime.monday) return false; 
+    if (monday.weekday != DateTime.monday) return false;
+    const int cutoffWeekday = 3; 
     final now = DateTime.now();
     final todayWeekday = now.weekday;
     final daysToNextMonday = (DateTime.monday - todayWeekday + 7) % 7;
-    final minReservableMonday = now.add(Duration(days: daysToNextMonday == 0 ? 7 : daysToNextMonday));
+    final nextMonday = now.add(Duration(days: daysToNextMonday == 0 ? 7 : daysToNextMonday));
+    final subsequentMonday = nextMonday.add(const Duration(days: 7));
+    DateTime minReservableMonday;
+    if (todayWeekday < cutoffWeekday) {
+      minReservableMonday = nextMonday;
+    } else {
+      minReservableMonday = subsequentMonday;
+    }
     return !monday.isBefore(minReservableMonday);
   }
 
   List<Map<String, dynamic>> getOptionsForDate(String dateStr, {bool isOutbound = true}) {
-    if (_optionsByDate[dateStr] != null) {
-      return _optionsByDate[dateStr]!;
+    if (_optionsByDate[dateStr]?[isOutbound] != null) {
+      return _optionsByDate[dateStr]![isOutbound]!;
     }
     final transportTimes = isOutbound
         ? ['07:00 AM', '08:00 AM', '09:00 AM']
         : ['13:00 PM', '15:00 PM', '17:00 PM'];
-    return transportTimes.map((time) => {'service': 'Bus', 'time': time, 'available': true, 'details': 'Inicio/Periferia'}).toList();
+    final list = transportTimes.map((time) => {'service': 'Bus', 'time': time, 'available': true, 'details': 'Inicio/Periferia'}).toList();
+    _optionsByDate[dateStr] ??= {};
+    _optionsByDate[dateStr]![isOutbound] = list;
+    return list;
   }
 
   bool hasAvailableOptions(String dateStr) {
@@ -135,25 +169,39 @@ class TransportReservationsProvider extends ChangeNotifier {
   }
 
   void sortReservations() {
-    _reservations.removeWhere((r) => r['date'] == null);
     _reservations.sort((a, b) {
-      dynamic dateValueA = a['date'];
-      dynamic dateValueB = b['date'];
-      if (dateValueA == null || dateValueB == null) return 0;
-      DateTime dateA;
-      if (dateValueA is DateTime) {
-        dateA = dateValueA;
-      } else {
-        dateA = DateTime.parse(dateValueA as String);
-      }
-      DateTime dateB;
-      if (dateValueB is DateTime) {
-        dateB = dateValueB;
-      } else {
-        dateB = DateTime.parse(dateValueB as String);
-      }
-      return dateB.compareTo(dateA); 
+      DateTime? dateA = _getEarliestDate(a);
+      DateTime? dateB = _getEarliestDate(b);
+      if (dateA == null && dateB == null) return 0;
+      if (dateA == null) return 1;
+      if (dateB == null) return -1;
+      return dateB.compareTo(dateA);
     });
+  }
+
+  DateTime? _getEarliestDate(Map<String, dynamic> reservation) {
+    DateTime? outboundDate;
+    if (reservation['outbound'] != null && reservation['outbound']['date'] != null) {
+      dynamic dateValue = reservation['outbound']['date'];
+      if (dateValue is DateTime) {
+        outboundDate = dateValue;
+      } else {
+        outboundDate = DateTime.parse(dateValue as String);
+      }
+    }
+    DateTime? returnDate;
+    if (reservation['return'] != null && reservation['return']['date'] != null) {
+      dynamic dateValue = reservation['return']['date'];
+      if (dateValue is DateTime) {
+        returnDate = dateValue;
+      } else {
+        returnDate = DateTime.parse(dateValue as String);
+      }
+    }
+    if (outboundDate != null && returnDate != null) {
+      return outboundDate.isBefore(returnDate) ? outboundDate : returnDate;
+    }
+    return outboundDate ?? returnDate;
   }
 
   void addReservation(Map<String, dynamic> reservation) async {
@@ -190,8 +238,8 @@ class TransportReservationsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  String? get selectedLocation => _selectedLocation;
-  set selectedLocation(String? value) {
+  Map<String, String>? get selectedLocation => _selectedLocation;
+  set selectedLocation(Map<String, String>? value) {
     _selectedLocation = value;
     notifyListeners();
   }
@@ -234,8 +282,8 @@ class TransportReservationsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void addRoundTripReservation() async {
-    if (_selectedDate == null || _selectedLocation == null || _selectedOutboundTime == null || _selectedReturnTime == null) return;
+  void addOutboundReservation() async {
+    if (_selectedDate == null || _selectedLocation == null || _selectedOutboundTime == null) return;
 
     dynamic selectedDateValue = _selectedDate;
     String outboundDateStr;
@@ -244,55 +292,159 @@ class TransportReservationsProvider extends ChangeNotifier {
     } else {
       outboundDateStr = selectedDateValue as String;
     }
-    dynamic returnDateValue = _selectedReturnDate ?? _selectedDate;
+
+    if (hasOutboundOnDate(outboundDateStr)) return;
+
+    final outboundTime = _parseTime(_selectedOutboundTime!);
+
+    final outboundReservation = {
+      'type': 'transport',
+      'date': outboundDateStr,
+      'origin': 'Campus Universidad',
+      'destination': _selectedLocation!['name'],
+      'originAddress': 'Campus Universitario, Santiago',
+      'destinationAddress': _selectedLocation!['address'],
+      'originTime': _formatTime(outboundTime),
+      'service': _selectedService ?? 'Transporte',
+      'details': 'Campus Universidad a Campo Clínico (IDA)',
+      'highlighted': true,
+      'status': TransportReservationStatus.pendiente.displayName,
+    };
+
+    final reservation = {
+      'id': DateTime.now().millisecondsSinceEpoch.toString(),
+      'outbound': outboundReservation,
+      'return': null,
+    };
+
+    _reservations.add(reservation);
+    sortReservations();
+    await saveReservations();
+    notifyListeners();
+  }
+
+  void addReturnReservation() async {
+    if (_selectedReturnDate == null || _selectedLocation == null || _selectedReturnTime == null) return;
+
+    dynamic returnDateValue = _selectedReturnDate;
     String returnDateStr;
     if (returnDateValue is DateTime) {
       returnDateStr = DateFormat('yyyy-MM-dd').format(returnDateValue);
     } else {
       returnDateStr = returnDateValue as String;
     }
-    final outboundDate = DateTime.parse(outboundDateStr);
-    final returnDate = DateTime.parse(returnDateStr);
-    if (returnDate.isAfter(outboundDate.add(const Duration(days: 7)))) {
-      return;
+
+    if (hasReturnOnDate(returnDateStr)) return;
+
+    final returnTime = _parseTime(_selectedReturnTime!);
+
+    final returnReservation = {
+      'type': 'transport',
+      'date': returnDateStr,
+      'origin': _selectedLocation!['name'],
+      'destination': 'Campus Universidad',
+      'originAddress': _selectedLocation!['address'],
+      'destinationAddress': 'Campus Universitario, Santiago',
+      'originTime': _formatTime(returnTime),
+      'service': _selectedService ?? 'Transporte',
+      'details': 'Campo Clínico a Campus Universidad (REGRESO)',
+      'highlighted': true,
+      'status': TransportReservationStatus.pendiente.displayName,
+    };
+
+    final reservation = {
+      'id': DateTime.now().millisecondsSinceEpoch.toString(),
+      'outbound': null,
+      'return': returnReservation,
+    };
+
+    _reservations.add(reservation);
+    sortReservations();
+    await saveReservations();
+    notifyListeners();
+
+    _selectedLocation = null;
+    _selectedReturnTime = null;
+    _selectedReturnDate = null;
+    _selectedService = null;
+  }
+
+  void addRoundTripReservation() async {
+    if (_selectedDate == null || _selectedLocation == null || _selectedOutboundTime == null ||
+        _selectedReturnDate == null || _selectedReturnTime == null) return;
+
+    dynamic outboundDateValue = _selectedDate;
+    String outboundDateStr;
+    if (outboundDateValue is DateTime) {
+      outboundDateStr = DateFormat('yyyy-MM-dd').format(outboundDateValue);
+    } else {
+      outboundDateStr = outboundDateValue as String;
     }
+
+    dynamic returnDateValue = _selectedReturnDate;
+    String returnDateStr;
+    if (returnDateValue is DateTime) {
+      returnDateStr = DateFormat('yyyy-MM-dd').format(returnDateValue);
+    } else {
+      returnDateStr = returnDateValue as String;
+    }
+
+    if (hasReturnOnDate(returnDateStr)) return;
 
     final outboundTime = _parseTime(_selectedOutboundTime!);
     final returnTime = _parseTime(_selectedReturnTime!);
-
-    final String groupId = DateTime.now().millisecondsSinceEpoch.toString();
 
     final outboundReservation = {
       'type': 'transport',
       'date': outboundDateStr,
       'origin': 'Campus Universidad',
-      'destination': _selectedLocation,
+      'destination': _selectedLocation!['name'],
+      'originAddress': 'Campus Universitario, Santiago',
+      'destinationAddress': _selectedLocation!['address'],
       'originTime': _formatTime(outboundTime),
       'service': _selectedService ?? 'Transporte',
       'details': 'Campus Universidad a Campo Clínico (IDA)',
       'highlighted': true,
-      'groupId': groupId,
       'status': TransportReservationStatus.pendiente.displayName,
     };
 
     final returnReservation = {
       'type': 'transport',
       'date': returnDateStr,
-      'origin': _selectedLocation,
+      'origin': _selectedLocation!['name'],
       'destination': 'Campus Universidad',
+      'originAddress': _selectedLocation!['address'],
+      'destinationAddress': 'Campus Universitario, Santiago',
       'originTime': _formatTime(returnTime),
       'service': _selectedService ?? 'Transporte',
       'details': 'Campo Clínico a Campus Universidad (REGRESO)',
       'highlighted': true,
-      'groupId': groupId,
       'status': TransportReservationStatus.pendiente.displayName,
     };
 
-    _reservations.add(outboundReservation);
-    _reservations.add(returnReservation);
-    sortReservations();
-    await saveReservations();
-    notifyListeners();
+    if (hasOutboundOnDate(outboundDateStr)) {
+      final existingReservation = _reservations.firstWhere(
+        (r) => r['outbound'] != null && r['outbound']['date'] == outboundDateStr,
+        orElse: () => {},
+      );
+      if (existingReservation.isNotEmpty) {
+        existingReservation['return'] = returnReservation;
+        sortReservations();
+        await saveReservations();
+        notifyListeners();
+      }
+    } else {
+      final reservation = {
+        'id': DateTime.now().millisecondsSinceEpoch.toString(),
+        'outbound': outboundReservation,
+        'return': returnReservation,
+      };
+
+      _reservations.add(reservation);
+      sortReservations();
+      await saveReservations();
+      notifyListeners();
+    }
 
     _selectedLocation = null;
     _selectedOutboundTime = null;
@@ -332,10 +484,36 @@ class TransportReservationsProvider extends ChangeNotifier {
     return DateFormat('HH:mm').format(time);
   }
 
+  bool hasOutboundOnDate(String date) {
+    return _reservations.any((r) =>
+      r['outbound'] != null && r['outbound']['date'] == date
+    );
+  }
+
+  bool hasReturnOnDate(String date) {
+    return _reservations.any((r) =>
+      r['return'] != null && r['return']['date'] == date
+    );
+  }
+
+  DateTime getMinReservableDate() {
+    const int cutoffWeekday = 3; 
+    final now = DateTime.now();
+    final todayWeekday = now.weekday;
+    final daysToNextMonday = (DateTime.monday - todayWeekday + 7) % 7;
+    final nextMonday = now.add(Duration(days: daysToNextMonday == 0 ? 7 : daysToNextMonday));
+    DateTime minReservableDate;
+    if (todayWeekday < cutoffWeekday) {
+      minReservableDate = nextMonday;
+    } else {
+      minReservableDate = nextMonday.add(const Duration(days: 7));
+    }
+    return minReservableDate;
+  }
+
   String getStatusForReservation(Map<String, dynamic> reservation) {
     final currentStatus = reservation['status'] as String?;
     if (currentStatus == TransportReservationStatus.aceptada.displayName) {
-      // Apply date logic only for accepted reservations
       final dateStr = reservation['date'] as String?;
       if (dateStr == null) return TransportReservationStatus.pendiente.displayName;
       final date = DateTime.parse(dateStr);
@@ -352,5 +530,10 @@ class TransportReservationsProvider extends ChangeNotifier {
     } else {
       return currentStatus ?? TransportReservationStatus.pendiente.displayName;
     }
+  }
+
+  // Método para hacer refresh a status de reservas (cambios de status que llegan desde API)
+  Future<void> fetchUpdatedReservations() async {
+    await fetchReservations();
   }
 }

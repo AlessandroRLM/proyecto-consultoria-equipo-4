@@ -3,6 +3,7 @@ import 'package:mobile/adapters/lodging/drivers/ui/widgets/lodging_week_calendar
 import 'package:provider/provider.dart';
 import 'package:mobile/adapters/lodging/driven/providers/lodging_provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mobile/adapters/core/driven/app_themes.dart';
 
 class LodgingCalendarScreen extends StatefulWidget {
   final String selectedLocation;
@@ -31,15 +32,22 @@ class _LodgingCalendarScreenState extends State<LodgingCalendarScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final now = DateTime.now();
-    final minSelectableDate = DateTime(now.year, now.month, now.day).add(const Duration(days: 7));
-    final maxSelectableDate = DateTime(now.year, now.month, now.day).add(const Duration(days: 365));
+    final lodgingProvider = Provider.of<LodgingProvider>(context, listen: false);
+    final minSelectableDate = lodgingProvider.getMinReservableDate();
+    final maxSelectableDate = minSelectableDate.add(const Duration(days: 365));
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Reservar'),
       ),
-      body: Column(
+      body: GestureDetector(
+        onTap: () {
+          setState(() {
+            _selectedStartDate = null;
+            _selectedEndDate = null;
+          });
+        },
+        child: Column(
         children: [
           Padding(
             padding: const EdgeInsets.all(16.0),
@@ -113,7 +121,8 @@ class _LodgingCalendarScreenState extends State<LodgingCalendarScreen> {
           ),
         ],
       ),
-    );
+    ),
+  );
   }
 }
 
@@ -178,10 +187,10 @@ class ReservationButtonWidget extends StatelessWidget {
           SizedBox(
             height: 40,
             child: ElevatedButton(
-              onPressed: onReserve,
+              onPressed: selectedStartDate != null && selectedEndDate != null ? onReserve : null,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.primary,
-                foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                backgroundColor: selectedStartDate != null && selectedEndDate != null ? AppThemes.primary_600 : theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
