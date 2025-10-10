@@ -141,6 +141,35 @@ class _TransportTimeSelectionScreenState extends State<TransportTimeSelectionScr
       });
       return;
     }
+
+    // Verificar limite 7 dias Ida.
+    final dateStr = DateFormat('yyyy-MM-dd').format(day);
+    if (_isOutbound) {
+      if (!_transportProvider.hasOutboundOnDate(dateStr)) {
+        if (_transportProvider.getDistinctDatesCount() + 1 > 7) {
+          SchedulerBinding.instance.addPostFrameCallback((_) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Límite máximo de 7 días alcanzado.')),
+            );
+          });
+          return;
+        }
+      }
+    } else {
+      // Verificar limite 7 dias Vuelta.
+      if (!_transportProvider.hasReturnOnDate(dateStr)) {
+        bool isSameDayAsOutbound = dateStr == _transportProvider.selectedDate;
+        if (!isSameDayAsOutbound && _transportProvider.getDistinctDatesCount() + 1 > 7) {
+          SchedulerBinding.instance.addPostFrameCallback((_) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Límite máximo de 7 días alcanzado.')),
+            );
+          });
+          return;
+        }
+      }
+    }
+
     setState(() {
       _selectedDate = day;
       _focusedWeekStart = getMondayOfWeek(day);
@@ -216,11 +245,11 @@ class _TransportTimeSelectionScreenState extends State<TransportTimeSelectionScr
   
   void _onReservar() {
     if (_selectedLocation == null) {
-      SchedulerBinding.instance.addPostFrameCallback((_) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Por favor, seleccione una ubicación primero.')),
-        );
-      });
+        SchedulerBinding.instance.addPostFrameCallback((_) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Por favor, seleccione una ubicación primero.')),
+          );
+        });
       return;
     }
     if (_selectedDate == null) {

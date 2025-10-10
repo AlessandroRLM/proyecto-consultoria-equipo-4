@@ -167,12 +167,12 @@ class LodgingWeekCalendarState extends State<LodgingWeekCalendar> {
     return LayoutBuilder(
       builder: (context, constraints) {
         double availableWidth = constraints.maxWidth;
-        double rowPaddingHorizontal = 32.0; 
-        double dayPadding = 8.0; 
-        double effectiveDayWidth = (availableWidth - rowPaddingHorizontal) / 7 - dayPadding;
+        double rowPaddingHorizontal = availableWidth < 350 ? 16.0 : 32.0; 
+        double dayPadding = availableWidth < 350 ? 2.0 : 8.0; 
+        double effectiveDayWidth = (availableWidth - rowPaddingHorizontal) / 7 - dayPadding * 2;
         double dayHeight = effectiveDayWidth * (55.0 / 40.0);
-        double fontSize = effectiveDayWidth > 30 ? 14.0 : 12.0;
-        double smallFontSize = fontSize * 0.8;
+        double fontSize = effectiveDayWidth > 35 ? 14.0 : (effectiveDayWidth > 30 ? 13.0 : 12.0);
+        double smallFontSize = effectiveDayWidth > 35 ? 11.0 : (effectiveDayWidth > 30 ? 10.0 : 9.0);
         double iconSize = smallFontSize;
 
         List<Widget> rows = [];
@@ -191,7 +191,7 @@ class LodgingWeekCalendarState extends State<LodgingWeekCalendar> {
             rowWidgets.add(
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.all(4.0),
+                  padding: EdgeInsets.all(availableWidth < 350 ? 2.0 : 4.0),
                   child: Material(
                     color: Colors.transparent,
                     child: Stack(
@@ -219,30 +219,36 @@ class LodgingWeekCalendarState extends State<LodgingWeekCalendar> {
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Text(
-                                    day.day.toString(),
-                                    style: TextStyle(
-                                      color: isSelected
-                                          ? onPrimaryColor
-                                          : !isCurrentMonth || isPast || (!isSelectable && !_isReserved(day))
-                                              ? onSurfaceColor.withValues(alpha: 0.5)
-                                              : onSurfaceColor,
-                                      fontWeight: FontWeight.w500,
-                                      fontSize: fontSize,
+                                  Flexible(
+                                    child: Text(
+                                      day.day.toString(),
+                                      style: TextStyle(
+                                        color: isSelected
+                                            ? onPrimaryColor
+                                            : !isCurrentMonth || isPast || (!isSelectable && !_isReserved(day))
+                                                ? onSurfaceColor.withValues(alpha: 0.5)
+                                                : onSurfaceColor,
+                                        fontWeight: FontWeight.w500,
+                                        fontSize: fontSize,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
                                     ),
                                   ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    weekdayAbbr,
-                                    style: TextStyle(
-                                      color: (isSelected
-                                              ? onPrimaryColor
-                                              : !isCurrentMonth || isPast || (!isSelectable && !_isReserved(day))
-                                                  ? onSurfaceColor.withValues(alpha: 0.5)
-                                                  : onSurfaceColor)
-                                          .withValues(alpha: 0.8),
-                                      fontSize: smallFontSize,
-                                      fontWeight: FontWeight.w400,
+                                  const SizedBox(height: 1),
+                                  Flexible(
+                                    child: Text(
+                                      weekdayAbbr,
+                                      style: TextStyle(
+                                        color: (isSelected
+                                                ? onPrimaryColor
+                                                : !isCurrentMonth || isPast || (!isSelectable && !_isReserved(day))
+                                                    ? onSurfaceColor.withValues(alpha: 0.5)
+                                                    : onSurfaceColor)
+                                            .withValues(alpha: 0.8),
+                                        fontSize: smallFontSize,
+                                        fontWeight: FontWeight.w400,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
                                     ),
                                   ),
                                 ],
@@ -256,11 +262,11 @@ class LodgingWeekCalendarState extends State<LodgingWeekCalendar> {
                           return !day.isBefore(checkIn) && !day.isAfter(checkOut);
                         }))
                           Positioned(
-                            right: 2,
-                            top: 2,
+                            right: availableWidth < 350 ? 1 : 2,
+                            top: availableWidth < 350 ? 1 : 2,
                             child: Icon(
                               Icons.confirmation_num,
-                              size: iconSize,
+                              size: availableWidth < 350 ? iconSize * 0.8 : iconSize,
                               color: isSelected ? onPrimaryColor : Colors.green,
                             ),
                           ),
@@ -273,7 +279,7 @@ class LodgingWeekCalendarState extends State<LodgingWeekCalendar> {
           }
           rows.add(
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: EdgeInsets.symmetric(horizontal: availableWidth < 350 ? 8.0 : 16.0),
               child: Row(
                 children: rowWidgets,
               ),
@@ -284,7 +290,7 @@ class LodgingWeekCalendarState extends State<LodgingWeekCalendar> {
         return Column(
           children: [
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: EdgeInsets.symmetric(horizontal: availableWidth < 350 ? 8.0 : 16.0),
               child: SizedBox(
                 height: 48,
                 child: Row(
@@ -297,12 +303,15 @@ class LodgingWeekCalendarState extends State<LodgingWeekCalendar> {
                     ),
                     Expanded(
                       child: Center(
-                        child: Text(
-                          capitalizedMonthFormatted,
-                          style: TextStyle(
-                            fontSize: 18,
-                            color: primaryColor,
-                            fontWeight: FontWeight.bold,
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            capitalizedMonthFormatted,
+                            style: TextStyle(
+                              fontSize: availableWidth < 350 ? 16.0 : 18.0,
+                              color: primaryColor,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                       ),
@@ -315,7 +324,7 @@ class LodgingWeekCalendarState extends State<LodgingWeekCalendar> {
                 ),
               ),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: availableWidth < 350 ? 8.0 : 16.0),
             Column(
               children: rows,
             ),

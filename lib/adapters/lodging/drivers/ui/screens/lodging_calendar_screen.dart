@@ -51,17 +51,22 @@ class _LodgingCalendarScreenState extends State<LodgingCalendarScreen> {
         children: [
           Padding(
             padding: const EdgeInsets.all(16.0),
-            child: Text(
-              'Seleccione la fecha del alojamiento',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
+            child: SizedBox(
+              width: double.infinity,
+              child: Text(
+                'Seleccione la fecha del alojamiento',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
-              textAlign: TextAlign.center,
             ),
           ),
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 16.0),
               child: LodgingWeekCalendar(
                 focusedWeekStart: minSelectableDate,
                 allowedStart: minSelectableDate,
@@ -78,17 +83,6 @@ class _LodgingCalendarScreenState extends State<LodgingCalendarScreen> {
               ),
             ),
           ),
-          if (_selectedStartDate != null && _selectedEndDate != null)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-              child: Text(
-                'De ${formatDate(_selectedStartDate!)} a ${formatDate(_selectedEndDate!)}',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w500,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ),
           ReservationButtonWidget(
             selectedLocation: widget.selectedLocation,
             selectedStartDate: _selectedStartDate,

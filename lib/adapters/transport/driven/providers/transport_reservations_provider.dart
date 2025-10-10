@@ -564,6 +564,19 @@ class TransportReservationsProvider extends ChangeNotifier {
     }
   }
 
+  int getDistinctDatesCount() {
+    Set<String> dates = {};
+    for (var res in _reservations) {
+      if (res['outbound'] != null && res['outbound']['date'] != null) {
+        dates.add(res['outbound']['date']);
+      }
+      if (res['return'] != null && res['return']['date'] != null) {
+        dates.add(res['return']['date']);
+      }
+    }
+    return dates.length;
+  }
+
   // Método para hacer refresh a status de reservas (cambios de status que llegan desde API)
   Future<void> fetchUpdatedReservations() async {
     await fetchReservations();
