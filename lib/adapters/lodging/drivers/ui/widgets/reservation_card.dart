@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/adapters/core/driven/app_themes.dart';
 import 'package:mobile/domain/models/lodging/lodging_reservation_model.dart';
+import 'package:mobile/adapters/lodging/drivers/ui/screens/detalle_lodging_screen.dart';
 
 class ReservationCard extends StatefulWidget {
   final LodgingReservation reservation;
@@ -64,7 +65,7 @@ class _ReservationCardState extends State<ReservationCard> {
             // Info extra cuando la card está expandida
             if (expanded) ...[
               const SizedBox(height: 12),
-              const Divider(height: 1), // <- línea divisoria
+              const Divider(height: 1),
 
               const SizedBox(height: 12),
               Row(
@@ -95,6 +96,34 @@ class _ReservationCardState extends State<ReservationCard> {
                         ),
                       ),
                     ],
+                  ),
+
+                  // 🔹 Botón "Ver"
+                  FilledButton(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: cs.primary,
+                      foregroundColor: cs.onPrimary,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 10,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      textStyle: text.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              const HomeAlojamientoScreen(), // tu nueva pantalla
+                        ),
+                      );
+                    },
+                    child: const Text("Ver"),
                   ),
                 ],
               ),
