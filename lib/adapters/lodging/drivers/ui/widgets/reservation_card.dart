@@ -118,8 +118,11 @@ class _ReservationCardState extends State<ReservationCard> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) =>
-                              const HomeAlojamientoScreen(), // tu nueva pantalla
+                          builder: (_) => HomeAlojamientoScreen(
+                            homeId: widget
+                                .reservation
+                                .homeId, // 👈 id real de la reserva
+                          ),
                         ),
                       );
                     },

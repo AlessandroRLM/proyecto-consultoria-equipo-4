@@ -1,6 +1,7 @@
 /// ViewModel que la UI (ReservationCard) consume para listar reservas.
 /// Se arma a partir de los mocks: schedule_student.json + home.json.
 class LodgingReservation {
+  final int homeId;
   final String area; // clinical_name (campo clínico)
   final String name; // residenceName (nombre residencia)
   final String address; // address (dirección)
@@ -9,6 +10,7 @@ class LodgingReservation {
   final String checkOut; // simulación (reservation_date + 7 días)
 
   const LodgingReservation({
+    required this.homeId,
     required this.area,
     required this.name,
     required this.address,

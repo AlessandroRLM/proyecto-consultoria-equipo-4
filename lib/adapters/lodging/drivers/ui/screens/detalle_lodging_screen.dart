@@ -4,28 +4,84 @@ import 'package:mobile/adapters/lodging/drivers/ui/widgets/image_carousel.dart';
 import 'package:mobile/adapters/lodging/drivers/ui/widgets/section_title.dart';
 import 'package:mobile/adapters/lodging/drivers/ui/widgets/service_item.dart';
 import 'package:provider/provider.dart';
-import 'package:mobile/adapters/core/driven/header_provider.dart';
+import 'package:mobile/adapters/lodging/driven/providers/lodging_provider.dart';
+import 'package:mobile/domain/models/lodging/residencia_model.dart';
 
 class HomeAlojamientoScreen extends StatefulWidget {
-  const HomeAlojamientoScreen({super.key});
+  final int homeId;
+  const HomeAlojamientoScreen({super.key, required this.homeId});
 
   @override
   State<HomeAlojamientoScreen> createState() => _HomeAlojamientoScreenState();
 }
 
 class _HomeAlojamientoScreenState extends State<HomeAlojamientoScreen> {
+  ResidenciaModel? residencia;
+  bool loading = true;
+
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<HeaderProvider>().set(showChips: false);
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final provider = context.read<LodgingProvider>();
+      try {
+        final data = await provider.fetchResidenceDetail(widget.homeId);
+        if (!mounted) return;
+        setState(() {
+          residencia = data;
+          loading = false;
+        });
+      } catch (e) {
+        if (!mounted) return;
+        setState(() => loading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al cargar residencia: $e')),
+        );
+      }
     });
   }
 
   @override
   void dispose() {
-    context.read<HeaderProvider>().reset();
     super.dispose();
+  }
+
+  // --- Normalizador y mapeo flexible de servicios --- //
+  String _norm(String s) => s.toLowerCase().trim();
+
+  MapEntry<IconData, String> _mapService(String raw) {
+    final k = _norm(raw);
+
+    if (['television', 'tv', 't.v.', 'televisión'].contains(k)) {
+      return const MapEntry(Icons.tv, 'Televisión');
+    }
+    if (['wifi', 'wi-fi', 'internet'].contains(k)) {
+      return const MapEntry(Icons.wifi, 'Wifi');
+    }
+    if (['hot water', 'agua caliente', 'water heater'].contains(k)) {
+      return const MapEntry(Icons.water_drop, 'Agua Caliente');
+    }
+    if (['heating', 'calefaccion', 'calefacción', 'heater'].contains(k)) {
+      return const MapEntry(Icons.local_fire_department, 'Calefacción');
+    }
+    if (['laundry', 'lavanderia', 'lavandería'].contains(k)) {
+      return const MapEntry(Icons.local_laundry_service, 'Lavandería');
+    }
+    if (['dining room', 'comedor', 'meal room'].contains(k)) {
+      return const MapEntry(Icons.restaurant, 'Comedor');
+    }
+
+    return MapEntry(Icons.check_circle_outline, raw);
+  }
+
+  List<Widget> _buildServiceItems(double itemWidth, List<String> services) {
+    return services.map((raw) {
+      final entry = _mapService(raw);
+      return SizedBox(
+        width: itemWidth,
+        child: ServiceItem(icon: entry.key, label: entry.value),
+      );
+    }).toList();
   }
 
   @override
@@ -33,11 +89,24 @@ class _HomeAlojamientoScreenState extends State<HomeAlojamientoScreen> {
     final cs = Theme.of(context).colorScheme;
     final text = Theme.of(context).textTheme;
 
-    const images = [
-      'https://picsum.photos/seed/lodge1/900/500',
-      'https://picsum.photos/seed/lodge2/900/500',
-      'https://picsum.photos/seed/lodge3/900/500',
-    ];
+    if (loading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+    if (residencia == null) {
+      return const Scaffold(
+        body: Center(child: Text('Residencia no encontrada')),
+      );
+    }
+
+    // Fallback de imágenes si la residencia viene sin fotos.
+    final images = (residencia!.images.isEmpty)
+        ? const ['https://picsum.photos/seed/fallback/900/500']
+        : residencia!.images.map((e) => e.url).toList();
+
+    // Fallback de servicios si viene vacío.
+    final services = (residencia!.availableServices.isEmpty)
+        ? const <String>[]
+        : residencia!.availableServices;
 
     const hPad = 16.0;
     const spacing = 12.0;
@@ -81,7 +150,6 @@ class _HomeAlojamientoScreenState extends State<HomeAlojamientoScreen> {
                 ),
               ),
 
-              // Espaciado proporcional post imagen
               const SizedBox(height: 20),
 
               // Título + dirección
@@ -91,7 +159,7 @@ class _HomeAlojamientoScreenState extends State<HomeAlojamientoScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Los Cipreses Residence',
+                      residencia!.residenceName,
                       style: text.titleLarge?.copyWith(
                         fontWeight: FontWeight.w600,
                         fontSize: 19,
@@ -99,7 +167,7 @@ class _HomeAlojamientoScreenState extends State<HomeAlojamientoScreen> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '1234 Evergreen Avenue, Santiago, Chile',
+                      residencia!.address,
                       style: text.bodySmall?.copyWith(
                         color: text.bodyMedium?.color?.withValues(alpha: 0.7),
                       ),
@@ -118,7 +186,7 @@ class _HomeAlojamientoScreenState extends State<HomeAlojamientoScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Beatriz Salazar',
+                      residencia!.residenceManager,
                       style: text.bodyMedium?.copyWith(
                         fontWeight: FontWeight.w900,
                         fontSize: 15.5,
@@ -147,47 +215,7 @@ class _HomeAlojamientoScreenState extends State<HomeAlojamientoScreen> {
                 child: Wrap(
                   spacing: spacing,
                   runSpacing: 10,
-                  children: [
-                    SizedBox(
-                      width: itemWidth,
-                      child: const ServiceItem(
-                        icon: Icons.tv,
-                        label: 'Televisión',
-                      ),
-                    ),
-                    SizedBox(
-                      width: itemWidth,
-                      child: const ServiceItem(icon: Icons.wifi, label: 'Wifi'),
-                    ),
-                    SizedBox(
-                      width: itemWidth,
-                      child: const ServiceItem(
-                        icon: Icons.water_drop,
-                        label: 'Agua Caliente',
-                      ),
-                    ),
-                    SizedBox(
-                      width: itemWidth,
-                      child: const ServiceItem(
-                        icon: Icons.ac_unit,
-                        label: 'Aire Acondicionado',
-                      ),
-                    ),
-                    SizedBox(
-                      width: itemWidth,
-                      child: const ServiceItem(
-                        icon: Icons.local_laundry_service,
-                        label: 'Lavandería',
-                      ),
-                    ),
-                    SizedBox(
-                      width: itemWidth,
-                      child: const ServiceItem(
-                        icon: Icons.restaurant,
-                        label: 'Comedor',
-                      ),
-                    ),
-                  ],
+                  children: _buildServiceItems(itemWidth, services),
                 ),
               ),
 

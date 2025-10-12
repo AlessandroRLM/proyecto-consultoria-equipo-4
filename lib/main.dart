@@ -10,7 +10,6 @@ import 'package:mobile/adapters/lodging/driven/providers/lodging_provider.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mobile/adapters/lodging/driven/providers/lodging_availability_provider.dart';
-import 'package:mobile/adapters/core/driven/header_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -44,7 +43,6 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(
           create: (_) => LodgingAvailabilityProvider()..fetchAvailability(),
         ),
-        ChangeNotifierProvider(create: (_) => HeaderProvider()),
       ],
       child: MaterialApp.router(
         title: 'ServicesApp',

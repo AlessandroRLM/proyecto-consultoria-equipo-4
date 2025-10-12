@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/adapters/lodging/driven/datasources/lodging_mock_datasource.dart';
 import 'package:mobile/domain/models/lodging/lodging_reservation_model.dart';
+import 'package:mobile/domain/models/lodging/residencia_model.dart';
 
 class LodgingProvider with ChangeNotifier {
   final LodgingMockDataSource _ds;
@@ -61,15 +62,17 @@ class LodgingProvider with ChangeNotifier {
         final room = homeId.toString(); // ej. "101"
         _reservations.add(
           LodgingReservation(
+            homeId: homeId,
             area: clinicalName,
             name: residenceName,
             address: address,
-            room: room, // ahora "101" (número, sin prefijos)
+            room: room,
             checkIn: checkIn,
             checkOut: checkOut,
           ),
         );
       }
+
       // (opcional) ordenar por fecha asc
       _reservations.sort((a, b) => a.checkIn.compareTo(b.checkIn));
     } catch (e) {
@@ -78,5 +81,26 @@ class LodgingProvider with ChangeNotifier {
 
     _loading = false;
     notifyListeners();
+  }
+
+  // ==========================================================
+  // 🔹 Obtener detalle completo de una residencia (home.json)
+  // ==========================================================
+  Future<ResidenciaModel> fetchResidenceDetail(int homeId) async {
+    try {
+      // Cargar lista completa de residencias desde el mock
+      final homes = await _ds.getHomesRaw();
+
+      // Buscar por homeId (igual que en home.json)
+      final json = homes.firstWhere(
+        (h) => h['homeId'] == homeId,
+        orElse: () => throw Exception('Residencia no encontrada'),
+      );
+
+      // Convertir el JSON a tu modelo ResidenciaModel
+      return ResidenciaModel.fromJson(json);
+    } catch (e) {
+      throw Exception('Error al cargar detalle de residencia: $e');
+    }
   }
 }
