@@ -4,6 +4,7 @@ import 'package:mobile/adapters/auth/drivers/screens/login_screen.dart';
 import 'package:mobile/adapters/core/drivers/ui/layouts/app_layout.dart';
 import 'package:mobile/adapters/core/drivers/ui/layouts/home_layout.dart';
 import 'package:mobile/adapters/core/drivers/ui/screens/clinics_map_screen.dart';
+import 'package:mobile/adapters/core/drivers/ui/screens/tracking_screen.dart';
 import 'package:mobile/adapters/credentials/driven/image_services.dart';
 import 'package:mobile/adapters/credentials/drivers/ui/screens/credential_screen.dart';
 import 'package:mobile/adapters/credentials/drivers/ui/screens/new_credential_screen.dart';
@@ -165,6 +166,12 @@ final GoRouter appRoutes = GoRouter(
               builder: (BuildContext context, GoRouterState state) => ClinicMapScreen(
                 origin: state.pathParameters['originId'],
               ),
+            ),
+
+            // Tracking del vehículo
+            GoRoute(
+              path: '/tracking',
+              builder: (BuildContext context, GoRouterState state) => const TrackingScreen(),
             ),
 
             // Rutas de reservas de servicios

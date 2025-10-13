@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'dart:ui' as ui;
+import 'dart:math' as math;
+import 'dart:typed_data';
 import 'package:location/location.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import 'package:flutter/material.dart';
@@ -17,6 +19,15 @@ class MapboxService {
   Cancelable? _tapEventsCancelable; // Para manejar la suscripción a eventos
   Map<PointAnnotation, Campus> _campusAnnotationMap =
       {}; // Mapeo de anotaciones a campus
+  PointAnnotationManager? _vehicleManager;
+  PointAnnotation? _vehicleAnnotation;
+  Timer? _vehicleTimer;
+  List<Position> _vehicleRoute = [];
+  int _vehicleIndex = 0;
+  bool _vehicleFollow = true;
+  PolylineAnnotationManager? _routeManager;
+  PolylineAnnotation? _routeAnnotation;
+  Position? _routeDestination; // destino para trazar ruta desde el vehículo
 
   static const List<String> mapStyles = [MapboxStyles.LIGHT, MapboxStyles.DARK];
 
@@ -105,6 +116,24 @@ class MapboxService {
         [], // stretchY
         null, // content
       );
+
+      // Crear ícono vectorial para vehículo (puck)
+      final vehicleIconBytes = await _createVehicleIcon();
+      final vehicleImage = MbxImage(
+        width: 60,
+        height: 90,
+        data: vehicleIconBytes,
+      );
+
+      await _mapboxMap!.style.addStyleImage(
+        "vehicle-marker",
+        1.0,
+        vehicleImage,
+        false,
+        [],
+        [],
+        null,
+      );
     } catch (e) {
       print('Error creando íconos personalizados: $e');
     }
@@ -162,6 +191,70 @@ class MapboxService {
     final image = await picture.toImage(size.toInt(), (size + 8).toInt());
     final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
     return byteData!.buffer.asUint8List();
+  }
+
+  Future<Uint8List> _createVehicleIcon() async {
+    // Tamaño sugerido 60x90 (coincide con el uso en _initializeCustomIcons)
+    const w = 60.0;
+    const h = 90.0;
+    final recorder = ui.PictureRecorder();
+    final canvas = Canvas(recorder, Rect.fromLTWH(0, 0, w, h));
+
+    // Fondo del bus (blanco) con borde
+    final bodyFill = Paint()
+      ..isAntiAlias = true
+      ..color = Colors.white;
+    final bodyStroke = Paint()
+      ..isAntiAlias = true
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3
+      ..color = Colors.black.withOpacity(0.7);
+
+    final body = RRect.fromRectAndRadius(
+      Rect.fromLTWH(8, 14, w - 16, h - 28),
+      const Radius.circular(14),
+    );
+    canvas.drawRRect(body, bodyFill);
+    canvas.drawRRect(body, bodyStroke);
+
+    // Parabrisas superior
+    final windshield = Paint()..color = AppThemes.primary_600.withOpacity(0.9);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(12, 18, w - 24, 18),
+        const Radius.circular(8),
+      ),
+      windshield,
+    );
+
+    // Franja central (color del bus)
+    final stripe = Paint()..color = AppThemes.primary_600;
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(12, h / 2 - 10, w - 24, 20),
+        const Radius.circular(10),
+      ),
+      stripe,
+    );
+
+    // Ruedas
+    final wheel = Paint()..color = Colors.black87;
+    canvas.drawCircle(Offset(18, h - 18), 6, wheel);
+    canvas.drawCircle(Offset(w - 18, h - 18), 6, wheel);
+
+    // Flecha/triángulo superior para indicar el frente
+    final arrow = Paint()..color = Colors.black87;
+    final path = Path()
+      ..moveTo(w / 2, 6)
+      ..lineTo(w / 2 - 10, 22)
+      ..lineTo(w / 2 + 10, 22)
+      ..close();
+    canvas.drawPath(path, arrow);
+
+    final picture = recorder.endRecording();
+    final image = await picture.toImage(w.toInt(), h.toInt());
+    final png = await image.toByteData(format: ui.ImageByteFormat.png);
+    return png!.buffer.asUint8List();
   }
 
   /// Agrega todos los marcadores de campus al mapa
@@ -300,6 +393,21 @@ class MapboxService {
   Future<void> dispose() async {
     _tapEventsCancelable?.cancel();
     try {
+      // Detener simulación de vehículo y limpiar sus recursos
+      _vehicleTimer?.cancel();
+      _vehicleTimer = null;
+      try {
+        if (_vehicleManager != null) {
+          await _mapboxMap?.annotations.removeAnnotationManager(_vehicleManager!);
+        }
+      } catch (e) {
+        // ignore
+      }
+      _vehicleManager = null;
+      _vehicleAnnotation = null;
+      _vehicleRoute = [];
+      _vehicleIndex = 0;
+
       if (_userLocationManager != null) {
         await _mapboxMap?.annotations.removeAnnotationManager(
           _userLocationManager!,
@@ -310,8 +418,148 @@ class MapboxService {
           _campusMarkersManager!,
         );
       }
+      if (_routeManager != null) {
+        await _mapboxMap?.annotations.removeAnnotationManager(_routeManager!);
+      }
+      await stopSimulatedVehicleTracking();
     } catch (e) {
       print('Error al limpiar managers de Mapbox: $e');
     }
+  }
+  
+  Future<void> startSimulatedVehicleTracking(
+    List<Position> route, {
+    bool follow = true,
+    int intervalMs = 10000,
+    double iconSize = 1,
+  }) async {
+    if (_mapboxMap == null || route.isEmpty) return;
+    // Cancelar simulación previa si existe
+    _vehicleTimer?.cancel();
+    _vehicleTimer = null;
+    try {
+      if (_vehicleManager != null) {
+        await _mapboxMap?.annotations.removeAnnotationManager(_vehicleManager!);
+      }
+    } catch (e) {
+      // ignore
+    }
+    _vehicleManager = null;
+    _vehicleAnnotation = null;
+
+    _vehicleRoute = route;
+    _vehicleIndex = 0;
+    _vehicleFollow = follow;
+
+    _vehicleManager = await _mapboxMap!.annotations.createPointAnnotationManager();
+    final startPoint = Point(coordinates: _vehicleRoute.first);
+    _vehicleAnnotation = await _vehicleManager!.create(
+      PointAnnotationOptions(
+        geometry: startPoint,
+        iconImage: "vehicle-marker",
+        iconSize: iconSize,
+        iconRotate: 0,
+      ),
+    );
+
+    _vehicleTimer = Timer.periodic(Duration(milliseconds: intervalMs), (t) async {
+      if (_vehicleAnnotation == null || _vehicleRoute.isEmpty) return;
+      final nextIdx = (_vehicleIndex + 1) % _vehicleRoute.length;
+      final current = _vehicleRoute[_vehicleIndex];
+      final next = _vehicleRoute[nextIdx];
+      final bearing = _bearing(current, next);
+
+      try {
+        // Mutar la anotación existente y actualizar una sola vez
+        _vehicleAnnotation!.geometry = Point(coordinates: next);
+        _vehicleAnnotation!.iconRotate = bearing;
+        await _vehicleManager!.update(_vehicleAnnotation!);
+      } catch (_) {}
+
+      if (_vehicleFollow) {
+        await _mapboxMap!.setCamera(
+          CameraOptions(center: Point(coordinates: next)),
+        );
+      }
+      // Si hay un destino, dibujar/actualizar la ruta desde la posición del vehículo al destino
+      if (_routeDestination != null) {
+        await drawRoute([next, _routeDestination!]);
+      }
+      _vehicleIndex = nextIdx;
+    });
+  }
+
+  Future<void> stopSimulatedVehicleTracking() async {
+    _vehicleTimer?.cancel();
+    _vehicleTimer = null;
+    try {
+      if (_vehicleManager != null) {
+        await _mapboxMap?.annotations.removeAnnotationManager(_vehicleManager!);
+      }
+    } catch (e) {
+      // ignore
+    }
+    _vehicleManager = null;
+    _vehicleAnnotation = null;
+    _vehicleRoute = [];
+    _vehicleIndex = 0;
+  }
+
+  /// Define el destino para trazar ruta desde la posición actual del vehículo
+  void setRouteDestination(Position destination) {
+    _routeDestination = destination;
+  }
+
+  /// Limpia el destino de ruta y elimina la polilínea del mapa
+  Future<void> clearRouteDestination() async {
+    _routeDestination = null;
+    await clearRoute();
+  }
+
+  Future<void> drawRoute(List<Position> positions, {double width = 4.0, int? color}) async {
+    if (_mapboxMap == null || positions.length < 2) return;
+    try {
+      // Crear o limpiar manager
+      _routeManager ??= await _mapboxMap!.annotations.createPolylineAnnotationManager();
+      if (_routeAnnotation != null) {
+        await _routeManager!.delete(_routeAnnotation!);
+        _routeAnnotation = null;
+      }
+
+      final line = LineString(coordinates: positions);
+      _routeAnnotation = await _routeManager!.create(
+        PolylineAnnotationOptions(
+          geometry: line,
+          lineWidth: width,
+          lineColor: (color ?? AppThemes.primary_600.toARGB32()),
+        ),
+      );
+    } catch (e) {
+      print('Error dibujando ruta: $e');
+    }
+  }
+
+  Future<void> clearRoute() async {
+    try {
+      if (_routeManager != null && _routeAnnotation != null) {
+        await _routeManager!.delete(_routeAnnotation!);
+      }
+    } catch (e) {
+      // ignore
+    }
+    _routeAnnotation = null;
+  }
+
+  double _bearing(Position a, Position b) {
+    final lat1 = a.lat * (3.141592653589793 / 180.0);
+    final lon1 = a.lng * (3.141592653589793 / 180.0);
+    final lat2 = b.lat * (3.141592653589793 / 180.0);
+    final lon2 = b.lng * (3.141592653589793 / 180.0);
+    final dLon = lon2 - lon1;
+    final y = math.sin(dLon) * math.cos(lat2);
+    final x = math.cos(lat1) * math.sin(lat2) - math.sin(lat1) * math.cos(lat2) * math.cos(dLon);
+    var brng = math.atan2(y, x) * 180.0 / 3.141592653589793;
+    if (brng < 0) brng += 360.0;
+    return brng;
   }
 }
