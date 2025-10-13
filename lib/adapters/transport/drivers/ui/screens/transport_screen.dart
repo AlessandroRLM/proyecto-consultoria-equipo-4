@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mobile/adapters/core/drivers/ui/layouts/base_screen_layout.dart';
 import 'package:mobile/adapters/core/drivers/ui/widgets/request_button.dart';
 import 'package:mobile/adapters/transport/driven/providers/transport_reservations_provider.dart';
 import 'package:provider/provider.dart';
-
 
 class TransportScreen extends StatefulWidget {
   const TransportScreen({super.key});
@@ -15,7 +15,6 @@ class TransportScreen extends StatefulWidget {
 
 class _TransportScreenState extends State<TransportScreen> {
   // CustomTabBar Credencial, Transporte y Alojamiento.
-
 
   Widget buildHighlightedReservationCard(Map<String, dynamic> reservation) {
     return Container(
@@ -111,74 +110,40 @@ class _TransportScreenState extends State<TransportScreen> {
       ),
     );
   }
-
+ 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // CustomTabBar Credencial, Transporte y Alojamiento.
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Reservas',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w500,
-                    fontSize: 27,
-                  ),
-                ),
-                GestureDetector(
-                  onTap: () { context.go('/transport/calendar');
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.red, width: 2),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(Icons.calendar_today, color: Colors.red, size: 20),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: Consumer<TransportReservationsProvider>(
-              builder: (context, provider, child) {
-                final reservations = provider.reservations;
-                if (reservations.isEmpty) {
-                  return const Center(
-                    child: Text(
-                      'Aún no hay reservas disponibles.',
-                      style: TextStyle(fontSize: 16, color: Colors.grey),
-                    ),
-                  );
-                }
-                return ListView.builder(
-                  itemCount: reservations.length,
-                  itemBuilder: (context, index) {
-                    final reservation = reservations[index];
-                    if (reservation['highlighted'] == true) {
-                      return buildHighlightedReservationCard(reservation);
-                    } else {
-                      return buildSimpleReservationCard(reservation);
-                    }
-                  },
-                );
-              },
-            ),
-          ),
-        ],
-      ),
+    return BaseScreenLayout(
+      title: "Reservas",
       floatingActionButton: RequestButton(
-        funcion: () => context.push('/clinic_selection/1'),
-        label: 'Reservar', 
+        function: () => context.push('/clinic_selection/1'),
+        label: 'Reservar',
         icon: Icons.calendar_today,
         heroTag: 'reserve_transport_button',
+      ),
+      child: Consumer<TransportReservationsProvider>(
+        builder: (context, provider, child) {
+          final reservations = provider.reservations;
+          if (reservations.isEmpty) {
+            return const Center(
+              child: Text(
+                'Aún no hay reservas disponibles.',
+                style: TextStyle(fontSize: 16, color: Colors.grey),
+              ),
+            );
+          }
+          return ListView.builder(
+            itemCount: reservations.length,
+            itemBuilder: (context, index) {
+              final reservation = reservations[index];
+              if (reservation['highlighted'] == true) {
+                return buildHighlightedReservationCard(reservation);
+              } else {
+                return buildSimpleReservationCard(reservation);
+              }
+            },
+          );
+        },
       ),
     );
   }

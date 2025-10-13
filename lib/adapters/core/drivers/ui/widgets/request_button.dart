@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 class RequestButton extends StatelessWidget {
-  final VoidCallback funcion; 
+  final VoidCallback function; 
   final String label;
   final Color? color;
   final IconData? icon;
@@ -9,7 +9,7 @@ class RequestButton extends StatelessWidget {
 
   const RequestButton({
     super.key,
-    required this.funcion,
+    required this.function,
     required this.label,
     this.color,
     this.icon,
@@ -19,14 +19,15 @@ class RequestButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+
     return FloatingActionButton.extended(
-      onPressed: funcion,
+      onPressed: function,
       backgroundColor: color ?? Theme.of(context).colorScheme.primary,
       label: Text(
         label,
-        style: TextStyle(
-          color: textColor ?? Theme.of(context).colorScheme.onPrimary,
-        ),
+        style: textTheme.titleMedium!.copyWith(color: cs.onPrimary)
       ),
       icon: icon != null
           ? Icon(icon, color: textColor ?? Theme.of(context).colorScheme.onPrimary)

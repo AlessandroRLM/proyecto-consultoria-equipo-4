@@ -1,47 +1,82 @@
 import 'package:flutter/material.dart';
-
-class LodgingReservation {
-  final String area;
-  final String name;
-  final String address;
-  final String room;
-  final String checkIn;
-  final String checkOut;
-
-  LodgingReservation({
-    required this.area,
-    required this.name,
-    required this.address,
-    required this.room,
-    required this.checkIn,
-    required this.checkOut,
-  });
-}
+import 'package:mobile/adapters/lodging/driven/datasources/lodging_mock_datasource.dart';
+import 'package:mobile/domain/models/lodging/lodging_reservation_model.dart';
 
 class LodgingProvider with ChangeNotifier {
-  final List<LodgingReservation> _reservations = [
-    LodgingReservation(
-      area: "Santiago - Pudahuel",
-      name: "Hostal Familiar S&G",
-      address: "Diagonal Norte 8912 Pudahuel",
-      room: "PRC-662",
-      checkIn: "LUN 10/09",
-      checkOut: "MIE 17/09",
-    ),
-    LodgingReservation(
-      area: "Santiago - Centro",
-      name: "Casa Bonita",
-      address: "San Martín 120, Stgo",
-      room: "STD-105",
-      checkIn: "MAR 12/09",
-      checkOut: "JUE 19/09",
-    ),
-  ];
+  final LodgingMockDataSource _ds;
 
-  List<LodgingReservation> get reservations => _reservations;
+  LodgingProvider({LodgingMockDataSource? dataSource})
+    : _ds = dataSource ?? LodgingMockDataSource();
 
-  void addReservation(LodgingReservation reservation) {
-    _reservations.add(reservation);
+  final List<LodgingReservation> _reservations = [];
+  bool _loading = false;
+  String? _error;
+
+  List<LodgingReservation> get reservations => List.unmodifiable(_reservations);
+  bool get loading => _loading;
+  String? get error => _error;
+
+  Future<void> fetchReservations() async {
+    _loading = true;
+    _error = null;
+    _reservations.clear();
+    notifyListeners();
+
+    try {
+      // 1) Cargar homes e indexar por homeId
+      final homes = await _ds.getHomesRaw();
+      final Map<int, Map<String, dynamic>> homeById = {
+        for (final h in homes) (h['homeId'] as int): h,
+      };
+
+      // 2) Cargar reservas del estudiante
+      final schedules = await _ds.getStudentSchedulesRaw();
+
+      // --- helpers de presentación --- //
+      String fmtDay(String ymd) {
+        final d = DateTime.parse(ymd);
+        const days = ['LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB', 'DOM'];
+        final dow = days[(d.weekday - 1) % 7];
+        final dd = d.day.toString().padLeft(2, '0');
+        final mm = d.month.toString().padLeft(2, '0');
+        return '$dow $dd/$mm';
+      }
+      // -------------------------------- //
+
+      // 3) Construir items para la UI
+      for (final it in schedules) {
+        final int homeId = it['home_id'] as int; // viene del schedule
+        final h = homeById[homeId]; // buscamos la residencia
+
+        final clinicalName =
+            (it['clinical_name'] as String?)?.trim() ?? 'Clínico';
+        final residenceName = (h?['residenceName'] as String?) ?? 'Residencia';
+        final address = (h?['address'] as String?) ?? 'Dirección no disponible';
+
+        final dateStr = (it['reservation_date'] as String?) ?? '2025-09-08';
+        final checkIn = fmtDay(dateStr);
+        final checkOut = fmtDay(dateStr); // mismo día
+
+        //  HABITACIÓN: usa el home_id como número (sin letras).
+        final room = homeId.toString(); // ej. "101"
+        _reservations.add(
+          LodgingReservation(
+            area: clinicalName,
+            name: residenceName,
+            address: address,
+            room: room, // ahora "101" (número, sin prefijos)
+            checkIn: checkIn,
+            checkOut: checkOut,
+          ),
+        );
+      }
+      // (opcional) ordenar por fecha asc
+      _reservations.sort((a, b) => a.checkIn.compareTo(b.checkIn));
+    } catch (e) {
+      _error = e.toString();
+    }
+
+    _loading = false;
     notifyListeners();
   }
 }
