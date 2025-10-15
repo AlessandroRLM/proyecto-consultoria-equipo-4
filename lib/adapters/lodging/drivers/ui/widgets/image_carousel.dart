@@ -22,8 +22,6 @@ class _ImageCarouselState extends State<ImageCarousel> {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-
     return Stack(
       alignment: Alignment.bottomCenter,
       children: [
