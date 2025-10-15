@@ -112,7 +112,7 @@ class MapboxService {
 
   Future<Uint8List> _createLocationPuckIcon() async {
     final ByteData bytes = await rootBundle.load(
-      'assets/images/location_puck/location_puck.png'
+      'assets/images/location_puck/location_puck.png',
     );
     return bytes.buffer.asUint8List();
   }
@@ -312,6 +312,37 @@ class MapboxService {
       }
     } catch (e) {
       print('Error al limpiar managers de Mapbox: $e');
+    }
+  }
+
+  /// Agrega un marcador para una residencia específica
+  Future<void> addResidenceMarker({
+    required double latitude,
+    required double longitude,
+    String iconId = "hospital-marker", // puedes crear uno nuevo si quieres
+  }) async {
+    if (_mapboxMap == null) return;
+
+    try {
+      // Crear manager si no existe
+      _campusMarkersManager ??= await _mapboxMap!.annotations
+          .createPointAnnotationManager();
+
+      // Crear el marcador
+      final annotation = await _campusMarkersManager!.create(
+        PointAnnotationOptions(
+          geometry: Point(coordinates: Position(longitude, latitude)),
+          iconImage: iconId,
+          iconSize: 1.0,
+        ),
+      );
+
+      // Puedes almacenar la anotación si quieres más tarde manipularla
+      if (annotation != null) {
+        _campusAnnotations.add(annotation);
+      }
+    } catch (e) {
+      print('Error agregando marcador de residencia: $e');
     }
   }
 }

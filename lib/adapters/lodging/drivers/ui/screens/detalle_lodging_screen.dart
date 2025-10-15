@@ -6,6 +6,9 @@ import 'package:mobile/adapters/lodging/drivers/ui/widgets/service_item.dart';
 import 'package:provider/provider.dart';
 import 'package:mobile/adapters/lodging/driven/providers/lodging_provider.dart';
 import 'package:mobile/domain/models/lodging/residencia_model.dart';
+import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
+import 'package:mobile/service_locator.dart';
+import 'package:mobile/adapters/core/driven/mapbox_service.dart';
 
 class HomeAlojamientoScreen extends StatefulWidget {
   final int homeId;
@@ -39,11 +42,6 @@ class _HomeAlojamientoScreenState extends State<HomeAlojamientoScreen> {
         );
       }
     });
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
   }
 
   // --- Normalizador y mapeo flexible de servicios --- //
@@ -169,7 +167,7 @@ class _HomeAlojamientoScreenState extends State<HomeAlojamientoScreen> {
                     Text(
                       residencia!.address,
                       style: text.bodySmall?.copyWith(
-                        color: text.bodyMedium?.color?.withValues(alpha: 0.7),
+                        color: text.bodyMedium?.color?.withAlpha(180),
                       ),
                     ),
                   ],
@@ -196,7 +194,7 @@ class _HomeAlojamientoScreenState extends State<HomeAlojamientoScreen> {
                     Text(
                       'Administrador de Residencia',
                       style: text.bodySmall?.copyWith(
-                        color: text.bodySmall?.color?.withValues(alpha: 0.7),
+                        color: text.bodySmall?.color?.withAlpha(180),
                       ),
                     ),
                   ],
@@ -224,28 +222,34 @@ class _HomeAlojamientoScreenState extends State<HomeAlojamientoScreen> {
                 child: Divider(height: 10),
               ),
 
-              // Mapa
+              // Mapa Mapbox integrado
               const Padding(
                 padding: EdgeInsets.fromLTRB(16, 10, 16, 6),
                 child: SectionTitle('Mapa'),
               ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Container(
-                  height: 120,
-                  decoration: BoxDecoration(
-                    color: cs.surfaceContainerHighest,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: cs.outlineVariant),
-                  ),
-                  child: Center(
-                    child: Text(
-                      'Integrar mapa (Mapbox)',
-                      style: text.bodySmall?.copyWith(
-                        color: AppThemes.primary_600,
-                        fontWeight: FontWeight.w600,
+                child: SizedBox(
+                  height: 200,
+                  child: MapWidget(
+                    styleUri: MapboxService.mapStyles[0],
+                    cameraOptions: CameraOptions(
+                      center: Point(
+                        coordinates: Position(
+                          residencia!.longitude,
+                          residencia!.latitude,
+                        ),
                       ),
+                      zoom: 14.0,
                     ),
+                    onMapCreated: (mapboxMap) async {
+                      final mapService = serviceLocator<MapboxService>();
+                      mapService.initialize(mapboxMap);
+                      await mapService.addResidenceMarker(
+                        latitude: residencia!.latitude,
+                        longitude: residencia!.longitude,
+                      );
+                    },
                   ),
                 ),
               ),
