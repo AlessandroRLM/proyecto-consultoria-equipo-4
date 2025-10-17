@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mobile/adapters/core/driven/app_themes.dart';
 import 'package:mobile/domain/models/lodging/lodging_reservation_model.dart';
 import 'package:mobile/adapters/lodging/drivers/ui/screens/detalle_lodging_screen.dart';
@@ -115,15 +116,9 @@ class _ReservationCardState extends State<ReservationCard> {
                       ),
                     ),
                     onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => HomeAlojamientoScreen(
-                            homeId: widget
-                                .reservation
-                                .homeId, // 👈 id real de la reserva
-                          ),
-                        ),
+                      // Navegación usando GoRouter
+                      context.push(
+                        '/lodging/detalle/${widget.reservation.homeId}',
                       );
                     },
                     child: const Text("Ver"),

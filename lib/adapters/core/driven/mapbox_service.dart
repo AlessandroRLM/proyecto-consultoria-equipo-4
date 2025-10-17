@@ -297,21 +297,31 @@ class MapboxService {
     _mapboxMap!.setCamera(CameraOptions(zoom: currentZoom - 1));
   }
 
-  Future<void> dispose() async {
-    _tapEventsCancelable?.cancel();
+  void dispose() {
     try {
+      _tapEventsCancelable?.cancel();
+
+      // Eliminar los annotation managers si existen
       if (_userLocationManager != null) {
-        await _mapboxMap?.annotations.removeAnnotationManager(
-          _userLocationManager!,
-        );
+        _mapboxMap?.annotations.removeAnnotationManager(_userLocationManager!);
+        _userLocationManager = null;
       }
+
       if (_campusMarkersManager != null) {
-        await _mapboxMap?.annotations.removeAnnotationManager(
-          _campusMarkersManager!,
-        );
+        _mapboxMap?.annotations.removeAnnotationManager(_campusMarkersManager!);
+        _campusMarkersManager = null;
       }
+
+      // Limpieza de anotaciones
+      _campusAnnotations.clear();
+      _campusAnnotationMap.clear();
+
+      // Eliminar referencia al mapa
+      _mapboxMap = null;
+
+      print('MapboxService limpiado correctamente');
     } catch (e) {
-      print('Error al limpiar managers de Mapbox: $e');
+      debugPrint('Error al limpiar managers de Mapbox: $e');
     }
   }
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:ui' as ui;
 import 'package:mobile/adapters/core/driven/app_themes.dart';
 import 'package:mobile/adapters/lodging/drivers/ui/widgets/image_carousel.dart';
 import 'package:mobile/adapters/lodging/drivers/ui/widgets/section_title.dart';
@@ -42,6 +43,13 @@ class _HomeAlojamientoScreenState extends State<HomeAlojamientoScreen> {
         );
       }
     });
+  }
+
+  @override
+  void dispose() {
+    final mapService = serviceLocator<MapboxService>();
+    mapService.dispose();
+    super.dispose();
   }
 
   // --- Normalizador y mapeo flexible de servicios --- //
@@ -112,6 +120,10 @@ class _HomeAlojamientoScreenState extends State<HomeAlojamientoScreen> {
     final itemWidth = (w - (hPad * 2) - spacing) / 2;
 
     return Scaffold(
+      appBar: PreferredSize(
+        preferredSize: ui.Size.fromHeight(0), //  Sin barra superior
+        child: AppBar(elevation: 0, backgroundColor: Colors.transparent),
+      ),
       backgroundColor: cs.surface,
       body: SafeArea(
         child: SingleChildScrollView(
@@ -175,7 +187,12 @@ class _HomeAlojamientoScreenState extends State<HomeAlojamientoScreen> {
               ),
 
               const SizedBox(height: 20),
-              const Divider(height: 10),
+              const Divider(
+                height: 10,
+                thickness: 1,
+                indent: 16,
+                endIndent: 16,
+              ),
 
               // Administrador
               Padding(
@@ -200,7 +217,13 @@ class _HomeAlojamientoScreenState extends State<HomeAlojamientoScreen> {
                   ],
                 ),
               ),
-              const Divider(height: 10),
+              const Divider(
+                height: 10,
+                thickness: 1,
+                indent: 16,
+                endIndent: 16,
+              ),
+
               const SizedBox(height: 5),
 
               // Servicios disponibles
@@ -216,12 +239,15 @@ class _HomeAlojamientoScreenState extends State<HomeAlojamientoScreen> {
                   children: _buildServiceItems(itemWidth, services),
                 ),
               ),
-
               const Padding(
                 padding: EdgeInsets.only(top: 12),
-                child: Divider(height: 10),
+                child: Divider(
+                  height: 10,
+                  thickness: 1,
+                  indent: 16, // margen desde el borde izquierdo
+                  endIndent: 16, // margen desde el borde derecho
+                ),
               ),
-
               // Mapa Mapbox integrado
               const Padding(
                 padding: EdgeInsets.fromLTRB(16, 10, 16, 6),

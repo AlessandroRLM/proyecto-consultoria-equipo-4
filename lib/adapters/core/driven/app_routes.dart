@@ -18,6 +18,7 @@ import 'package:mobile/ports/auth/driven/for_authenticating_user.dart';
 import 'package:mobile/service_locator.dart';
 import 'package:mobile/adapters/auth/drivers/screens/profile_screen.dart';
 import 'package:mobile/adapters/home/home.dart';
+import 'package:mobile/adapters/lodging/drivers/ui/screens/detalle_lodging_screen.dart';
 
 final GoRouter appRoutes = GoRouter(
   initialLocation: '/home',
@@ -147,7 +148,6 @@ final GoRouter appRoutes = GoRouter(
                   routes: [
                     GoRoute(
                       path: '/lodging',
-
                       redirect: (BuildContext context, GoRouterState state) {
                         final authService =
                             serviceLocator<ForAuthenticatingUser>();
@@ -166,6 +166,18 @@ final GoRouter appRoutes = GoRouter(
                       },
                       builder: (BuildContext context, GoRouterState state) =>
                           const LodgingListScreen(),
+                      routes: [
+                        // 👇 Subruta para ver el detalle del alojamiento
+                        GoRoute(
+                          path: 'detalle/:homeId',
+                          builder: (BuildContext context, GoRouterState state) {
+                            final id = int.parse(
+                              state.pathParameters['homeId']!,
+                            );
+                            return HomeAlojamientoScreen(homeId: id);
+                          },
+                        ),
+                      ],
                     ),
                   ],
                 ),
