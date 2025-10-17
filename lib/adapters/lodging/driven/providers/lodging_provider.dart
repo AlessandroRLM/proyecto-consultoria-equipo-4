@@ -3,6 +3,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'package:mobile/adapters/lodging/driven/datasources/lodging_mock_datasource.dart';
 import 'package:mobile/domain/models/lodging/lodging_reservation_model.dart';
+import 'package:mobile/adapters/core/driven/campus_mock_service.dart';
+import 'package:mobile/domain/core/campus.dart';
 
 class LodgingProvider with ChangeNotifier {
   final LodgingMockDataSource _ds;
@@ -11,10 +13,14 @@ class LodgingProvider with ChangeNotifier {
     : _ds = dataSource ?? LodgingMockDataSource();
 
   final List<LodgingReservation> _reservations = [];
+  final List<LodgingReservation> _userReservations = [];
+  final List<Map<String, dynamic>> _occupiedReservations = [];
   bool _loading = false;
   String? _error;
 
   List<LodgingReservation> get reservations => List.unmodifiable(_reservations);
+  List<LodgingReservation> get userReservations => List.unmodifiable(_userReservations);
+  List<Map<String, dynamic>> get occupiedReservations => List.unmodifiable(_occupiedReservations);
   bool get loading => _loading;
   String? get error => _error;
 
@@ -22,6 +28,8 @@ class LodgingProvider with ChangeNotifier {
     _loading = true;
     _error = null;
     _reservations.clear();
+    _userReservations.clear();
+    _occupiedReservations.clear();
     notifyListeners();
 
     try {
@@ -34,17 +42,6 @@ class LodgingProvider with ChangeNotifier {
       // 2) Cargar reservas del estudiante
       final schedules = await _ds.getStudentSchedulesRaw();
 
-      // --- helpers de presentación --- //
-      String fmtDay(String ymd) {
-        final d = DateTime.parse(ymd);
-        const days = ['LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB', 'DOM'];
-        final dow = days[(d.weekday - 1) % 7];
-        final dd = d.day.toString().padLeft(2, '0');
-        final mm = d.month.toString().padLeft(2, '0');
-        return '$dow $dd/$mm';
-      }
-      // -------------------------------- //
-
       // 3) Construir items para la UI
       for (final it in schedules) {
         final int homeId = it['home_id'] as int; // viene del schedule
@@ -56,8 +53,8 @@ class LodgingProvider with ChangeNotifier {
         final address = (h?['address'] as String?) ?? 'Dirección no disponible';
 
         final dateStr = (it['reservation_date'] as String?) ?? '2025-09-08';
-        final checkIn = fmtDay(dateStr);
-        final checkOut = fmtDay(dateStr); // mismo día
+        final checkIn = dateStr; 
+        final checkOut = dateStr; 
 
         //  HABITACIÓN: usa el home_id como número (sin letras).
         final room = homeId.toString(); // ej. "101"
@@ -74,6 +71,30 @@ class LodgingProvider with ChangeNotifier {
       }
       // (opcional) ordenar por fecha asc
       _reservations.sort((a, b) => a.checkIn.compareTo(b.checkIn));
+
+      // 4) Cargar todas las reservas ocupadas para el calendario
+      final allSchedules = await _ds.getSchedulesRaw();
+      for (final it in allSchedules) {
+        final int homeId = it['home_id'] as int;
+        final h = homeById[homeId];
+        final clinicalName = (it['clinical_name'] as String?)?.trim() ?? 'Clínico';
+        final dateStr = (it['reservation_date'] as String?) ?? '2025-09-08';
+        _occupiedReservations.add({
+          'area': clinicalName,
+          'checkIn': dateStr,
+          'checkOut': dateStr,
+        });
+      }
+
+      // 5) Cargar reservas del usuario desde SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      final userReservationsJson = prefs.getString('user_lodging_reservations');
+      if (userReservationsJson != null) {
+        final List<dynamic> userReservationsList = json.decode(userReservationsJson);
+        _userReservations.addAll(
+          userReservationsList.map((json) => LodgingReservation.fromJson(json)).toList(),
+        );
+      }
     } catch (e) {
       _error = e.toString();
     }
@@ -88,28 +109,29 @@ class LodgingProvider with ChangeNotifier {
     await prefs.setString('lodging_reservations', jsonString);
   }
 
+  Future<void> saveUserReservations() async {
+    final prefs = await SharedPreferences.getInstance();
+    final jsonString = json.encode(_userReservations.map((r) => r.toJson()).toList());
+    await prefs.setString('user_lodging_reservations', jsonString);
+  }
+
   void addReservation(LodgingReservation reservation) {
-    _reservations.add(reservation);
-    saveReservations();
+    _userReservations.add(reservation);
+    saveUserReservations();
     notifyListeners();
   }
 
-  final List<Map<String, String>> clinics = [
-    {
-      "name": "Centro Médico Andes Salud Talca",
-      "city": "Talca",
-      "address": "Cuatro Nte. 1656, 3467384 Talca, Maule",
-    },
-    {
-      "name": "Clínica Santa María",
-      "city": "Talca",
-      "address": "Calle Falsa 123, Talca, Maule",
-    },
-  ];
-  
-  Map<String, String>? getClinicInfoByName(String area) {
+  final CampusMockService _campusService = CampusMockService();
+
+  Future<Map<String, String>?> getClinicInfoByName(String area) async {
     try {
-      return clinics.firstWhere((clinic) => clinic["name"] == area);
+      final campuses = await _campusService.getCampus(null);
+      final campus = campuses.firstWhere((c) => c.name == area);
+      return {
+        "city": campus.city,
+        "commune": campus.commune,
+        "address": "", // Futura address especifica 
+      };
     } catch (e) {
       return null;
     }

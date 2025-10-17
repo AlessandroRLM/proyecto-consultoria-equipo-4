@@ -32,7 +32,7 @@ class RequestButton extends StatelessWidget {
       icon: icon != null
           ? Icon(icon, color: textColor ?? Theme.of(context).colorScheme.onPrimary)
           : null,
-      heroTag: heroTag ?? 'request_button',
+      heroTag: heroTag,
     );
   }
 }

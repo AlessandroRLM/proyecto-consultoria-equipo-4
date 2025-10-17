@@ -200,6 +200,7 @@ class _TransportReservationCardState extends State<TransportReservationCard> {
                         ],
                       ),
                     ),
+                    const SizedBox(height: 6),
                     RichText(
                       text: TextSpan(
                         children: [
@@ -214,6 +215,7 @@ class _TransportReservationCardState extends State<TransportReservationCard> {
                         ],
                       ),
                     ),
+                    const SizedBox(height: 6),
                     RichText(
                       text: TextSpan(
                         children: [
@@ -228,6 +230,7 @@ class _TransportReservationCardState extends State<TransportReservationCard> {
                         ],
                       ),
                     ),
+                    const SizedBox(height: 6),
                     RichText(
                       text: TextSpan(
                         children: [
@@ -242,6 +245,7 @@ class _TransportReservationCardState extends State<TransportReservationCard> {
                         ],
                       ),
                     ),
+                    const SizedBox(height: 6),
                     RichText(
                       text: TextSpan(
                         children: [
@@ -256,6 +260,7 @@ class _TransportReservationCardState extends State<TransportReservationCard> {
                         ],
                       ),
                     ),
+                    const SizedBox(height: 6),
                     RichText(
                       text: TextSpan(
                         children: [

@@ -19,6 +19,7 @@ class LodgingAvailabilityProvider with ChangeNotifier {
   List<ClinicAvailabilityItem> get items => List.unmodifiable(_items);
 
   Future<void> fetchAvailability({DateTime? date}) async {
+    if (_loading) return; 
     _loading = true;
     _error = null;
     _items.clear();

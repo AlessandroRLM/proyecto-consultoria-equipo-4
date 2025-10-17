@@ -14,12 +14,25 @@ class ReservationCard extends StatefulWidget {
 
 class _ReservationCardState extends State<ReservationCard> {
   bool expanded = false;
+  Map<String, String>? clinicInfo;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadClinicInfo();
+  }
+
+  Future<void> _loadClinicInfo() async {
+    final lodgingProvider = Provider.of<LodgingProvider>(context, listen: false);
+    clinicInfo = await lodgingProvider.getClinicInfoByName(widget.reservation.area);
+    if (mounted) setState(() {});
+  }
 
   String _formatDateFull(String dateStr) {
     try {
       final date = DateTime.parse(dateStr);
-      final weekdays = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
-      final months = [
+      const weekdays = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+      const months = [
         'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
         'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
       ];
@@ -36,10 +49,8 @@ class _ReservationCardState extends State<ReservationCard> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final text = Theme.of(context).textTheme;
-    final lodgingProvider = Provider.of<LodgingProvider>(context, listen: false);
-    final clinicInfo = lodgingProvider.getClinicInfoByName(widget.reservation.area);
-    final city = clinicInfo != null ? clinicInfo["city"] : null;
-    final address = clinicInfo != null ? clinicInfo["address"] : widget.reservation.address;
+    final city = clinicInfo?['city'] ?? 'No disponible...';
+    final commune = clinicInfo?['commune'] ?? 'No disponible...';
 
     return GestureDetector(
       onTap: () {
@@ -50,47 +61,61 @@ class _ReservationCardState extends State<ReservationCard> {
       child: Card(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         elevation: 0,
-        margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
-        color: null,
+        margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 16),
         child: Container(
           decoration: BoxDecoration(
             border: Border.all(color: AppThemes.black_500.withValues(alpha: 0.4)),
             borderRadius: BorderRadius.circular(12),
           ),
-          padding: const EdgeInsets.all(14),
+          padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Icon(
-                    Icons.home,
-                    size: 28,
+                    Icons.home_outlined,
+                    size: 32,
                     color: cs.primary,
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 16),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          city != null ? "${widget.reservation.area} - $city." : widget.reservation.area,
-                          style: text.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                          widget.reservation.area, 
+                          style: text.bodyLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
                         ),
+                        const SizedBox(height: 4),
+
                         Text(
-                          address ?? '',
-                          style: text.bodySmall?.copyWith(color: text.bodySmall?.color?.withValues(alpha: 0.7)),
+                          city,
+                          style: text.bodyMedium?.copyWith(
+                            color: text.bodyMedium?.color?.withValues(alpha: 0.8),
+                          ),
+                        ),
+
+                        Text(
+                          commune,
+                          style: text.bodyMedium?.copyWith(
+                            color: text.bodyMedium?.color?.withValues(alpha: 0.8),
+                          ),
                         ),
                       ],
                     ),
                   ),
                 ],
               ),
+
               if (expanded) ...[
-                const Divider(height: 20, thickness: 1),
+                const Divider(height: 24, thickness: 1),
                 Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Expanded(
                       child: Column(
@@ -98,30 +123,32 @@ class _ReservationCardState extends State<ReservationCard> {
                         children: [
                           Text(
                             "Entrada: ${_formatDateFull(widget.reservation.checkIn)}",
-                            style: text.bodySmall?.copyWith(fontWeight: FontWeight.bold),
+                            style: text.bodyMedium,
                           ),
+                          const SizedBox(height: 4),
                           Text(
                             "Salida: ${_formatDateFull(widget.reservation.checkOut)}",
-                            style: text.bodySmall?.copyWith(fontWeight: FontWeight.bold),
+                            style: text.bodyMedium,
                           ),
+                          const SizedBox(height: 4),
                           Text(
-                            "Habitación: ${widget.reservation.room.isNotEmpty ? widget.reservation.room : 'PRA-322'}",
-                            style: text.bodySmall?.copyWith(fontWeight: FontWeight.bold),
+                            "Habitación: ${widget.reservation.room}",
+                            style: text.bodyMedium,
                           ),
                         ],
                       ),
                     ),
+                    const SizedBox(width: 8),
                     FilledButton(
                       style: FilledButton.styleFrom(
                         backgroundColor: cs.primary,
                         foregroundColor: cs.onPrimary,
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                        textStyle: text.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
                       ),
                       onPressed: () {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Pantalla aún no implementada.')),
+                          const SnackBar(content: Text('No implementada.')),
                         );
                       },
                       child: const Text("Ver"),

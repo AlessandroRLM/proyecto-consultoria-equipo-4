@@ -10,90 +10,25 @@ class TransportScreen extends StatefulWidget {
   const TransportScreen({super.key});
 
   @override
-  // ignore: library_private_types_in_public_api
-  _TransportScreenState createState() => _TransportScreenState();
+  TransportScreenState createState() => TransportScreenState();
 }
 
-class _TransportScreenState extends State<TransportScreen> {
-  // CustomTabBar Credencial, Transporte y Alojamiento.
-
-<<<<<<< HEAD
+class TransportScreenState extends State<TransportScreen> {
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<TransportReservationsProvider>(context, listen: false).fetchReservations();
     });
-=======
-  Widget buildHighlightedReservationCard(Map<String, dynamic> reservation) {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.grey.shade300),
-      ),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    reservation['origin'],
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                    ),
-                  ),
-                  Text(
-                    reservation['originTime'],
-                    style: const TextStyle(fontSize: 12, color: Colors.black54),
-                  ),
-                ],
-              ),
-              Column(
-                children: [
-                  const Icon(Icons.directions_bus, color: Colors.red, size: 20),
-                  Text(
-                    reservation['date'],
-                    style: const TextStyle(fontSize: 12, color: Colors.black54),
-                  ),
-                ],
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    reservation['destination'],
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                    ),
-                  ),
-                  Text(
-                    reservation['destinationTime'],
-                    style: const TextStyle(fontSize: 12, color: Colors.black54),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
->>>>>>> origin/main
   }
-
+  
   List<Map<String, dynamic>> getGroupedReservations(List<Map<String, dynamic>> reservations) {
     final sortedReservations = List<Map<String, dynamic>>.from(reservations);
 
     int compareReservations(Map<String, dynamic> a, Map<String, dynamic> b) {
       DateTime parseDateTime(String? dateStr, String? timeStr) {
         if (dateStr == null || timeStr == null) {
-          return DateTime(2100); 
+          return DateTime(2100);
         }
         try {
           final date = DateTime.parse(dateStr);
@@ -135,92 +70,44 @@ class _TransportScreenState extends State<TransportScreen> {
     }
 
     sortedReservations.sort(compareReservations);
-
     return sortedReservations;
   }
-<<<<<<< HEAD
-
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Reservas'),
-      ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: Consumer<TransportReservationsProvider>(
-              builder: (context, provider, child) {
-                final reservations = provider.futureReservations;
-                if (reservations.isEmpty) {
-                  return Center(
-                    child: Text(
-                      'Aún no hay reservas disponibles.',
-                      style: theme.textTheme.bodyLarge?.copyWith(
-                        color: theme.disabledColor,
-                      ),
-                    ),
-                  );
-                }
-                final grouped = getGroupedReservations(reservations);
-                return ListView.builder(
-                  itemCount: grouped.length,
-                  itemBuilder: (context, index) {
-                    final reservation = grouped[index];
-                    return TransportReservationCard(reservation: reservation);
-                  },
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-      floatingActionButton: RequestButton(
-        funcion: () => context.push('/transport/reservation/location-search'),
-        label: 'Reservar',
-        icon: Icons.calendar_today,
-      ),
-      
-=======
- 
-  @override
-  Widget build(BuildContext context) {
     return BaseScreenLayout(
-      title: "Reservas",
+      title: 'Reservas',
       floatingActionButton: RequestButton(
-        function: () => context.push('/clinic_selection/1'),
+        function: () => context.push('/transport/reservation'),
         label: 'Reservar',
         icon: Icons.calendar_today,
-        heroTag: 'reserve_transport_button',
+        heroTag: 'transport_request_button',
       ),
       child: Consumer<TransportReservationsProvider>(
         builder: (context, provider, child) {
-          final reservations = provider.reservations;
+          final reservations = provider.futureReservations;
           if (reservations.isEmpty) {
-            return const Center(
+            return Center(
               child: Text(
                 'Aún no hay reservas disponibles.',
-                style: TextStyle(fontSize: 16, color: Colors.grey),
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  color: theme.disabledColor,
+                ),
               ),
             );
           }
+          final grouped = getGroupedReservations(reservations);
           return ListView.builder(
-            itemCount: reservations.length,
+            padding: const EdgeInsets.only(top: 8.0),
+            itemCount: grouped.length,
             itemBuilder: (context, index) {
-              final reservation = reservations[index];
-              if (reservation['highlighted'] == true) {
-                return buildHighlightedReservationCard(reservation);
-              } else {
-                return buildSimpleReservationCard(reservation);
-              }
+              final reservation = grouped[index];
+              return TransportReservationCard(reservation: reservation);
             },
           );
         },
       ),
->>>>>>> origin/main
     );
   }
 }

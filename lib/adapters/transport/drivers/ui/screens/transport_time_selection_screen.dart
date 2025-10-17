@@ -379,76 +379,98 @@ class _TransportTimeSelectionScreenState extends State<TransportTimeSelectionScr
 
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
-        ),
-        title: Text('Seleccionar $timeLabel'),
+        automaticallyImplyLeading: false,
+        title: const SizedBox.shrink(),
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: SingleChildScrollView(
-              child: Column(
+      body: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(8.0, 8.0, 16.0, 0),
+              child: Row(
                 children: [
-                  TabsWidget(
-                    selectedTabIndex: _selectedTabIndex,
-                    onTabSelected: _onTabSelected,
-                    primaryColor: primary,
-                    onPrimaryColor: onPrimary,
-                    onSurfaceColor: onSurface,
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back),
+                    onPressed: () => context.pop(),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Seleccione la fecha y hora del transporte de $timeLabel',
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                        ),
-                      ],
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                      'Seleccionar $timeLabel',
+                      style: theme.textTheme.displayMedium,
                     ),
                   ),
-                  WeekCalendarWidget(
-                    days: days,
-                    selectedDate: _selectedDate,
-                    onDaySelected: _onDaySelected,
-                    focusedWeekStart: _focusedWeekStart!,
-                    previousWeek: _previousWeek,
-                    nextWeek: _nextWeek,
-                    primaryColor: primary,
-                    onPrimaryColor: onPrimary,
-                    onSurfaceContainerHighestColor: surfaceContainerHighest,
-                    onSurfaceColor: onSurface,
-                    transportProvider: _transportProvider,
-                    weekdays: _weekdays,
-                    isOutbound: _isOutbound,
-                    allowedStart: _allowedStart,
-                    allowedEnd: _allowedEnd,
-                  ),
-                  const SizedBox(height: 16),
-                  if (_selectedDate != null)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: TimeOptionsWidget(
-                        availableOptions: _availableOptions,
-                        selectedOption: _selectedOption,
-                        onTimeSelected: _onTimeSelected,
-                      ),
-                    ),
                 ],
               ),
             ),
-          ),
-          const Divider(color: Colors.transparent, height: 0),
-          ReservationButtonWidget(
-            isOutbound: _isOutbound,
-            selectedLocation: _selectedLocation,
-            selectedOption: _selectedOption,
-            onReservar: _onReservar,
-          ),
-        ],
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 0),
+              child: SizedBox(
+                width: double.infinity,
+                child: Text(
+                  'Seleccione la fecha y hora del transporte de $timeLabel',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    TabsWidget(
+                      selectedTabIndex: _selectedTabIndex,
+                      onTabSelected: _onTabSelected,
+                      primaryColor: primary,
+                      onPrimaryColor: onPrimary,
+                      onSurfaceColor: onSurface,
+                    ),
+                    WeekCalendarWidget(
+                      days: days,
+                      selectedDate: _selectedDate,
+                      onDaySelected: _onDaySelected,
+                      focusedWeekStart: _focusedWeekStart!,
+                      previousWeek: _previousWeek,
+                      nextWeek: _nextWeek,
+                      primaryColor: primary,
+                      onPrimaryColor: onPrimary,
+                      onSurfaceContainerHighestColor: surfaceContainerHighest,
+                      onSurfaceColor: onSurface,
+                      transportProvider: _transportProvider,
+                      weekdays: _weekdays,
+                      isOutbound: _isOutbound,
+                      allowedStart: _allowedStart,
+                      allowedEnd: _allowedEnd,
+                    ),
+                    const SizedBox(height: 16),
+                    if (_selectedDate != null)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: TimeOptionsWidget(
+                          availableOptions: _availableOptions,
+                          selectedOption: _selectedOption,
+                          onTimeSelected: _onTimeSelected,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+            const Divider(color: Colors.transparent, height: 0),
+            ReservationButtonWidget(
+              isOutbound: _isOutbound,
+              selectedLocation: _selectedLocation,
+              selectedOption: _selectedOption,
+              onReservar: _onReservar,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -473,7 +495,7 @@ class TabsWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
         children: [
           Expanded(
@@ -878,7 +900,7 @@ class ReservationButtonWidget extends StatelessWidget {
     final onSurface = theme.colorScheme.onSurface;
 
     return Container(
-      padding: const EdgeInsets.all(12.0),
+      padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 12.0),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         boxShadow: [
@@ -930,8 +952,8 @@ class ReservationButtonWidget extends StatelessWidget {
               child: const Text(
                 'Reservar',
                 style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13,
                 ),
               ),
             ),

@@ -75,12 +75,6 @@ class LodgingWeekCalendarState extends State<LodgingWeekCalendar> {
     if (day.month != _focusedMonth.month || day.isBefore(widget.allowedStart) || day.isAfter(widget.allowedEnd)) {
       return false;
     }
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final minSelectableDate = today.add(const Duration(days: 7));
-    if (day.isBefore(minSelectableDate)) {
-      return false;
-    }
     for (var reservation in widget.reservations) {
       final checkIn = DateTime.parse(reservation['checkIn']);
       final checkOut = DateTime.parse(reservation['checkOut']);
@@ -187,11 +181,12 @@ class LodgingWeekCalendarState extends State<LodgingWeekCalendar> {
             final isSelected = _isSelected(day);
             final isCurrentMonth = day.month == _focusedMonth.month;
             final weekdayAbbr = weekdayLabels[day.weekday - 1];
-
+            final dayBoxWidth = effectiveDayWidth + dayPadding * 2;
             rowWidgets.add(
-              Expanded(
+              SizedBox(
+                width: dayBoxWidth,
                 child: Padding(
-                  padding: EdgeInsets.all(availableWidth < 350 ? 2.0 : 4.0),
+                  padding: EdgeInsets.all(dayPadding),
                   child: Material(
                     color: Colors.transparent,
                     child: Stack(
@@ -325,8 +320,12 @@ class LodgingWeekCalendarState extends State<LodgingWeekCalendar> {
               ),
             ),
             SizedBox(height: availableWidth < 350 ? 8.0 : 16.0),
-            Column(
-              children: rows,
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  children: rows,
+                ),
+              ),
             ),
           ],
         );

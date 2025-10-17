@@ -138,7 +138,7 @@ class TransportReservationsProvider extends ChangeNotifier {
     if (monday.weekday != DateTime.monday) {
       return false;
     }
-    const int cutoffWeekday = 3;
+    const int cutoffWeekday = 4;
     final now = DateTime.now();
     final todayWeekday = now.weekday;
     final daysToNextMonday = (DateTime.monday - todayWeekday + 7) % 7;
@@ -527,7 +527,7 @@ class TransportReservationsProvider extends ChangeNotifier {
   }
 
   DateTime getMinReservableDate() {
-    const int cutoffWeekday = 3; 
+    const int cutoffWeekday = 4;
     final now = DateTime.now();
     final todayWeekday = now.weekday;
     final daysToNextMonday = (DateTime.monday - todayWeekday + 7) % 7;
