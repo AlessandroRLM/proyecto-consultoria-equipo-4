@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mobile/adapters/core/drivers/ui/layouts/base_screen_layout.dart';
 import 'package:mobile/adapters/lodging/driven/providers/lodging_provider.dart';
 import 'package:mobile/adapters/lodging/drivers/ui/widgets/reservation_card.dart';
 import 'package:provider/provider.dart';

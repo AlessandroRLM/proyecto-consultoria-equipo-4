@@ -1,5 +1,6 @@
+import 'dart:convert';
 import 'package:mobile/adapters/auth/driven/services/user_mock_service.dart';
-import 'package:mobile/domain/entities/user.dart';
+import 'package:mobile/domain/models/user/user_model.dart';
 import 'package:mobile/ports/auth/driven/for_authenticating_user.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -8,18 +9,22 @@ class AuthMockService implements ForAuthenticatingUser {
   final UserMockService _userService = UserMockService();
 
   bool _isAuthenticated = false;
-  User? _currentUser;
+  UserModel? _currentUser;
 
   @override
   bool get isAuthenticated => _isAuthenticated;
   @override
-  User? get currentUser => _currentUser;
+  UserModel? get currentUser => _currentUser;
 
   @override
   Future<void> initialize() async {
     final prefs = await SharedPreferences.getInstance();
     _isAuthenticated = prefs.getBool(_isAuthenticatedKey) ?? false;
-  }
+    final userJson = prefs.getString('current_user');
+    if (userJson != null) {
+      _currentUser = UserModel.fromJson(jsonDecode(userJson));
+    }
+  } 
 
   @override
   Future<bool> authenticate({
@@ -41,7 +46,7 @@ class AuthMockService implements ForAuthenticatingUser {
   @override
   Future<void> initRecoverPassword({required String email}) async {
     final user = _userService.getUserByEmail(email);
-    if (user!=null) {
+    if (user != null) {
       return;
     }
     throw Exception('Email not found');
@@ -56,10 +61,15 @@ class AuthMockService implements ForAuthenticatingUser {
   Future<void> _saveToStorage() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_isAuthenticatedKey, _isAuthenticated);
+    if (_currentUser != null) {
+    final userJson = jsonEncode(_currentUser!.toJson());
+    await prefs.setString('current_user', userJson);
+  }
   }
 
   Future<void> _clearStorage() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_isAuthenticatedKey);
+    await prefs.remove('current_user');
   }
 }
