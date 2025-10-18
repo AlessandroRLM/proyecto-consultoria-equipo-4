@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/adapters/core/driven/app_themes.dart';
-import 'package:mobile/domain/models/lodging/lodging_reservation_model.dart';
+import 'package:mobile/adapters/lodging/driven/providers/lodging_provider.dart';
+import 'package:mobile/domain/models/lodging/agenda_model.dart';
+import 'package:provider/provider.dart';
 
 class ReservationCard extends StatefulWidget {
-  final LodgingReservation reservation;
-  const ReservationCard({super.key, required this.reservation});
+  final AgendaModel agenda;
+  const ReservationCard({super.key, required this.agenda});
 
   @override
   State<ReservationCard> createState() => _ReservationCardState();
@@ -13,10 +15,26 @@ class ReservationCard extends StatefulWidget {
 class _ReservationCardState extends State<ReservationCard> {
   bool expanded = false;
 
+  String _fmtDate(String ymd) {
+    try {
+      final d = DateTime.parse(ymd);
+      const days = ['LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB', 'DOM'];
+      return '${days[d.weekday - 1]} ${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}';
+    } catch (_) {
+      return ymd;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final text = Theme.of(context).textTheme;
+
+    final home = context.read<LodgingProvider>().getHomeById(
+      widget.agenda.homeId,
+    );
+    final residenceName = home?.residenceName ?? 'Residencia';
+    final address = home?.address ?? '';
 
     return InkWell(
       onTap: () => setState(() => expanded = !expanded),
@@ -33,7 +51,6 @@ class _ReservationCardState extends State<ReservationCard> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header principal
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -48,53 +65,44 @@ class _ReservationCardState extends State<ReservationCard> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        widget.reservation.area,
+                        widget.agenda.clinicalName,
                         style: text.titleSmall?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      Text(widget.reservation.name, style: text.bodyMedium),
-                      Text(widget.reservation.address, style: text.bodySmall),
+                      Text(residenceName, style: text.bodyMedium),
+                      Text(address, style: text.bodySmall),
                     ],
                   ),
                 ),
               ],
             ),
-
-            // Info extra cuando la card está expandida
             if (expanded) ...[
               const SizedBox(height: 12),
-              const Divider(height: 1), // <- línea divisoria
-
+              const Divider(height: 1),
               const SizedBox(height: 12),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Columna izquierda
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        "Entrada: ${widget.reservation.checkIn}",
-                        style: text.bodySmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        "Salida: ${widget.reservation.checkOut}",
-                        style: text.bodySmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        "Habitación: ${widget.reservation.room}",
-                        style: text.bodySmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
+                  Text(
+                    "Entrada: ${_fmtDate(widget.agenda.reservationDate)}",
+                    style: text.bodySmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    "Salida: ${_fmtDate(widget.agenda.reservationDate)}",
+                    style: text.bodySmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    "Habitación: ${widget.agenda.homeId}",
+                    style: text.bodySmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ],
               ),
