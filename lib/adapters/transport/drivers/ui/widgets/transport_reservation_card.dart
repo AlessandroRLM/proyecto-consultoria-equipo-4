@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:mobile/adapters/core/driven/app_themes.dart';
+import 'package:mobile/adapters/core/drivers/ui/widgets/status_widget.dart';
 
 class TransportReservationCard extends StatefulWidget {
   final Map<String, dynamic> reservation;
@@ -164,16 +165,7 @@ class _TransportReservationCardState extends State<TransportReservationCard> {
                                 maxLines: 1,
                               ),
                             ),
-                            Text(
-                              widget.reservation['status'] as String? ?? 'Estado desconocido',
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                fontWeight: FontWeight.w500,
-                                fontSize: 12,
-                                color: Colors.blue,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                              maxLines: 1,
-                            ),
+                            StatusWidget(estado:  widget.reservation['status'] as String? ?? 'Estado desconocido')
                           ],
                         ),
                       ],

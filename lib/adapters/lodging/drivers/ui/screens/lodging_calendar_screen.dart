@@ -43,7 +43,6 @@ class _LodgingCalendarScreenState extends State<LodgingCalendarScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final lodgingProvider = Provider.of<LodgingProvider>(context, listen: false);
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final minSelectableDate = today.add(const Duration(days: 7));
