@@ -32,6 +32,7 @@ void main() async {
 
   await initializeDateFormatting(Intl.getCurrentLocale(), null);
 
+
   runApp(const MyApp());
 }
 
@@ -45,7 +46,7 @@ class MyApp extends StatelessWidget {
         // Inicializamos el proveedor vacío, sin datos aún
         ChangeNotifierProvider(create: (_) => TransportReservationsProvider()),
         ChangeNotifierProvider(
-          create: (_) => LodgingProvider()..fetchAgendas(),
+          create: (_) => LodgingProvider()..fetchReservations(),
         ),
         ChangeNotifierProvider(
           create: (_) => LodgingAvailabilityProvider(),
