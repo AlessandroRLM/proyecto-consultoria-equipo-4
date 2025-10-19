@@ -6,13 +6,20 @@ import 'package:mobile/adapters/lodging/driven/providers/lodging_provider.dart';
 import 'package:mobile/adapters/lodging/drivers/ui/widgets/reservation_card.dart';
 import 'package:provider/provider.dart';
 
-class LodgingListScreen extends StatelessWidget {
+class LodgingListScreen extends StatefulWidget {
   const LodgingListScreen({super.key});
 
   @override
+  State<LodgingListScreen> createState() => _LodgingListScreenState();
+}
+
+class _LodgingListScreenState extends State<LodgingListScreen> {
+  @override
   Widget build(BuildContext context) {
-    final reservations = context.watch<LodgingProvider>().userReservations;
-    final theme = Theme.of(context);
+    final provider = context.watch<LodgingProvider>();
+    final agendas = provider.agendas;
+    final cs = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
 
     return BaseScreenLayout(
       title: 'Reservas',
@@ -22,23 +29,35 @@ class LodgingListScreen extends StatelessWidget {
         icon: Icons.calendar_today,
         heroTag: 'lodging_request_button',
       ),
-      child: reservations.isEmpty
-          ? Center(
+      child: Column(
+        children: [
+          if (provider.loading)
+            const Center(child: CircularProgressIndicator())
+          else if (provider.error != null)
+            Center(
               child: Text(
-                'Aún no hay reservas disponibles.',
-                style: theme.textTheme.bodyLarge?.copyWith(
-                      color: theme.disabledColor,
-                    ),
+                "Error: ${provider.error}",
+                style: TextStyle(color: cs.error),
               ),
             )
-          : ListView.builder(
-              padding: const EdgeInsets.only(top: 8.0), 
-              itemCount: reservations.length,
-              itemBuilder: (context, index) {
-                final reservation = reservations[index];
-                return ReservationCard(reservation: reservation);
-              },
+          else
+            Expanded(
+              child: agendas.isEmpty
+                  ? Center(
+                      child: Text(
+                        "No hay reservas aún",
+                        style: TextStyle(color: cs.onSurfaceVariant),
+                      ),
+                    )
+                  : ListView.builder(
+                      padding: EdgeInsets.zero,
+                      itemCount: agendas.length,
+                      itemBuilder: (context, i) =>
+                          ReservationCard(agenda: agendas[i]),
+                    ),
             ),
+        ],
+      ),
     );
   }
 }
