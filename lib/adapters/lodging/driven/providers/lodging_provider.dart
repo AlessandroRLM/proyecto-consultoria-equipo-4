@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'package:mobile/adapters/lodging/driven/datasources/lodging_mock_datasource.dart';
-import 'package:mobile/domain/models/lodging/lodging_reservation_model.dart';
+import 'package:mobile/domain/models/lodging/agenda_model.dart';
+import 'package:mobile/domain/models/lodging/estado_agenda.dart';
 import 'package:mobile/adapters/core/driven/campus_mock_service.dart';
 
 class LodgingProvider with ChangeNotifier {
@@ -11,14 +12,14 @@ class LodgingProvider with ChangeNotifier {
   LodgingProvider({LodgingMockDataSource? dataSource})
     : _ds = dataSource ?? LodgingMockDataSource();
 
-  final List<LodgingReservation> _reservations = [];
-  final List<LodgingReservation> _userReservations = [];
+  final List<AgendaModel> _reservations = [];
+  final List<AgendaModel> _userReservations = [];
   final List<Map<String, dynamic>> _occupiedReservations = [];
   bool _loading = false;
   String? _error;
 
-  List<LodgingReservation> get reservations => List.unmodifiable(_reservations);
-  List<LodgingReservation> get userReservations => List.unmodifiable(_userReservations);
+  List<AgendaModel> get reservations => List.unmodifiable(_reservations);
+  List<AgendaModel> get userReservations => List.unmodifiable(_userReservations);
   List<Map<String, dynamic>> get occupiedReservations => List.unmodifiable(_occupiedReservations);
   bool get loading => _loading;
   String? get error => _error;
@@ -43,45 +44,50 @@ class LodgingProvider with ChangeNotifier {
 
       // 3) Construir items para la UI
       for (final it in schedules) {
-        final int homeId = it['home_id'] as int; // viene del schedule
-        final h = homeById[homeId]; // buscamos la residencia
+        final int id = it['id'] as int; // viene del schedule
+        final int studentId = it['student_id'] as int;
+        final String occupantName = it['occupant_name'] as String;
+        final String occupantMobile = it['occupant_mobile'] as String;
+        final String occupantKind = it['occupant_kind'] as String;
+        final String reservationDate = it['reservation_date'] as String;
+        final String reservationInit = it['reservation_init'] as String;
+        final String reservationFin = it['reservation_fin'] as String;
+        final clinicalName = it['clinical_name'] as String;
+        final int homeId = it['home_id'] as int;
+        final String state = it['state'] as String;
 
-        final clinicalName =
-            (it['clinical_name'] as String?)?.trim() ?? 'Clínico';
-        final residenceName = (h?['residenceName'] as String?) ?? 'Residencia';
-        final address = (h?['address'] as String?) ?? 'Dirección no disponible';
-
-        final dateStr = (it['reservation_date'] as String?) ?? '2025-09-08';
-        final checkIn = dateStr; 
-        final checkOut = dateStr; 
-
-        //  HABITACIÓN: usa el home_id como número (sin letras).
-        final room = homeId.toString(); // ej. "101"
         _reservations.add(
-          LodgingReservation(
-            area: clinicalName,
-            name: residenceName,
-            address: address,
-            room: room, // ahora "101" (número, sin prefijos)
-            checkIn: checkIn,
-            checkOut: checkOut,
+          AgendaModel(
+            id: id,
+            studentId: studentId,
+            occupantName: occupantName,
+            occupantMobile: occupantMobile,
+            occupantKind: occupantKind,
+            reservationDate: reservationDate,
+            reservationInit: reservationInit,
+            reservationFin: reservationFin,
+            clinicalName: clinicalName,
+            homeId: homeId,
+            state: EstadoAgendaX.fromJson(state),
           ),
         );
       }
       // (opcional) ordenar por fecha asc
-      _reservations.sort((a, b) => a.checkIn.compareTo(b.checkIn));
+      _reservations.sort((a, b) => a.reservationInit.compareTo(b.reservationInit));
 
       // 4) Cargar todas las reservas ocupadas para el calendario
       final allSchedules = await _ds.getSchedulesRaw();
       for (final it in allSchedules) {
         final int homeId = it['home_id'] as int;
+        // ignore: unused_local_variable
         final h = homeById[homeId];
         final clinicalName = (it['clinical_name'] as String?)?.trim() ?? 'Clínico';
-        final dateStr = (it['reservation_date'] as String?) ?? '2025-09-08';
+        final String reservationInit = it['reservation_init'] as String;
+        final String reservationFin = it['reservation_fin'] as String;
         _occupiedReservations.add({
           'area': clinicalName,
-          'checkIn': dateStr,
-          'checkOut': dateStr,
+          'reservationInit': reservationInit,
+          'reservationFin': reservationFin,
         });
       }
 
@@ -91,7 +97,7 @@ class LodgingProvider with ChangeNotifier {
       if (userReservationsJson != null) {
         final List<dynamic> userReservationsList = json.decode(userReservationsJson);
         _userReservations.addAll(
-          userReservationsList.map((json) => LodgingReservation.fromJson(json)).toList(),
+          userReservationsList.map((json) => AgendaModel.fromJson(json)).toList(),
         );
       }
     } catch (e) {
@@ -114,7 +120,7 @@ class LodgingProvider with ChangeNotifier {
     await prefs.setString('user_lodging_reservations', jsonString);
   }
 
-  void addReservation(LodgingReservation reservation) {
+  void addReservation(AgendaModel reservation) {
     _userReservations.add(reservation);
     saveUserReservations();
     notifyListeners();
