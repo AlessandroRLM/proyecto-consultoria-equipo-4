@@ -5,6 +5,7 @@ import 'package:mobile/adapters/lodging/driven/datasources/lodging_mock_datasour
 import 'package:mobile/domain/models/lodging/agenda_model.dart';
 import 'package:mobile/domain/models/lodging/estado_agenda.dart';
 import 'package:mobile/adapters/core/driven/campus_mock_service.dart';
+import 'package:mobile/domain/core/campus.dart';
 
 class LodgingProvider with ChangeNotifier {
   final LodgingMockDataSource _ds;
@@ -23,6 +24,15 @@ class LodgingProvider with ChangeNotifier {
   List<Map<String, dynamic>> get occupiedReservations => List.unmodifiable(_occupiedReservations);
   bool get loading => _loading;
   String? get error => _error;
+
+  Campus? _selectedClinic;
+  Campus? get selectedClinic => _selectedClinic;
+
+  void selectClinic(Campus clinic) {
+    _selectedClinic = clinic;
+    notifyListeners();
+  }
+
 
   Future<void> fetchReservations() async {
     _loading = true;

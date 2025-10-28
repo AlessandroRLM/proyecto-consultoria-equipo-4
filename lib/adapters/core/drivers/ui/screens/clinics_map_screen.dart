@@ -7,6 +7,7 @@ import 'package:mobile/adapters/core/driven/mapbox_service.dart';
 import 'package:mobile/adapters/core/drivers/ui/widgets/map_search_bar.dart';
 import 'package:mobile/adapters/core/drivers/ui/widgets/map_results_list.dart';
 import 'package:mobile/adapters/core/drivers/ui/widgets/map_control_buttons.dart';
+import 'package:mobile/adapters/lodging/driven/providers/lodging_provider.dart';
 import 'package:mobile/domain/core/campus.dart';
 import 'package:mobile/ports/core/driven/for_querying_campus.dart';
 import 'package:mobile/ports/core/drivers/for_mapping_interactions.dart';
@@ -278,16 +279,13 @@ class _ClinicMapScreenState extends State<ClinicMapScreen>
                         );
 
                       } else if (widget.origin == '2') {
-                        await context.push(
-                          '/lodging/calendar',
-                          extra: {
-                            'selectedLocation': campus.name,
-                            'address': campus.commune,
-                            'city': campus.city,
-                            'residenceName': campus.name,
-                            'id': campus.id,
-                          },
-                        );
+                        final lodgingProvider = Provider.of<LodgingProvider>(context, listen: false);
+
+                        // Guarda la clínica seleccionada en el provider (igual que en la otra pantalla)
+                        lodgingProvider.selectClinic(campus);
+
+                        // Luego navega sin pasar extras
+                        context.go('/lodging/calendar');
                       }
                     },
                     icon: const Icon(Icons.today_outlined, size: 24),

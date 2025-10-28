@@ -1,24 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/adapters/lodging/drivers/ui/widgets/lodging_week_calendar.dart';
+import 'package:mobile/domain/models/lodging/estado_agenda.dart';
 import 'package:provider/provider.dart';
 import 'package:mobile/adapters/lodging/driven/providers/lodging_provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile/adapters/core/driven/app_themes.dart';
-import 'package:mobile/domain/models/lodging/lodging_reservation_model.dart';
+import 'package:mobile/domain/models/lodging/agenda_model.dart';
 
 class LodgingCalendarScreen extends StatefulWidget {
-  final String selectedLocation;
-  final String address;
-  final String city;
-  final String residenceName;
 
-  const LodgingCalendarScreen({
-    super.key,
-    required this.selectedLocation,
-    required this.address,
-    required this.city,
-    required this.residenceName,
-  });
+  const LodgingCalendarScreen({super.key,});
 
   @override
   State<LodgingCalendarScreen> createState() => _LodgingCalendarScreenState();
@@ -49,6 +40,13 @@ class _LodgingCalendarScreenState extends State<LodgingCalendarScreen> {
     final maxSelectableDate = minSelectableDate.add(const Duration(days: 365));
 
     final theme = Theme.of(context);
+    final lodgingProvider = Provider.of<LodgingProvider>(context, listen: false);
+    final selectedClinic = Provider.of<LodgingProvider>(context).selectedClinic;
+    if (selectedClinic == null) {
+    return Scaffold(
+      body: Center(child: Text('No se ha seleccionado ninguna clínica')),
+    );
+}
 
     return Scaffold(
       appBar: AppBar(
@@ -114,7 +112,7 @@ class _LodgingCalendarScreenState extends State<LodgingCalendarScreen> {
                             allowedEnd: maxSelectableDate,
                             initialStartDate: _selectedStartDate,
                             initialEndDate: _selectedEndDate,
-                            reservations: Provider.of<LodgingProvider>(context).occupiedReservations.where((r) => r['area'] == widget.selectedLocation).toList(),
+                            reservations: lodgingProvider.occupiedReservations.where((r) => r['area'] == selectedClinic.name).toList(),
                             onDateRangeSelected: (start, end) {
                               setState(() {
                                 _selectedStartDate = start;
@@ -137,20 +135,37 @@ class _LodgingCalendarScreenState extends State<LodgingCalendarScreen> {
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16.0),
                   child: ReservationButtonWidget(
-                    selectedLocation: widget.selectedLocation,
+                    selectedLocation: selectedClinic.name,
                     selectedStartDate: _selectedStartDate,
                     selectedEndDate: _selectedEndDate,
                     onReserve: () {
                       if (_selectedStartDate != null && _selectedEndDate != null) {
-                        final lodgingProvider = Provider.of<LodgingProvider>(context, listen: false);
-                        lodgingProvider.addReservation(LodgingReservation.fromJson({
-                          'area': widget.selectedLocation,
-                          'name': widget.residenceName,
-                          'address': widget.address,
-                          'room': '',
-                          'checkIn': _selectedStartDate!.toIso8601String(),
-                          'checkOut': _selectedEndDate!.toIso8601String(),
-                        }));
+                        final selectedClinic = lodgingProvider.selectedClinic;
+
+                        if (selectedClinic == null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('No hay clínica seleccionada')),
+                          );
+                          return;
+                        }
+
+                        final now = DateTime.now();
+                        final reservation = AgendaModel(
+                          id: DateTime.now().millisecondsSinceEpoch, 
+                          studentId: 1,
+                          occupantName: 'Estudiante', 
+                          occupantMobile: '000000000', 
+                          occupantKind: 'Interno',
+                          reservationDate: "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}",
+                          reservationInit: "${_selectedStartDate!.hour.toString().padLeft(2, '0')}:${_selectedStartDate!.minute.toString().padLeft(2, '0')}",
+                          reservationFin: "${_selectedEndDate!.hour.toString().padLeft(2, '0')}:${_selectedEndDate!.minute.toString().padLeft(2, '0')}",
+                          clinicalName: selectedClinic.name,
+                          homeId: selectedClinic.id,
+                          state: EstadoAgenda.pendiente // o el estado que corresponda
+                        );
+
+                        lodgingProvider.addReservation(reservation);
+
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: SingleChildScrollView(
@@ -158,7 +173,8 @@ class _LodgingCalendarScreenState extends State<LodgingCalendarScreen> {
                                 mainAxisSize: MainAxisSize.min,
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text('Reserva confirmada'),
+                                  const Text('Reserva confirmada'),
+                                  Text('Clínica: ${selectedClinic.name}'),
                                   Text('Desde: ${formatDate(_selectedStartDate!)}'),
                                   Text('Hasta: ${formatDate(_selectedEndDate!)}'),
                                 ],
@@ -166,12 +182,11 @@ class _LodgingCalendarScreenState extends State<LodgingCalendarScreen> {
                             ),
                           ),
                         );
+
                         context.go('/lodging');
                       } else {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Por favor, selecciona fechas para reservar'),
-                          ),
+                          const SnackBar(content: Text('Por favor, selecciona fechas para reservar')),
                         );
                       }
                     },

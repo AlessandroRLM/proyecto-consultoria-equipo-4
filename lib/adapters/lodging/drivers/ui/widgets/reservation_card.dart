@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/adapters/core/driven/app_themes.dart';
+import 'package:mobile/adapters/core/drivers/ui/widgets/status_widget.dart';
 import 'package:mobile/adapters/lodging/driven/providers/lodging_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:mobile/domain/models/lodging/lodging_reservation_model.dart';
+import 'package:mobile/domain/models/lodging/agenda_model.dart';
 
 class ReservationCard extends StatefulWidget {
-  final LodgingReservation reservation;
+  final AgendaModel reservation;
   const ReservationCard({super.key, required this.reservation});
 
   @override
@@ -24,7 +25,7 @@ class _ReservationCardState extends State<ReservationCard> {
 
   Future<void> _loadClinicInfo() async {
     final lodgingProvider = Provider.of<LodgingProvider>(context, listen: false);
-    clinicInfo = await lodgingProvider.getClinicInfoByName(widget.reservation.area);
+    clinicInfo = await lodgingProvider.getClinicInfoByName(widget.reservation.clinicalName);
     if (mounted) setState(() {});
   }
 
@@ -85,7 +86,7 @@ class _ReservationCardState extends State<ReservationCard> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          widget.reservation.area, 
+                          widget.reservation.clinicalName, 
                           style: text.bodyLarge?.copyWith(
                             fontWeight: FontWeight.bold,
                             fontSize: 16,
@@ -99,13 +100,19 @@ class _ReservationCardState extends State<ReservationCard> {
                             color: text.bodyMedium?.color?.withValues(alpha: 0.8),
                           ),
                         ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              commune,
+                              style: text.bodyMedium?.copyWith(
+                                color: text.bodyMedium?.color?.withValues(alpha: 0.8),
+                              ),
+                            ),
+                            StatusWidget(estado: widget.reservation.state.name),
+                          ],
+                        )
 
-                        Text(
-                          commune,
-                          style: text.bodyMedium?.copyWith(
-                            color: text.bodyMedium?.color?.withValues(alpha: 0.8),
-                          ),
-                        ),
                       ],
                     ),
                   ),
@@ -122,17 +129,17 @@ class _ReservationCardState extends State<ReservationCard> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            "Entrada: ${_formatDateFull(widget.reservation.checkIn)}",
+                            "Entrada: ${_formatDateFull(widget.reservation.reservationInit)}",
                             style: text.bodyMedium,
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            "Salida: ${_formatDateFull(widget.reservation.checkOut)}",
+                            "Salida: ${_formatDateFull(widget.reservation.reservationFin)}",
                             style: text.bodyMedium,
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            "Habitación: ${widget.reservation.room}",
+                            "Habitación: ${widget.reservation.occupantKind}",
                             style: text.bodyMedium,
                           ),
                         ],

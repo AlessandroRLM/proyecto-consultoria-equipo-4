@@ -133,12 +133,7 @@ final GoRouter appRoutes = GoRouter(
                         ),
                         GoRoute(
                           path: 'calendar',
-                          builder: (context, state) => LodgingCalendarScreen(
-                            selectedLocation: (state.extra as Map<String, dynamic>?)?['selectedLocation'] ?? "Ubicación no especificada",
-                            address: (state.extra as Map<String, dynamic>?)?['address'] ?? "",
-                            city: (state.extra as Map<String, dynamic>?)?['city'] ?? "",
-                            residenceName: (state.extra as Map<String, dynamic>?)?['residenceName'] ?? "",
-                          ),
+                          builder: (context, state) => LodgingCalendarScreen(),
                         ),
                       ],
                       redirect: (BuildContext context, GoRouterState state) {

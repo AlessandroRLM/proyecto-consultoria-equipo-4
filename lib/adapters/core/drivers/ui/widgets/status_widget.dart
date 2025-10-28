@@ -19,7 +19,8 @@ class StatusWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final color = colores[estado] ?? Colors.grey;
+    final color = colores[estado[0].toUpperCase() + estado.substring(1).toLowerCase()] ?? Colors.grey;
+
 
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),

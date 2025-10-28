@@ -76,9 +76,9 @@ class LodgingWeekCalendarState extends State<LodgingWeekCalendar> {
       return false;
     }
     for (var reservation in widget.reservations) {
-      final checkIn = DateTime.parse(reservation['checkIn']);
-      final checkOut = DateTime.parse(reservation['checkOut']);
-      if (!day.isBefore(checkIn) && !day.isAfter(checkOut)) {
+      final reservationInit = DateTime.parse(reservation['reservationInit']);
+      final reservationFin = DateTime.parse(reservation['reservationFin']);
+      if (!day.isBefore(reservationInit) && !day.isAfter(reservationFin)) {
         return false;
       }
     }
@@ -87,9 +87,9 @@ class LodgingWeekCalendarState extends State<LodgingWeekCalendar> {
 
   bool _isReserved(DateTime day) {
     for (var reservation in widget.reservations) {
-      final checkIn = DateTime.parse(reservation['checkIn']);
-      final checkOut = DateTime.parse(reservation['checkOut']);
-      if (!day.isBefore(checkIn) && !day.isAfter(checkOut)) {
+      final reservationInit = DateTime.parse(reservation['reservationInit']);
+      final reservationFin = DateTime.parse(reservation['reservationFin']);
+      if (!day.isBefore(reservationInit) && !day.isAfter(reservationFin)) {
         return true;
       }
     }
@@ -106,9 +106,9 @@ class LodgingWeekCalendarState extends State<LodgingWeekCalendar> {
     if (!_isSelectable(day)) return;
 
     for (var reservation in widget.reservations) {
-      final checkIn = DateTime.parse(reservation['checkIn']);
-      final checkOut = DateTime.parse(reservation['checkOut']);
-      if (!day.isBefore(checkIn) && !day.isAfter(checkOut)) {
+      final reservationInit = DateTime.parse(reservation['reservationInit']);
+      final reservationFin = DateTime.parse(reservation['reservationFin']);
+      if (!day.isBefore(reservationInit) && !day.isAfter(reservationFin)) {
         return;
       }
     }
@@ -252,9 +252,9 @@ class LodgingWeekCalendarState extends State<LodgingWeekCalendar> {
                           ),
                         ),
                         if (isCurrentMonth && widget.reservations.any((reservation) {
-                          final checkIn = DateTime.parse(reservation['checkIn']);
-                          final checkOut = DateTime.parse(reservation['checkOut']);
-                          return !day.isBefore(checkIn) && !day.isAfter(checkOut);
+                          final reservationInit = DateTime.parse(reservation['reservationInit']);
+                          final reservationFin = DateTime.parse(reservation['reservationFin']);
+                          return !day.isBefore(reservationInit) && !day.isAfter(reservationFin);
                         }))
                           Positioned(
                             right: availableWidth < 350 ? 1 : 2,
