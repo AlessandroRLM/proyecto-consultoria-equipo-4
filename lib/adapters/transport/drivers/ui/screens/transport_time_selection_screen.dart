@@ -45,7 +45,7 @@ class TransportTimeSelectionScreen extends StatefulWidget {
 
 class _TransportTimeSelectionScreenState extends State<TransportTimeSelectionScreen> {
   Map<String, dynamic>? _selectedOption;
-  String? _selectedLocation;
+  
   DateTime? _focusedWeekStart;
   DateTime? _selectedDate;
   DateTime? _allowedStart;
@@ -133,40 +133,29 @@ class _TransportTimeSelectionScreenState extends State<TransportTimeSelectionScr
       return;
     }
 
-    if (day.isBefore(_allowedStart!) || day.isAfter(_allowedEnd!)) {
-      SchedulerBinding.instance.addPostFrameCallback((_) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Fecha fuera del rango permitido')),
-        );
-      });
-      return;
+    final dateStrForRangeCheck = DateFormat('yyyy-MM-dd').format(day);
+    final isReservedForThisTab = _isOutbound
+        ? _transportProvider.hasOutboundOnDate(dateStrForRangeCheck)
+        : _transportProvider.hasReturnOnDate(dateStrForRangeCheck);
+    if (!isReservedForThisTab) {
+      if (day.isBefore(_allowedStart!) || day.isAfter(_allowedEnd!)) {
+        SchedulerBinding.instance.addPostFrameCallback((_) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Fecha fuera del rango permitido')),
+          );
+        });
+        return;
+      }
     }
 
-    // Verificar limite 7 dias Ida.
     final dateStr = DateFormat('yyyy-MM-dd').format(day);
     if (_isOutbound) {
-      if (!_transportProvider.hasOutboundOnDate(dateStr)) {
-        if (_transportProvider.getDistinctDatesCount() + 1 > 7) {
-          SchedulerBinding.instance.addPostFrameCallback((_) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Límite máximo de 7 días alcanzado.')),
-            );
-          });
-          return;
-        }
+      if (_transportProvider.hasOutboundOnDate(dateStr)) {
+        return;
       }
     } else {
-      // Verificar limite 7 dias Vuelta.
-      if (!_transportProvider.hasReturnOnDate(dateStr)) {
-        bool isSameDayAsOutbound = dateStr == _transportProvider.selectedDate;
-        if (!isSameDayAsOutbound && _transportProvider.getDistinctDatesCount() + 1 > 7) {
-          SchedulerBinding.instance.addPostFrameCallback((_) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Límite máximo de 7 días alcanzado.')),
-            );
-          });
-          return;
-        }
+      if (_transportProvider.hasReturnOnDate(dateStr)) {
+        return;
       }
     }
 
@@ -243,79 +232,7 @@ class _TransportTimeSelectionScreenState extends State<TransportTimeSelectionScr
     });
   }
   
-  void _onReservar() {
-    if (_selectedLocation == null) {
-        SchedulerBinding.instance.addPostFrameCallback((_) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Por favor, seleccione una ubicación primero.')),
-          );
-        });
-      return;
-    }
-    if (_selectedDate == null) {
-      SchedulerBinding.instance.addPostFrameCallback((_) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Por favor, seleccione una fecha primero.')),
-        );
-      });
-      return;
-    }
-    if (_selectedOption == null) {
-      SchedulerBinding.instance.addPostFrameCallback((_) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Por favor, seleccione una hora primero.')),
-        );
-      });
-      return;
-    }
-
-    final dateStr = DateFormat('yyyy-MM-dd').format(_selectedDate!);
-
-    if (_isOutbound) {
-      _transportProvider.selectedDate = dateStr;
-      _transportProvider.selectedOutboundTime = _selectedOption!['time'];
-      _transportProvider.selectedService = _selectedOption!['service'];
-      _transportProvider.addOutboundReservation();
-      SchedulerBinding.instance.addPostFrameCallback((_) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Reserva confirmada con exito.')),
-        );
-      });
-      _onTabSelected(1);
-    } else {
-      if (_transportProvider.selectedOutboundTime != null) {
-        if (dateStr != _transportProvider.selectedDate && _transportProvider.selectedOutboundTime == _selectedOption!['time']) {
-          SchedulerBinding.instance.addPostFrameCallback((_) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('La hora de vuelta no puede ser la misma que la de ida.')),
-            );
-          });
-          return;
-        }
-        _transportProvider.selectedReturnDate = dateStr;
-        _transportProvider.selectedReturnTime = _selectedOption!['time'];
-        _transportProvider.selectedService = _selectedOption!['service'];
-        _transportProvider.addRoundTripReservation();
-        SchedulerBinding.instance.addPostFrameCallback((_) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Reserva confirmada con exito.')),
-          );
-        });
-        context.go('/transport');
-      } else {
-        _transportProvider.selectedReturnDate = dateStr;
-        _transportProvider.selectedReturnTime = _selectedOption!['time'];
-        _transportProvider.selectedService = _selectedOption!['service'];
-        _transportProvider.addReturnReservation();
-        SchedulerBinding.instance.addPostFrameCallback((_) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Reserva confirmada con exito.')),
-          );
-        });
-        context.go('/transport');
-      }
-    }
-  }
+  
 
   DateTime? _getLatestReservationDate() {
     if (_transportProvider.reservations.isEmpty) return null;
@@ -348,8 +265,7 @@ class _TransportTimeSelectionScreenState extends State<TransportTimeSelectionScr
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _transportProvider = Provider.of<TransportReservationsProvider>(context, listen: false);
-    _selectedLocation = _transportProvider.selectedLocation?['name'];
+  _transportProvider = Provider.of<TransportReservationsProvider>(context, listen: false);
     _allowedStart = _transportProvider.getMinReservableDate();
     _allowedEnd = _allowedStart!.add(Duration(days: 365));
     _focusedWeekStart = _allowedStart;
@@ -456,6 +372,8 @@ class _TransportTimeSelectionScreenState extends State<TransportTimeSelectionScr
                           availableOptions: _availableOptions,
                           selectedOption: _selectedOption,
                           onTimeSelected: _onTimeSelected,
+                          selectedDate: _selectedDate!,
+                          isOutbound: _isOutbound,
                         ),
                       ),
                   ],
@@ -463,12 +381,6 @@ class _TransportTimeSelectionScreenState extends State<TransportTimeSelectionScr
               ),
             ),
             const Divider(color: Colors.transparent, height: 0),
-            ReservationButtonWidget(
-              isOutbound: _isOutbound,
-              selectedLocation: _selectedLocation,
-              selectedOption: _selectedOption,
-              onReservar: _onReservar,
-            ),
           ],
         ),
       ),
@@ -675,16 +587,16 @@ class WeekCalendarWidget extends StatelessWidget {
                     final dateStr = DateFormat('yyyy-MM-dd').format(day);
                     final isPast = day.isBefore(now.subtract(const Duration(days: 1)));
                     final isReserved = isOutbound ? transportProvider.hasOutboundOnDate(dateStr) : transportProvider.hasReturnOnDate(dateStr);
-                    final hasOptions = transportProvider.hasAvailableOptions(dateStr);
+                    
                     final isSelected = selectedDate != null && selectedDate!.isAtSameMomentAs(day);
-                    final isSelectable = !isPast && !isReserved && hasOptions && !day.isBefore(allowedStart!) && !day.isAfter(allowedEnd!);
+                    final isSelectable = !isPast && !day.isBefore(allowedStart!) && !day.isAfter(allowedEnd!);
                     final isHighlighted = isSelected;
                     return Expanded(
                       child: Material(
                         color: Colors.transparent,
                         child: GestureDetector(
                           behavior: HitTestBehavior.opaque,
-                            onTap: isSelectable ? () => onDaySelected(day) : null,
+                            onTap: () => onDaySelected(day),
                           child: Container(
                             width: double.infinity,
                             height: dayHeight,
@@ -771,21 +683,54 @@ class WeekCalendarWidget extends StatelessWidget {
   }
 }
 
-class TimeOptionsWidget extends StatelessWidget {
+class TimeOptionsWidget extends StatefulWidget {
   final List<Map<String, dynamic>> availableOptions;
   final Map<String, dynamic>? selectedOption;
   final Function(Map<String, dynamic>) onTimeSelected;
+  final DateTime selectedDate;
+  final bool isOutbound;
 
   const TimeOptionsWidget({
     super.key,
     required this.availableOptions,
     required this.selectedOption,
     required this.onTimeSelected,
+    required this.selectedDate,
+    required this.isOutbound,
   });
 
   @override
+  State<TimeOptionsWidget> createState() => _TimeOptionsWidgetState();
+}
+
+class _TimeOptionsWidgetState extends State<TimeOptionsWidget> {
+  final Map<String, bool> _loading = {};
+
+  Future<void> _toggleReservation(String dateStr, String time, bool isCurrentlyReserved, String service) async {
+    final provider = Provider.of<TransportReservationsProvider>(context, listen: false);
+    if (_loading[time] == true) return;
+    setState(() {
+      _loading[time] = true;
+    });
+    bool success = false;
+    if (!isCurrentlyReserved) {
+      success = await provider.reserveLeg(date: dateStr, time: time, isOutbound: widget.isOutbound, service: service);
+    } else {
+      success = await provider.cancelLeg(date: dateStr, time: time, isOutbound: widget.isOutbound);
+    }
+    if (!success && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Error al actualizar la reserva')));
+    }
+    if (mounted) {
+      setState(() {
+        _loading[time] = false;
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    if (availableOptions.isEmpty) {
+    if (widget.availableOptions.isEmpty) {
       return Center(
         child: Text(
           'No hay opciones disponibles',
@@ -793,25 +738,33 @@ class TimeOptionsWidget extends StatelessWidget {
         ),
       );
     }
+    final provider = Provider.of<TransportReservationsProvider>(context);
+    final dateStr = DateFormat('yyyy-MM-dd').format(widget.selectedDate);
     final onSurface = Theme.of(context).colorScheme.onSurface;
+
     return Row(
-      children: availableOptions.take(3).map((option) {
+      children: widget.availableOptions.take(3).map((option) {
         final time = option['time'] as String;
         final service = option['service'] as String;
-        final isSelected = selectedOption != null && selectedOption!['time'] == time;
+        final isSelected = widget.selectedOption != null && widget.selectedOption!['time'] == time;
+        final isReserved = provider.isOptionReserved(dateStr, time, isOutbound: widget.isOutbound);
+        final loading = _loading[time] ?? false;
         return Expanded(
           child: LayoutBuilder(
             builder: (context, constraints) {
               double buttonWidth = constraints.maxWidth;
               double fontSize = buttonWidth > 80 ? 14.0 : 12.0;
               double smallFontSize = buttonWidth > 80 ? 10.0 : 8.0;
-              double iconSize = buttonWidth > 80 ? 20.0 : 16.0;
-              double spacing = buttonWidth > 80 ? 8.0 : 4.0;
+              double iconSize = buttonWidth > 80 ? 18.0 : 14.0;
+              double spacing = buttonWidth > 80 ? 6.0 : 3.0;
               return GestureDetector(
-                onTap: () => onTimeSelected(option),
+                onTap: () async {
+                  if (_loading[time] == true) return;
+                  await _toggleReservation(dateStr, time, isReserved, service);
+                },
                 child: Container(
                   height: 60,
-                  margin: const EdgeInsets.symmetric(horizontal: 4),
+                  margin: const EdgeInsets.symmetric(horizontal: 2),
                   decoration: BoxDecoration(
                     color: isSelected ? AppThemes.primary_300 : Colors.transparent,
                     borderRadius: BorderRadius.circular(12),
@@ -866,6 +819,18 @@ class TimeOptionsWidget extends StatelessWidget {
                                 ),
                                 overflow: TextOverflow.ellipsis,
                                 maxLines: 1,
+                              ),
+                      ),
+                      const SizedBox(width: 4),
+                      SizedBox(
+                        width: 28,
+                        child: loading
+                            ? const Center(child: SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)))
+                            : Checkbox(
+                                value: isReserved,
+                                onChanged: (val) async {
+                                  await _toggleReservation(dateStr, time, isReserved, service);
+                                },
                               ),
                       ),
                     ],
