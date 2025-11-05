@@ -149,30 +149,44 @@ class _TransportTimeSelectionScreenState extends State<TransportTimeSelectionScr
     }
 
     final dateStr = DateFormat('yyyy-MM-dd').format(day);
-    if (_isOutbound) {
-      if (_transportProvider.hasOutboundOnDate(dateStr)) {
-        return;
-      }
-    } else {
-      if (_transportProvider.hasReturnOnDate(dateStr)) {
-        return;
-      }
-    }
-
+    
     setState(() {
       _selectedDate = day;
       _focusedWeekStart = getMondayOfWeek(day);
       if (_isOutbound) {
-        _transportProvider.selectedDate = DateFormat('yyyy-MM-dd').format(day);
+        _transportProvider.selectedDate = dateStr;
         _transportProvider.selectedOutboundTime = null;
       } else {
-        _transportProvider.selectedReturnDate = DateFormat('yyyy-MM-dd').format(day);
+        _transportProvider.selectedReturnDate = dateStr;
         _transportProvider.selectedReturnTime = null;
       }
       _selectedOption = null;
       _transportProvider.selectedService = null;
     });
+
     _loadAvailableOptions();
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      Map<String, dynamic>? reservedOption;
+      for (var opt in _availableOptions) {
+        try {
+          if (_transportProvider.isOptionReserved(dateStr, opt['time'], isOutbound: _isOutbound)) {
+            reservedOption = Map<String, dynamic>.from(opt);
+            break;
+          }
+        } catch (_) {
+        }
+      }
+
+      if (reservedOption != null) {
+        final ro = reservedOption;
+        if (_isOutbound) {
+          _transportProvider.selectedOutboundTime = ro['time'];
+        } else {
+          _transportProvider.selectedReturnTime = ro['time'];
+        }
+        _transportProvider.selectedService = ro['service'];
+      }
+    });
   }
 
   void _loadAvailableOptions({bool? isOutbound}) {
