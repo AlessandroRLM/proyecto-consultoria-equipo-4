@@ -8,12 +8,14 @@ import 'package:mobile/adapters/credentials/driven/image_services.dart';
 import 'package:mobile/adapters/credentials/drivers/ui/screens/credential_screen.dart';
 import 'package:mobile/adapters/credentials/drivers/ui/screens/new_credential_screen.dart';
 import 'package:mobile/adapters/credentials/drivers/ui/screens/photo_credencial_screen.dart';
+import 'package:mobile/adapters/lodging/drivers/ui/screens/lodging_calendar_screen.dart';
 import 'package:mobile/adapters/lodging/drivers/ui/screens/lodging_list_screen.dart';
+
+import 'package:mobile/adapters/lodging/drivers/ui/screens/lodging_map_screen.dart';
 import 'package:mobile/adapters/core/drivers/ui/screens/clinic_selection_screen.dart';
-import 'package:mobile/adapters/transport/drivers/ui/screens/map_screen.dart';
-import 'package:mobile/adapters/transport/drivers/ui/screens/reservation_screen.dart';
-import 'package:mobile/adapters/transport/drivers/ui/screens/transport_calendar_screen.dart';
+
 import 'package:mobile/adapters/transport/drivers/ui/screens/transport_screen.dart';
+import 'package:mobile/adapters/transport/drivers/ui/screens/transport_time_selection_screen.dart';
 import 'package:mobile/ports/auth/driven/for_authenticating_user.dart';
 import 'package:mobile/service_locator.dart';
 import 'package:mobile/adapters/auth/drivers/screens/profile_screen.dart';
@@ -101,28 +103,16 @@ final GoRouter appRoutes = GoRouter(
                           );
                           return '/credentials';
                         }
-                        
+
                         return null;
                       },
                       builder: (BuildContext context, GoRouterState state) => const TransportScreen(),
                       routes: [
                         GoRoute(
                           path: 'reservation',
-                          builder: (BuildContext context, GoRouterState state) =>
-                              const ReservationScreen(),
-                          routes: [
-                            GoRoute(
-                              path: 'map_screen',
-                              builder: (BuildContext context, GoRouterState state) => const MapScreen(),
-                            ),
-                          ],
+                          redirect: (context, state) => '/clinic_selection/1',
                         ),
-                        GoRoute(
-                          path: 'calendar',
-                          builder: (BuildContext context, GoRouterState state) =>
-                              const TransportCalendarScreen(),
-                        ),
-                      ],
+                      ]
                     ),
                   ],
                 ),
@@ -131,7 +121,21 @@ final GoRouter appRoutes = GoRouter(
                   routes: [
                     GoRoute(
                       path: '/lodging',
-                      
+                      builder: (context, state) => const LodgingListScreen(),
+                      routes: [
+                        GoRoute(
+                          path: 'new',
+                          redirect: (context, state) => '/clinic_selection/2',
+                        ),
+                        GoRoute(
+                          path: 'map',
+                          builder: (context, state) => const LodgingMapScreen(),
+                        ),
+                        GoRoute(
+                          path: 'calendar',
+                          builder: (context, state) => LodgingCalendarScreen(),
+                        ),
+                      ],
                       redirect: (BuildContext context, GoRouterState state) {
                         final authService = serviceLocator<ForAuthenticatingUser>();
                         final serviceId = authService.currentUser?.servicesId;
@@ -142,10 +146,9 @@ final GoRouter appRoutes = GoRouter(
                           );
                           return '/credentials';
                         }
-                        
+
                         return null;
                       },
-                      builder: (BuildContext context, GoRouterState state) => const LodgingListScreen(),
                     ),
                   ],
                 ),
@@ -165,6 +168,28 @@ final GoRouter appRoutes = GoRouter(
               builder: (BuildContext context, GoRouterState state) => ClinicMapScreen(
                 origin: state.pathParameters['originId'],
               ),
+            ),
+
+            // Rutas de selección de tiempo de transporte
+            GoRoute(
+              path: '/transport/time-selection',
+              builder: (context, state) {
+                final args = state.extra as Map<String, dynamic>? ?? {};
+                return TransportTimeSelectionScreen(
+                  location: args['location'],
+                  dateStr: args['dateStr'],
+                  fixedInitialDate: args['fixedInitialDate'],
+                  isOutbound: args['isOutbound'] ?? false,
+                );
+              },
+            ),
+            GoRoute(
+              path: '/transport/time-selection-return',
+              builder: (context, state) {
+                return const TransportTimeSelectionScreen(
+                  isOutbound: false,
+                );
+              },
             ),
 
             // Rutas de reservas de servicios

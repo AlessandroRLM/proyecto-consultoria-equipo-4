@@ -1,65 +1,44 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile/adapters/core/drivers/ui/layouts/base_screen_layout.dart';
+import 'package:mobile/adapters/core/drivers/ui/widgets/request_button.dart';
 import 'package:mobile/adapters/lodging/driven/providers/lodging_provider.dart';
 import 'package:mobile/adapters/lodging/drivers/ui/widgets/reservation_card.dart';
 import 'package:provider/provider.dart';
 
-class LodgingListScreen extends StatefulWidget {
+class LodgingListScreen extends StatelessWidget {
   const LodgingListScreen({super.key});
 
   @override
-  State<LodgingListScreen> createState() => _LodgingListScreenState();
-}
-
-class _LodgingListScreenState extends State<LodgingListScreen> {
-  @override
   Widget build(BuildContext context) {
-    final provider = context.watch<LodgingProvider>();
-    final agendas = provider.agendas;
-    final cs = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
+    final reservations = context.watch<LodgingProvider>().userReservations;
+    final theme = Theme.of(context);
 
     return BaseScreenLayout(
-      title: "Reservas",
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => context.push('/clinic_selection/2'),
-        label: Text(
-          "Reservar",
-          style: textTheme.titleMedium!.copyWith(color: cs.onPrimary),
-        ),
-        icon: const Icon(Icons.calendar_today),
-        heroTag: 'reserve_lodging_button',
+      title: 'Reservas',
+      floatingActionButton: RequestButton(
+        function: () => context.go('/lodging/new'),
+        label: 'Reservar',
+        icon: Icons.calendar_today,
+        heroTag: 'lodging_request_button',
       ),
-      child: Column(
-        children: [
-          if (provider.loading)
-            const Center(child: CircularProgressIndicator())
-          else if (provider.error != null)
-            Center(
+      child: reservations.isEmpty
+          ? Center(
               child: Text(
-                "Error: ${provider.error}",
-                style: TextStyle(color: cs.error),
+                'Aún no hay reservas disponibles.',
+                style: theme.textTheme.bodyLarge?.copyWith(
+                      color: theme.disabledColor,
+                    ),
               ),
             )
-          else
-            Expanded(
-              child: agendas.isEmpty
-                  ? Center(
-                      child: Text(
-                        "No hay reservas aún",
-                        style: TextStyle(color: cs.onSurfaceVariant),
-                      ),
-                    )
-                  : ListView.builder(
-                      padding: EdgeInsets.zero,
-                      itemCount: agendas.length,
-                      itemBuilder: (context, i) =>
-                          ReservationCard(agenda: agendas[i]),
-                    ),
+          : ListView.builder(
+              padding: const EdgeInsets.only(top: 8.0), 
+              itemCount: reservations.length,
+              itemBuilder: (context, index) {
+                final reservation = reservations[index];
+                return ReservationCard(reservation: reservation);
+              },
             ),
-        ],
-      ),
     );
   }
 }
