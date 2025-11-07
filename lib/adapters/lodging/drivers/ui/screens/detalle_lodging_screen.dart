@@ -105,6 +105,11 @@ class _HomeAlojamientoScreenState extends State<HomeAlojamientoScreen> {
       );
     }
 
+    final styleUri = isDark
+        ? MapboxService.mapStyles[1] // oscuro
+        : MapboxService.mapStyles[0]; // claro
+    final mapKey = ValueKey(styleUri);
+
     //  Fallback de imágenes si no vienen URLs
     final images = residencia!.images.isEmpty
         ? const <String>[]
@@ -271,9 +276,8 @@ class _HomeAlojamientoScreenState extends State<HomeAlojamientoScreen> {
                   child: SizedBox(
                     height: 200,
                     child: MapWidget(
-                      styleUri: Theme.of(context).brightness == Brightness.dark
-                          ? MapboxService.mapStyles[1] // 🔹 estilo oscuro
-                          : MapboxService.mapStyles[0], // 🔹 estilo claro
+                      key: mapKey, // 🔸 clave para reconstruir
+                      styleUri: styleUri, // 🔸 estilo según tema
                       cameraOptions: CameraOptions(
                         center: Point(
                           coordinates: Position(
