@@ -271,7 +271,9 @@ class _HomeAlojamientoScreenState extends State<HomeAlojamientoScreen> {
                   child: SizedBox(
                     height: 200,
                     child: MapWidget(
-                      styleUri: MapboxService.mapStyles[0],
+                      styleUri: Theme.of(context).brightness == Brightness.dark
+                          ? MapboxService.mapStyles[1] // 🔹 estilo oscuro
+                          : MapboxService.mapStyles[0], // 🔹 estilo claro
                       cameraOptions: CameraOptions(
                         center: Point(
                           coordinates: Position(
