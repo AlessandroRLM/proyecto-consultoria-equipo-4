@@ -94,6 +94,7 @@ class _HomeAlojamientoScreenState extends State<HomeAlojamientoScreen> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final text = Theme.of(context).textTheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     if (loading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
@@ -104,12 +105,12 @@ class _HomeAlojamientoScreenState extends State<HomeAlojamientoScreen> {
       );
     }
 
-    // Fallback de imágenes si la residencia viene sin fotos.
-    final images = (residencia!.images.isEmpty)
-        ? const ['https://picsum.photos/seed/fallback/900/500']
+    //  Fallback de imágenes si no vienen URLs
+    final images = residencia!.images.isEmpty
+        ? const <String>[]
         : residencia!.images.map((e) => e.url).toList();
 
-    // Fallback de servicios si viene vacío.
+    //  Fallback de servicios si viene vacío
     final services = (residencia!.availableServices.isEmpty)
         ? const <String>[]
         : residencia!.availableServices;
@@ -121,7 +122,7 @@ class _HomeAlojamientoScreenState extends State<HomeAlojamientoScreen> {
 
     return Scaffold(
       appBar: PreferredSize(
-        preferredSize: ui.Size.fromHeight(0), //  Sin barra superior
+        preferredSize: ui.Size.fromHeight(0),
         child: AppBar(elevation: 0, backgroundColor: Colors.transparent),
       ),
       backgroundColor: cs.surface,
@@ -143,15 +144,23 @@ class _HomeAlojamientoScreenState extends State<HomeAlojamientoScreen> {
                       top: 12,
                       left: 12,
                       child: Material(
-                        color: Colors.white,
+                        color: isDark
+                            ? AppThemes.black_1100
+                            : AppThemes.black_100,
                         borderRadius: BorderRadius.circular(10),
                         elevation: 1.5,
                         child: InkWell(
                           borderRadius: BorderRadius.circular(10),
                           onTap: () => Navigator.pop(context),
-                          child: const Padding(
-                            padding: EdgeInsets.all(6),
-                            child: Icon(Icons.arrow_back, size: 22),
+                          child: Padding(
+                            padding: const EdgeInsets.all(6),
+                            child: Icon(
+                              Icons.arrow_back,
+                              size: 22,
+                              color: isDark
+                                  ? AppThemes.black_100
+                                  : AppThemes.black_800,
+                            ),
                           ),
                         ),
                       ),
@@ -239,43 +248,48 @@ class _HomeAlojamientoScreenState extends State<HomeAlojamientoScreen> {
                   children: _buildServiceItems(itemWidth, services),
                 ),
               ),
+
               const Padding(
                 padding: EdgeInsets.only(top: 12),
                 child: Divider(
                   height: 10,
                   thickness: 1,
-                  indent: 16, // margen desde el borde izquierdo
-                  endIndent: 16, // margen desde el borde derecho
+                  indent: 16,
+                  endIndent: 16,
                 ),
               ),
-              // Mapa Mapbox integrado
+
+              // Mapa Mapbox con bordes redondeados
               const Padding(
                 padding: EdgeInsets.fromLTRB(16, 10, 16, 6),
                 child: SectionTitle('Mapa'),
               ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: SizedBox(
-                  height: 200,
-                  child: MapWidget(
-                    styleUri: MapboxService.mapStyles[0],
-                    cameraOptions: CameraOptions(
-                      center: Point(
-                        coordinates: Position(
-                          residencia!.longitude,
-                          residencia!.latitude,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: SizedBox(
+                    height: 200,
+                    child: MapWidget(
+                      styleUri: MapboxService.mapStyles[0],
+                      cameraOptions: CameraOptions(
+                        center: Point(
+                          coordinates: Position(
+                            residencia!.longitude,
+                            residencia!.latitude,
+                          ),
                         ),
+                        zoom: 14.0,
                       ),
-                      zoom: 14.0,
+                      onMapCreated: (mapboxMap) async {
+                        final mapService = serviceLocator<MapboxService>();
+                        mapService.initialize(mapboxMap);
+                        await mapService.addResidenceMarker(
+                          latitude: residencia!.latitude,
+                          longitude: residencia!.longitude,
+                        );
+                      },
                     ),
-                    onMapCreated: (mapboxMap) async {
-                      final mapService = serviceLocator<MapboxService>();
-                      mapService.initialize(mapboxMap);
-                      await mapService.addResidenceMarker(
-                        latitude: residencia!.latitude,
-                        longitude: residencia!.longitude,
-                      );
-                    },
                   ),
                 ),
               ),
