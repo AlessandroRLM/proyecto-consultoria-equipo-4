@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/adapters/core/drivers/ui/widgets/custom_tab_item.dart';
-import 'package:mobile/ports/auth/driven/for_authenticating_user.dart';
+import 'package:mobile/ports/auth/drivers/for_authenticating_user.dart';
 import 'package:mobile/service_locator.dart';
 
 class HomeTabBar extends StatelessWidget {
