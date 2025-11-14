@@ -4,27 +4,35 @@ import 'package:mobile/adapters/core/driven/campus_mock_service.dart';
 import 'package:mobile/adapters/core/driven/mapbox_service.dart';
 import 'package:mobile/ports/auth/driven/for_authenticating_user.dart';
 import 'package:mobile/ports/core/driven/for_querying_campus.dart';
+import 'package:mobile/ports/lodging/driven/for_querying_lodging.dart';
+import 'package:mobile/adapters/lodging/driven/lodging_service_from_mocks.dart';
 
 final GetIt serviceLocator = GetIt.instance;
 
 void setupServiceLocator() {
   // servicio de autenticación
   serviceLocator.registerSingleton<ForAuthenticatingUser>(AuthMockService());
-  
+
   // servicio para obtener campos clinicos
-  serviceLocator.registerLazySingleton<ForQueryingCampus>(() => CampusMockService());
-    
+  serviceLocator.registerLazySingleton<ForQueryingCampus>(
+    () => CampusMockService(),
+  );
+
   // servicio para utilizar mapa
   serviceLocator.registerLazySingleton<MapboxService>(() => MapboxService());
+
+  // Puerto de lodging: consulta agendas y residencias desde mocks
+  serviceLocator.registerLazySingleton<ForQueryingLodging>(
+    () => LodgingFromMocks(),
+  );
 }
 
 // Metodo para limpiar servicios que requieren limpieza manual
 void disposeServiceLocator() {
-  
   if (serviceLocator.isRegistered<MapboxService>()) {
     serviceLocator<MapboxService>().dispose();
   }
-  
+
   // Reset GetIt
   serviceLocator.reset();
 }
