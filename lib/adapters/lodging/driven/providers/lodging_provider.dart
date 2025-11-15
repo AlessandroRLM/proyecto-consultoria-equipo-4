@@ -4,7 +4,7 @@ import 'dart:convert';
 import 'package:mobile/adapters/lodging/driven/datasources/lodging_mock_datasource.dart';
 import 'package:mobile/domain/models/lodging/agenda_model.dart';
 import 'package:mobile/domain/models/lodging/estado_agenda.dart';
-import 'package:mobile/adapters/core/driven/campus_mock_service.dart';
+import 'package:mobile/adapters/core/driven/services/campus_mock_service.dart';
 import 'package:mobile/domain/core/campus.dart';
 
 class LodgingProvider with ChangeNotifier {
