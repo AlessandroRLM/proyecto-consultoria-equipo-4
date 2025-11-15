@@ -4,6 +4,7 @@ import 'package:mobile/adapters/core/driven/services/location_package_service.da
 import 'package:mobile/adapters/core/driven/services/campus_mock_service.dart';
 import 'package:mobile/adapters/core/driven/services/mapbox_service.dart';
 import 'package:mobile/ports/auth/driven/for_authenticating_user.dart';
+import 'package:mobile/ports/core/driven/for_managing_location.dart';
 import 'package:mobile/ports/core/driven/for_querying_campus.dart';
 import 'package:mobile/ports/core/driven/for_managing_map.dart';
 
@@ -18,9 +19,14 @@ void setupServiceLocator() {
     () => CampusMockService(),
   );
 
-  // Servicio de mapa - depende del servicio de ubicación
+  // Servicio de ubicación
+  serviceLocator.registerLazySingleton<ForManagingLocation>(
+    () => LocationPackageService(),
+  );
+
+  // Servicio de mapa 
   serviceLocator.registerLazySingleton<ForManagingMap>(
-    () => MapboxMapService(locationService: LocationPackageService()),
+    () => MapboxMapService(locationService: serviceLocator<ForManagingLocation>()),
   );
 }
 
