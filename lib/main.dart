@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import 'package:mobile/adapters/transport/driven/providers/transport_reservations_provider.dart';
 import 'package:provider/provider.dart';
@@ -16,12 +17,18 @@ void main() async {
 
   String accessToken = const String.fromEnvironment('ACCESS_TOKEN');
   if (accessToken.isEmpty) {
-    throw Exception('MapBox ACCESS_TOKEN not found');
+    // Token de mapbox default 
+    accessToken = 'pk.eyJ1IjoieW9ub21hYWEiLCJhIjoiY21ncjZtbDg2MjdqNTJtcHljcWJjcGg4eCJ9.baVhFCwxkSilSsmG4GP4oQ';
   }
   setupServiceLocator();
   await serviceLocator<ForAuthenticatingUser>().initialize();
 
-  MapboxOptions.setAccessToken(accessToken);
+  // Evitar crasheo en chrome al usar MapboxOptions.setAccessToken
+  if (!kIsWeb) {
+    MapboxOptions.setAccessToken(accessToken);
+  } else {
+    debugPrint('Skipping MapboxOptions.setAccessToken on web');
+  }
 
   await initializeDateFormatting(Intl.getCurrentLocale(), null);
 
@@ -41,7 +48,7 @@ class MyApp extends StatelessWidget {
           create: (_) => LodgingProvider()..fetchReservations(),
         ),
         ChangeNotifierProvider(
-          create: (_) => LodgingAvailabilityProvider()..fetchAvailability(),
+          create: (_) => LodgingAvailabilityProvider(),
         ),
       ],
       child: MaterialApp.router(

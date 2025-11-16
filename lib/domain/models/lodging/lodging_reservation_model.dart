@@ -18,4 +18,26 @@ class LodgingReservation {
     required this.checkIn,
     required this.checkOut,
   });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'area': area,
+      'name': name,
+      'address': address,
+      'room': room,
+      'checkIn': checkIn,
+      'checkOut': checkOut,
+    };
+  }
+
+  factory LodgingReservation.fromJson(Map<String, dynamic> json) {
+    return LodgingReservation(
+      area: json['area'] as String,
+      name: json['name'] as String,
+      address: json['address'] as String,
+      room: json['room'] as String,
+      checkIn: json['checkIn'] as String,
+      checkOut: json['checkOut'] as String,
+    );
+  }
 }

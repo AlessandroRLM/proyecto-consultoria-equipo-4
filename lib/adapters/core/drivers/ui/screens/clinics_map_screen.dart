@@ -7,10 +7,14 @@ import 'package:mobile/adapters/core/driven/mapbox_service.dart';
 import 'package:mobile/adapters/core/drivers/ui/widgets/map_search_bar.dart';
 import 'package:mobile/adapters/core/drivers/ui/widgets/map_results_list.dart';
 import 'package:mobile/adapters/core/drivers/ui/widgets/map_control_buttons.dart';
+import 'package:mobile/adapters/lodging/driven/providers/lodging_provider.dart';
 import 'package:mobile/domain/core/campus.dart';
 import 'package:mobile/ports/core/driven/for_querying_campus.dart';
 import 'package:mobile/ports/core/drivers/for_mapping_interactions.dart';
 import 'package:mobile/service_locator.dart';
+import 'package:provider/provider.dart';
+import 'package:mobile/adapters/transport/driven/providers/transport_reservations_provider.dart';
+
 
 class ClinicMapScreen extends StatefulWidget {
   // pasar a origin 1 o 2: 1 para transporte y 2 para alojamiento 
@@ -261,13 +265,27 @@ class _ClinicMapScreenState extends State<ClinicMapScreen>
               children: [
                 Expanded(
                   child: ElevatedButton.icon(
-                    onPressed: () {
-                      
-                      // Navegar a la pantalla de selección de fechas
+                    onPressed: () async {
                       if (widget.origin == '1') {
-                        context.push('/ytransport_clinic_reservation/${campus.id}');
+                        // Guarda la ubicación seleccionada en el Provider
+                        final provider = Provider.of<TransportReservationsProvider>(context, listen: false);
+                        provider.selectedLocation = {
+                          'name': campus.name,
+                          'address': '${campus.commune}, ${campus.city}',
+                        };
+                        await context.push(
+                          '/transport/time-selection',
+                          extra: {'isOutbound': true},
+                        );
+
                       } else if (widget.origin == '2') {
-                        context.push('/lodging_clinic_reservation/${campus.id}');
+                        final lodgingProvider = Provider.of<LodgingProvider>(context, listen: false);
+
+                        // Guarda la clínica seleccionada en el provider (igual que en la otra pantalla)
+                        lodgingProvider.selectClinic(campus);
+
+                        // Luego navega sin pasar extras
+                        context.go('/lodging/calendar');
                       }
                     },
                     icon: const Icon(Icons.today_outlined, size: 24),
@@ -285,6 +303,7 @@ class _ClinicMapScreenState extends State<ClinicMapScreen>
                       ),
                     ),
                   ),
+
                 ),
               ],
             ),

@@ -89,22 +89,22 @@ class _ProfileScreen extends State<ProfileScreen> {
                 child: ElevatedButton(
                   onPressed: () async {
                     final authService = serviceLocator<ForAuthenticatingUser>();
-                    await authService
-                        .logout(); // 👈 Limpia el estado de autenticación
-                    if (!mounted) return;
-                    context.go('/login');
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Sesión cerrada correctamente'),
-                        backgroundColor: Colors.green,
-                        behavior: SnackBarBehavior.floating,
-                        margin: const EdgeInsets.all(10),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                    await authService.logout();
+                    if (context.mounted) {
+                      context.go('/login');
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Sesión cerrada correctamente'),
+                          backgroundColor: Colors.green,
+                          behavior: SnackBarBehavior.floating,
+                          margin: const EdgeInsets.all(10),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          duration: const Duration(seconds: 3),
                         ),
-                        duration: const Duration(seconds: 3),
-                      ),
-                    );
+                      );
+                    }
                   },
                   style: ElevatedButton.styleFrom(
                     elevation: 3,
@@ -117,13 +117,13 @@ class _ProfileScreen extends State<ProfileScreen> {
                       alpha: 0.5,
                     ),
                   ),
-                  child: Text(
+                  child: const Text(
                     "Cerrar sesión",
                     style: TextStyle(fontSize: 16, color: AppThemes.black_100),
                   ),
                 ),
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
             ],
           ),
         ),
