@@ -32,7 +32,6 @@ void main() async {
 
   await initializeDateFormatting(Intl.getCurrentLocale(), null);
 
-
   runApp(const MyApp());
 }
 

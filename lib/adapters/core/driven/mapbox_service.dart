@@ -114,7 +114,7 @@ class MapboxService {
 
   Future<Uint8List> _createLocationPuckIcon() async {
     final ByteData bytes = await rootBundle.load(
-      'assets/images/location_puck/location_puck.png'
+      'assets/images/location_puck/location_puck.png',
     );
     return bytes.buffer.asUint8List();
   }
@@ -299,21 +299,62 @@ class MapboxService {
     _mapboxMap!.setCamera(CameraOptions(zoom: currentZoom - 1));
   }
 
-  Future<void> dispose() async {
-    _tapEventsCancelable?.cancel();
+  void dispose() {
     try {
+      _tapEventsCancelable?.cancel();
+
+      // Eliminar los annotation managers si existen
       if (_userLocationManager != null) {
-        await _mapboxMap?.annotations.removeAnnotationManager(
-          _userLocationManager!,
-        );
+        _mapboxMap?.annotations.removeAnnotationManager(_userLocationManager!);
+        _userLocationManager = null;
       }
+
       if (_campusMarkersManager != null) {
-        await _mapboxMap?.annotations.removeAnnotationManager(
-          _campusMarkersManager!,
-        );
+        _mapboxMap?.annotations.removeAnnotationManager(_campusMarkersManager!);
+        _campusMarkersManager = null;
+      }
+
+      // Limpieza de anotaciones
+      _campusAnnotations.clear();
+      _campusAnnotationMap.clear();
+
+      // Eliminar referencia al mapa
+      _mapboxMap = null;
+
+      print('MapboxService limpiado correctamente');
+    } catch (e) {
+      debugPrint('Error al limpiar managers de Mapbox: $e');
+    }
+  }
+
+  /// Agrega un marcador para una residencia específica
+  Future<void> addResidenceMarker({
+    required double latitude,
+    required double longitude,
+    String iconId = "hospital-marker", // puedes crear uno nuevo si quieres
+  }) async {
+    if (_mapboxMap == null) return;
+
+    try {
+      // Crear manager si no existe
+      _campusMarkersManager ??= await _mapboxMap!.annotations
+          .createPointAnnotationManager();
+
+      // Crear el marcador
+      final annotation = await _campusMarkersManager!.create(
+        PointAnnotationOptions(
+          geometry: Point(coordinates: Position(longitude, latitude)),
+          iconImage: iconId,
+          iconSize: 1.0,
+        ),
+      );
+
+      // Puedes almacenar la anotación si quieres más tarde manipularla
+      if (annotation != null) {
+        _campusAnnotations.add(annotation);
       }
     } catch (e) {
-      print('Error al limpiar managers de Mapbox: $e');
+      print('Error agregando marcador de residencia: $e');
     }
   }
 }

@@ -39,9 +39,7 @@ class _HomeLayoutState extends State<HomeLayout> {
             ),
             const SizedBox(height: 16),
           ],
-          Expanded(
-            child: widget.navigationShell,
-          ),
+          Expanded(child: widget.navigationShell),
         ],
       ),
     );

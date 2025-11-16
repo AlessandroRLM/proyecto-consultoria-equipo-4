@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mobile/adapters/core/driven/app_themes.dart';
 import 'package:mobile/adapters/core/drivers/ui/widgets/status_widget.dart';
 import 'package:mobile/adapters/lodging/driven/providers/lodging_provider.dart';
@@ -86,7 +87,7 @@ class _ReservationCardState extends State<ReservationCard> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          widget.reservation.clinicalName, 
+                          widget.reservation.clinicalName,
                           style: text.bodyLarge?.copyWith(
                             fontWeight: FontWeight.bold,
                             fontSize: 16,
@@ -112,9 +113,31 @@ class _ReservationCardState extends State<ReservationCard> {
                             StatusWidget(estado: widget.reservation.state.name),
                           ],
                         )
-
                       ],
                     ),
+                  ),
+
+                  FilledButton(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: cs.primary,
+                      foregroundColor: cs.onPrimary,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 10,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      textStyle: text.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    onPressed: () {
+                      context.push(
+                        '/lodging/detalle/${widget.reservation.homeId}',
+                      );
+                    },
+                    child: const Text("Ver"),
                   ),
                 ],
               ),
