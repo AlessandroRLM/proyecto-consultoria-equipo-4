@@ -1,37 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
-
 import 'package:mobile/adapters/lodging/driven/datasources/lodging_mock_datasource.dart';
-
-// === Modelos existentes (rama main) ===
 import 'package:mobile/domain/models/lodging/agenda_model.dart';
 import 'package:mobile/domain/models/lodging/estado_agenda.dart';
 import 'package:mobile/adapters/core/driven/campus_mock_service.dart';
 import 'package:mobile/domain/core/campus.dart';
 
-// === Modelos agregados para detalle_residencia ===
-import 'package:mobile/domain/models/lodging/lodging_reservation_model.dart';
-import 'package:mobile/domain/models/lodging/residencia_model.dart';
-
 class LodgingProvider with ChangeNotifier {
   final LodgingMockDataSource _ds;
 
   LodgingProvider({LodgingMockDataSource? dataSource})
-      : _ds = dataSource ?? LodgingMockDataSource();
+    : _ds = dataSource ?? LodgingMockDataSource();
 
   final List<AgendaModel> _reservations = [];
   final List<AgendaModel> _userReservations = [];
   final List<Map<String, dynamic>> _occupiedReservations = [];
-
   bool _loading = false;
   String? _error;
 
   List<AgendaModel> get reservations => List.unmodifiable(_reservations);
   List<AgendaModel> get userReservations => List.unmodifiable(_userReservations);
-  List<Map<String, dynamic>> get occupiedReservations =>
-      List.unmodifiable(_occupiedReservations);
-
+  List<Map<String, dynamic>> get occupiedReservations => List.unmodifiable(_occupiedReservations);
   bool get loading => _loading;
   String? get error => _error;
 
@@ -43,20 +33,17 @@ class LodgingProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  // ==========================================================
-  // 🔹 Cargar reservas (agenda + homes)
-  // ==========================================================
+
   Future<void> fetchReservations() async {
     _loading = true;
     _error = null;
-
     _reservations.clear();
     _userReservations.clear();
     _occupiedReservations.clear();
     notifyListeners();
 
     try {
-      // 1) Cargar lista completa de residencias
+      // 1) Cargar homes e indexar por homeId
       final homes = await _ds.getHomesRaw();
       final Map<int, Map<String, dynamic>> homeById = {
         for (final h in homes) (h['homeId'] as int): h,
@@ -65,9 +52,9 @@ class LodgingProvider with ChangeNotifier {
       // 2) Cargar reservas del estudiante
       final schedules = await _ds.getStudentSchedulesRaw();
 
-      // 3) Construir modelos para UI
+      // 3) Construir items para la UI
       for (final it in schedules) {
-        final int id = it['id'] as int;
+        final int id = it['id'] as int; // viene del schedule
         final int studentId = it['student_id'] as int;
         final String occupantName = it['occupant_name'] as String;
         final String occupantMobile = it['occupant_mobile'] as String;
@@ -95,31 +82,32 @@ class LodgingProvider with ChangeNotifier {
           ),
         );
       }
+      // (opcional) ordenar por fecha asc
+      _reservations.sort((a, b) => a.reservationInit.compareTo(b.reservationInit));
 
-      // Ordenar por inicio
-      _reservations.sort(
-        (a, b) => a.reservationInit.compareTo(b.reservationInit),
-      );
-
-      // 4) Cargar TODAS las reservas ocupadas
+      // 4) Cargar todas las reservas ocupadas para el calendario
       final allSchedules = await _ds.getSchedulesRaw();
-
       for (final it in allSchedules) {
+        final int homeId = it['home_id'] as int;
+        // ignore: unused_local_variable
+        final h = homeById[homeId];
+        final clinicalName = (it['clinical_name'] as String?)?.trim() ?? 'Clínico';
+        final String reservationInit = it['reservation_init'] as String;
+        final String reservationFin = it['reservation_fin'] as String;
         _occupiedReservations.add({
-          'area': (it['clinical_name'] as String?) ?? 'Clínico',
-          'reservationInit': it['reservation_init'] as String,
-          'reservationFin': it['reservation_fin'] as String,
+          'area': clinicalName,
+          'reservationInit': reservationInit,
+          'reservationFin': reservationFin,
         });
       }
 
-      // 5) Cargar reservas guardadas del usuario
+      // 5) Cargar reservas del usuario desde SharedPreferences
       final prefs = await SharedPreferences.getInstance();
-      final userResJson = prefs.getString('user_lodging_reservations');
-
-      if (userResJson != null) {
-        final list = json.decode(userResJson);
+      final userReservationsJson = prefs.getString('user_lodging_reservations');
+      if (userReservationsJson != null) {
+        final List<dynamic> userReservationsList = json.decode(userReservationsJson);
         _userReservations.addAll(
-          list.map<AgendaModel>((json) => AgendaModel.fromJson(json)).toList(),
+          userReservationsList.map((json) => AgendaModel.fromJson(json)).toList(),
         );
       }
     } catch (e) {
@@ -130,38 +118,15 @@ class LodgingProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  // ==========================================================
-  // 🔹 Obtener DETALLE COMPLETO de una residencia (home.json)
-  // ==========================================================
-  Future<ResidenciaModel> fetchResidenceDetail(int homeId) async {
-    try {
-      final homes = await _ds.getHomesRaw();
-
-      final json = homes.firstWhere(
-        (h) => h['homeId'] == homeId,
-        orElse: () => throw Exception('Residencia no encontrada'),
-      );
-
-      return ResidenciaModel.fromJson(json);
-    } catch (e) {
-      throw Exception('Error al cargar detalle de residencia: $e');
-    }
-  }
-
-  // ==========================================================
-  // 🔹 Guardado local
-  // ==========================================================
   Future<void> saveReservations() async {
     final prefs = await SharedPreferences.getInstance();
-    final jsonString =
-        json.encode(_reservations.map((r) => r.toJson()).toList());
+    final jsonString = json.encode(_reservations.map((r) => r.toJson()).toList());
     await prefs.setString('lodging_reservations', jsonString);
   }
 
   Future<void> saveUserReservations() async {
     final prefs = await SharedPreferences.getInstance();
-    final jsonString =
-        json.encode(_userReservations.map((r) => r.toJson()).toList());
+    final jsonString = json.encode(_userReservations.map((r) => r.toJson()).toList());
     await prefs.setString('user_lodging_reservations', jsonString);
   }
 
@@ -171,42 +136,34 @@ class LodgingProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  // ==========================================================
-  // 🔹 Información de clínica relacionada
-  // ==========================================================
   final CampusMockService _campusService = CampusMockService();
 
   Future<Map<String, String>?> getClinicInfoByName(String area) async {
     try {
       final campuses = await _campusService.getCampus(null);
       final campus = campuses.firstWhere((c) => c.name == area);
-
       return {
         "city": campus.city,
         "commune": campus.commune,
-        "address": "",
+        "address": "", // Futura address especifica 
       };
-    } catch (_) {
+    } catch (e) {
       return null;
     }
   }
 
-  // ==========================================================
-  // 🔹 Calcular fecha mínima reservable
-  // ==========================================================
   DateTime getMinReservableDate() {
-    const cutoffWeekday = 3;
+    const int cutoffWeekday = 3; 
     final now = DateTime.now();
-    final today = now.weekday;
-    final daysToNextMon = (DateTime.monday - today + 7) % 7;
-
-    final nextMonday =
-        now.add(Duration(days: daysToNextMon == 0 ? 7 : daysToNextMon));
-
-    if (today < cutoffWeekday) {
-      return nextMonday;
+    final todayWeekday = now.weekday;
+    final daysToNextMonday = (DateTime.monday - todayWeekday + 7) % 7;
+    final nextMonday = now.add(Duration(days: daysToNextMonday == 0 ? 7 : daysToNextMonday));
+    DateTime minReservableDate;
+    if (todayWeekday < cutoffWeekday) {
+      minReservableDate = nextMonday;
     } else {
-      return nextMonday.add(const Duration(days: 7));
+      minReservableDate = nextMonday.add(const Duration(days: 7));
     }
+    return minReservableDate;
   }
 }
