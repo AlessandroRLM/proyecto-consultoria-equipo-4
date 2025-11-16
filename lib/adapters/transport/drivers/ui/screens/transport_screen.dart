@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile/adapters/core/drivers/ui/layouts/base_screen_layout.dart';
 import 'package:mobile/adapters/core/drivers/ui/widgets/request_button.dart';
-import 'package:mobile/adapters/transport/drivers/ui/widgets/transport_reservation_card.dart';
+import 'package:mobile/adapters/transport/drivers/ui/widgets/widgets.dart';
 import 'package:mobile/adapters/transport/driven/providers/transport_reservations_provider.dart';
 import 'package:provider/provider.dart';
 
