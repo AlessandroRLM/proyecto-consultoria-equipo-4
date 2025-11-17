@@ -5,7 +5,7 @@ import 'package:mobile/adapters/transport/driven/providers/transport_reservation
 import 'package:provider/provider.dart';
 import 'package:mobile/adapters/core/driven/app_routes.dart';
 import 'package:mobile/adapters/core/driven/app_themes.dart';
-import 'package:mobile/ports/auth/driven/for_authenticating_user.dart';
+import 'package:mobile/ports/auth/drivers/for_authenticating_user.dart';
 import 'package:mobile/service_locator.dart';
 import 'package:mobile/adapters/lodging/driven/providers/lodging_provider.dart';
 import 'package:intl/intl.dart';
@@ -31,6 +31,7 @@ void main() async {
   }
 
   await initializeDateFormatting(Intl.getCurrentLocale(), null);
+
 
   runApp(const MyApp());
 }
