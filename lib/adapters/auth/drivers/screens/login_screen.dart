@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile/adapters/core/driven/app_themes.dart';
-import 'package:mobile/ports/auth/driven/for_authenticating_user.dart';
+import 'package:mobile/ports/auth/drivers/for_authenticating_user.dart';
 import 'package:mobile/service_locator.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -48,7 +48,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       final authService = serviceLocator<ForAuthenticatingUser>();
-      final success = await authService.authenticate(
+      final success = await authService.login(
         email: _emailController.text.trim(),
         password: _passwordController.text,
       );

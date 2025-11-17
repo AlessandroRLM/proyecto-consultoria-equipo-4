@@ -1,69 +1,55 @@
-// ignore_for_file: avoid_print
+// adapters/core/driven/mapbox_map_adapter.dart
 
 import 'dart:async';
 import 'dart:ui' as ui;
-import 'package:location/location.dart';
-import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import 'package:mobile/adapters/core/driven/app_themes.dart';
 import 'package:mobile/domain/core/user_location.dart';
 import 'package:mobile/domain/core/campus.dart';
+import 'package:mobile/ports/core/driven/for_managing_map.dart';
+import 'package:mobile/ports/core/driven/for_managing_location.dart';
 
-class MapboxService {
+/// Adaptador de Mapbox que implementa los puertos de mapa
+/// Esta es la implementación concreta para Mapbox
+class MapboxMapService implements ForManagingMap {
   MapboxMap? _mapboxMap;
-  final Location _location = Location();
+  final ForManagingLocation _locationRepository;
   PointAnnotationManager? _userLocationManager;
   PointAnnotationManager? _campusMarkersManager;
   final List<PointAnnotation> _campusAnnotations = [];
-  Cancelable? _tapEventsCancelable; // Para manejar la suscripción a eventos
-  Map<PointAnnotation, Campus> _campusAnnotationMap =
-      {}; // Mapeo de anotaciones a campus
+  Cancelable? _tapEventsCancelable;
+  Map<PointAnnotation, Campus> _campusAnnotationMap = {};
 
-  static const List<String> mapStyles = [MapboxStyles.LIGHT, MapboxStyles.DARK];
+  static const List<String> _mapStyles = [
+    MapboxStyles.LIGHT,
+    MapboxStyles.DARK
+  ];
 
-  void initialize(MapboxMap mapboxMap) {
-    _mapboxMap = mapboxMap;
+  // Inyección de dependencia del servicio de ubicación
+  MapboxMapService({required ForManagingLocation locationService})
+      : _locationRepository = locationService;
+
+  @override
+  void initialize(dynamic mapInstance) {
+    if (mapInstance is! MapboxMap) {
+      throw ArgumentError('mapInstance debe ser de tipo MapboxMap');
+    }
+    _mapboxMap = mapInstance;
     _initializeCustomIcons();
     _setupLocationComponent();
   }
 
+  @override
   Future<bool> requestLocationPermission() async {
-    try {
-      // Verificar primero si el servicio de ubicación está habilitado
-      bool serviceEnabled = await _location.serviceEnabled();
-      if (!serviceEnabled) {
-        serviceEnabled = await _location.requestService();
-        if (!serviceEnabled) {
-          print('Servicio de ubicación no está habilitado');
-          return false;
-        }
-      }
-
-      // Verificar permisos usando el paquete location
-      PermissionStatus permissionGranted = await _location.hasPermission();
-      if (permissionGranted == PermissionStatus.denied) {
-        permissionGranted = await _location.requestPermission();
-        if (permissionGranted != PermissionStatus.granted) {
-          print('Permisos de ubicación denegados');
-          return false;
-        }
-      }
-
-      print('Permisos y servicios de ubicación configurados correctamente');
-      return permissionGranted == PermissionStatus.granted;
-    } catch (e) {
-      print('Error al solicitar permisos de ubicación: $e');
-      return false;
-    }
+    return await _locationRepository.isLocationAvailable();
   }
 
-  /// Configura el componente de ubicación nativo de Mapbox
   Future<void> _setupLocationComponent() async {
     if (_mapboxMap == null) return;
 
     try {
-      // Configurar el componente de ubicación de Mapbox
       await _mapboxMap!.location.updateSettings(
         LocationComponentSettings(
           enabled: true,
@@ -78,55 +64,49 @@ class MapboxService {
           ),
         ),
       );
-
-      print('Componente de ubicación de Mapbox configurado');
+      debugPrint('Componente de ubicación de Mapbox configurado');
     } catch (e) {
-      print('Error al configurar el componente de ubicación de Mapbox: $e');
+      debugPrint('Error al configurar el componente de ubicación de Mapbox: $e');
     }
   }
 
-  /// Inicializa los íconos personalizados para el mapa
   Future<void> _initializeCustomIcons() async {
     if (_mapboxMap == null) return;
 
     try {
-      // Crear ícono personalizado para hospitales/clínicas
       final hospitalIconBytes = await _createHospitalIcon();
       final hospitalImage = MbxImage(
         width: 48,
-        height: 56, // Altura mayor por la forma de gota
+        height: 56,
         data: hospitalIconBytes,
       );
 
       await _mapboxMap!.style.addStyleImage(
-        "hospital-marker", // imageId
-        1.0, // scale
-        hospitalImage, // image (MbxImage)
-        false, // sdf
-        [], // stretchX
-        [], // stretchY
-        null, // content
+        "hospital-marker",
+        1.0,
+        hospitalImage,
+        false,
+        [],
+        [],
+        null,
       );
     } catch (e) {
-      print('Error creando íconos personalizados: $e');
+      debugPrint('Error creando íconos personalizados: $e');
     }
   }
 
   Future<Uint8List> _createLocationPuckIcon() async {
     final ByteData bytes = await rootBundle.load(
-      'assets/images/location_puck/location_puck.png'
-    );
+        'assets/images/location_puck/location_puck.png');
     return bytes.buffer.asUint8List();
   }
 
-  /// Crea un ícono personalizado para hospitales/clínicas
   Future<Uint8List> _createHospitalIcon() async {
     const size = 48.0;
     final recorder = ui.PictureRecorder();
     final canvas = Canvas(recorder);
     final paint = Paint()..isAntiAlias = true;
 
-    // Fondo del marcador
     final path = Path();
     path.addOval(
       Rect.fromCircle(center: Offset(size / 2, size / 2 - 8), radius: 16),
@@ -136,28 +116,21 @@ class MapboxService {
     path.lineTo(size / 2 + 8, size / 2 + 4);
     path.close();
 
-    // Sombra
     paint.color = Colors.black26;
     canvas.drawPath(path.shift(const Offset(2, 2)), paint);
 
-    // Fondo principal
-    paint.color = AppThemes.primary_600; // Azul médico
+    paint.color = AppThemes.primary_600;
     canvas.drawPath(path, paint);
 
-    // Borde
     paint.color = Colors.white;
     paint.style = PaintingStyle.stroke;
     paint.strokeWidth = 2;
     canvas.drawPath(path, paint);
 
-    // Ícono de hospital (cruz médica)
     paint.style = PaintingStyle.fill;
     paint.color = Colors.white;
 
-    // Cruz horizontal
     canvas.drawRect(Rect.fromLTWH(size / 2 - 8, size / 2 - 10, 16, 4), paint);
-
-    // Cruz vertical
     canvas.drawRect(Rect.fromLTWH(size / 2 - 2, size / 2 - 16, 4, 16), paint);
 
     final picture = recorder.endRecording();
@@ -166,16 +139,14 @@ class MapboxService {
     return byteData!.buffer.asUint8List();
   }
 
-  /// Agrega todos los marcadores de campus al mapa
+  @override
   Future<void> addCampusMarkers(List<Campus> campusList) async {
     if (_mapboxMap == null) return;
 
-    // Crear manager para campus si no existe
     try {
-      _campusMarkersManager = await _mapboxMap!.annotations
-          .createPointAnnotationManager();
+      _campusMarkersManager =
+          await _mapboxMap!.annotations.createPointAnnotationManager();
 
-      // Agregar nuevos marcadores y crear un mapa para búsqueda rápida
       final Map<PointAnnotation, Campus> annotationToCampusMap = {};
 
       for (final campus in campusList) {
@@ -197,19 +168,18 @@ class MapboxService {
         }
       }
 
-      // Almacenar la referencia para usar en los eventos de tap
       _campusAnnotationMap = annotationToCampusMap;
     } catch (e) {
-      print('Error creando manager de marcadores de campus: $e');
+      debugPrint('Error creando manager de marcadores de campus: $e');
     }
   }
 
-  /// Filtra los marcadores de campus basado en una búsqueda
+  @override
   Future<void> filterCampusMarkers(List<Campus> filteredCampusList) async {
     await addCampusMarkers(filteredCampusList);
   }
 
-  /// Centra el mapa en una ubicación específica
+  @override
   Future<void> centerOnLocation(
     UserLocation location, {
     double zoom = 14.0,
@@ -227,7 +197,7 @@ class MapboxService {
     );
   }
 
-  /// Centra el mapa en un campus específico
+  @override
   Future<void> centerOnCampus(Campus campus, {double zoom = 14.0}) async {
     if (_mapboxMap == null) return;
 
@@ -240,37 +210,35 @@ class MapboxService {
     );
   }
 
-  /// Centra el mapa en la ubicación del usuario
+  @override
   Future<void> centerOnUserLocation({double zoom = 14.0}) async {
     if (_mapboxMap == null) return;
     try {
-      final location = await _location.getLocation();
+      // Usar el servicio de ubicación inyectado
+      final location = await _locationRepository.getCurrentLocation();
 
       await _mapboxMap!.flyTo(
         CameraOptions(
           center: Point(
-            coordinates: Position(location.longitude!, location.latitude!),
+            coordinates: Position(location.longitude, location.latitude),
           ),
           zoom: zoom,
         ),
         MapAnimationOptions(duration: 500),
       );
     } catch (e) {
-      print('Error centrando mapa en ubicación del usuario: $e');
+      debugPrint('Error centrando mapa en ubicación del usuario: $e');
     }
   }
 
-  /// Configura eventos de tap en los marcadores usando la nueva API
+  @override
   void setupMarkerTapEvents(Function(Campus) onCampusMarkerTapped) {
-    // Cancelar eventos anteriores si existen
     _tapEventsCancelable?.cancel();
 
     if (_campusMarkersManager == null) return;
 
-    // Configurar nuevos eventos de tap
     _tapEventsCancelable = _campusMarkersManager!.tapEvents(
       onTap: (PointAnnotation annotation) {
-        // Buscar el campus asociado a esta anotación
         final campus = _campusAnnotationMap[annotation];
         if (campus != null) {
           onCampusMarkerTapped(campus);
@@ -279,7 +247,7 @@ class MapboxService {
     );
   }
 
-  /// Aumenta el zoom del mapa
+  @override
   Future<void> zoomIn() async {
     if (_mapboxMap == null) return;
 
@@ -289,7 +257,7 @@ class MapboxService {
     _mapboxMap!.setCamera(CameraOptions(zoom: currentZoom + 1));
   }
 
-  /// Disminuye el zoom del mapa
+  @override
   Future<void> zoomOut() async {
     if (_mapboxMap == null) return;
 
@@ -299,6 +267,7 @@ class MapboxService {
     _mapboxMap!.setCamera(CameraOptions(zoom: currentZoom - 1));
   }
 
+  @override
   Future<void> dispose() async {
     _tapEventsCancelable?.cancel();
     try {
@@ -313,7 +282,38 @@ class MapboxService {
         );
       }
     } catch (e) {
-      print('Error al limpiar managers de Mapbox: $e');
+      debugPrint('Error al limpiar managers de Mapbox: $e');
     }
+  }
+
+  // Implementación de ForProvidingMapWidget
+  @override
+  Widget buildMapWidget({
+    required Function(dynamic) onMapCreated,
+    Widget? child,
+    String? styleUri,
+    double? initialZoom,
+    double? initialLatitude,
+    double? initialLongitude,
+  }) {
+    return MapWidget(
+      key: const ValueKey("mapWidget"),
+      styleUri: styleUri ?? _mapStyles[0],
+      cameraOptions: CameraOptions(
+        center: Point(
+          coordinates: Position(
+            initialLongitude ?? -70.6693,
+            initialLatitude ?? -33.4489,
+          ),
+        ),
+        zoom: initialZoom ?? 12.0,
+      ),
+      onMapCreated: onMapCreated,
+    );
+  }
+
+  @override
+  List<String> getAvailableStyles() {
+    return _mapStyles;
   }
 }

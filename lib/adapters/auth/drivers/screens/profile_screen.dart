@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile/adapters/core/driven/app_themes.dart';
 import 'package:mobile/domain/models/user/user_model.dart';
-import 'package:mobile/ports/auth/driven/for_authenticating_user.dart';
+import 'package:mobile/ports/auth/drivers/for_authenticating_user.dart';
 import 'package:mobile/service_locator.dart';
 
 class ProfileScreen extends StatefulWidget {

@@ -16,7 +16,7 @@ import 'package:mobile/adapters/core/drivers/ui/screens/clinic_selection_screen.
 
 import 'package:mobile/adapters/transport/drivers/ui/screens/transport_screen.dart';
 import 'package:mobile/adapters/transport/drivers/ui/screens/transport_time_selection_screen.dart';
-import 'package:mobile/ports/auth/driven/for_authenticating_user.dart';
+import 'package:mobile/ports/auth/drivers/for_authenticating_user.dart';
 import 'package:mobile/service_locator.dart';
 import 'package:mobile/adapters/auth/drivers/screens/profile_screen.dart';
 import 'package:mobile/adapters/home/home.dart';
