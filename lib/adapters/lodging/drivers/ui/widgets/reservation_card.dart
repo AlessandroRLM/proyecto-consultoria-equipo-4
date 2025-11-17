@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:mobile/adapters/core/driven/app_themes.dart';
 import 'package:mobile/adapters/core/drivers/ui/widgets/status_widget.dart';
 import 'package:mobile/domain/models/lodging/agenda_model.dart';
-import 'package:mobile/ports/lodging/driven/for_querying_lodging.dart';
-import 'package:mobile/service_locator.dart';
 
 class ReservationCard extends StatefulWidget {
   final AgendaModel reservation;
@@ -15,33 +13,6 @@ class ReservationCard extends StatefulWidget {
 
 class _ReservationCardState extends State<ReservationCard> {
   bool expanded = false;
-  Map<String, String>? clinicInfo;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadClinicInfo();
-  }
-
-  // consultamos la info de la clínica al puerto, no al provider
-  Future<void> _loadClinicInfo() async {
-    try {
-      final lodgingService = serviceLocator<ForQueryingLodging>();
-      final info = await lodgingService.getClinicInfoByName(
-        widget.reservation.clinicalName,
-      );
-      if (!mounted) return;
-      setState(() {
-        clinicInfo = info;
-      });
-    } catch (_) {
-      // Si falla, dejamos los textos por defecto ("No disponible...")
-      if (!mounted) return;
-      setState(() {
-        clinicInfo = null;
-      });
-    }
-  }
 
   String _formatDateFull(String dateStr) {
     try {
@@ -69,12 +40,9 @@ class _ReservationCardState extends State<ReservationCard> {
         'Noviembre',
         'Diciembre',
       ];
-      final weekday = weekdays[date.weekday - 1];
-      final day = date.day;
-      final month = months[date.month - 1];
-      return "$weekday $day de $month";
-    } catch (e) {
-      return dateStr;
+      return "${weekdays[date.weekday - 1]} ${date.day} de ${months[date.month - 1]}";
+    } catch (_) {
+      return dateStr; // evita FormatException
     }
   }
 
@@ -82,15 +50,9 @@ class _ReservationCardState extends State<ReservationCard> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final text = Theme.of(context).textTheme;
-    final city = clinicInfo?['city'] ?? 'No disponible...';
-    final commune = clinicInfo?['commune'] ?? 'No disponible...';
 
     return GestureDetector(
-      onTap: () {
-        setState(() {
-          expanded = !expanded;
-        });
-      },
+      onTap: () => setState(() => expanded = !expanded),
       child: Card(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         elevation: 0,
@@ -107,51 +69,31 @@ class _ReservationCardState extends State<ReservationCard> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Icon(Icons.home_outlined, size: 32, color: cs.primary),
                   const SizedBox(width: 16),
                   Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    child: Row(
                       children: [
-                        Text(
-                          widget.reservation.clinicalName,
-                          style: text.bodyLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          city,
-                          style: text.bodyMedium?.copyWith(
-                            color: text.bodyMedium?.color?.withValues(
-                              alpha: 0.8,
+                        Expanded(
+                          child: Text(
+                            widget.reservation.clinicalName,
+                            style: text.bodyLarge?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
                             ),
                           ),
                         ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              commune,
-                              style: text.bodyMedium?.copyWith(
-                                color: text.bodyMedium?.color?.withValues(
-                                  alpha: 0.8,
-                                ),
-                              ),
-                            ),
-                            StatusWidget(estado: widget.reservation.state.name),
-                          ],
-                        ),
+                        StatusWidget(estado: widget.reservation.state.name),
                       ],
                     ),
                   ),
                 ],
               ),
+
               if (expanded) ...[
                 const Divider(height: 24, thickness: 1),
+
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
@@ -176,22 +118,20 @@ class _ReservationCardState extends State<ReservationCard> {
                         ],
                       ),
                     ),
-                    const SizedBox(width: 8),
                     FilledButton(
                       style: FilledButton.styleFrom(
                         backgroundColor: cs.primary,
                         foregroundColor: cs.onPrimary,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 24,
-                          vertical: 10,
-                        ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(20),
                         ),
                       ),
                       onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('No implementada.')),
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const _TempDetailScreen(),
+                          ),
                         );
                       },
                       child: const Text("Ver"),
@@ -201,6 +141,24 @@ class _ReservationCardState extends State<ReservationCard> {
               ],
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+// Pantalla temporal del QA
+class _TempDetailScreen extends StatelessWidget {
+  const _TempDetailScreen();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text("Detalle (placeholder)")),
+      body: const Center(
+        child: Text(
+          "La implementación real del detalle se hace en otra rama.\n",
+          textAlign: TextAlign.center,
         ),
       ),
     );
