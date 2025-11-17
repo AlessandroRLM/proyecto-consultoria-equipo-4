@@ -4,6 +4,7 @@ import 'package:mobile/adapters/core/drivers/ui/layouts/base_screen_layout.dart'
 import 'package:mobile/adapters/core/drivers/ui/widgets/request_button.dart';
 import 'package:mobile/adapters/transport/drivers/ui/widgets/widgets.dart';
 import 'package:mobile/adapters/transport/driven/providers/transport_reservations_provider.dart';
+import 'package:mobile/ports/transport/driven/for_querying_transport.dart';
 import 'package:provider/provider.dart';
 
 class TransportScreen extends StatefulWidget {
@@ -18,7 +19,11 @@ class TransportScreenState extends State<TransportScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<TransportReservationsProvider>(context, listen: false).fetchReservations();
+      final provider = Provider.of<TransportReservationsProvider>(context, listen: false);
+      provider.fetchReservations();
+      provider.app.loadStudentAgenda(
+        const TransportAgendaQuery(studentId: 'demo-student'),
+      );
     });
   }
   

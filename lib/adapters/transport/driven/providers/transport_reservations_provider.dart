@@ -1,10 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:mobile/domain/models/transport/agenda_model.dart';
+import 'package:mobile/domain/models/transport/service_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'package:mobile/domain/entities/transport_reservation_status.dart';
+import 'package:mobile/ports/transport/drivers/for_transport_interactions.dart';
+import 'package:mobile/adapters/transport/drivers/application/transport_application_service.dart';
 
-class TransportReservationsProvider extends ChangeNotifier {
+class TransportReservationsProvider extends ChangeNotifier implements ForTransportInteractions {
+  // ----------------------------
+  // Campos para Puerto DRIVER
+  // ----------------------------
+
+  List<TransportAgendaModel> _loadedAgenda = const [];
+  List<TransportServiceModel> _loadedServices = const [];
+  Object? _lastError;
+
+  List<TransportAgendaModel> get loadedAgenda => _loadedAgenda;
+  List<TransportServiceModel> get loadedServices => _loadedServices;
+  Object? get lastError => _lastError;
+
+      
+  late TransportApplicationService app;
   List<Map<String, dynamic>> _reservations = [];
   final Map<String, Map<bool, List<Map<String, dynamic>>>> _optionsByDate = {};
 
@@ -14,6 +32,7 @@ class TransportReservationsProvider extends ChangeNotifier {
   String? _selectedDate;
   String? _selectedReturnDate;
   String? _selectedService;
+  
 
   List<Map<String, dynamic>> get reservations => _reservations;
 
@@ -160,13 +179,23 @@ class TransportReservationsProvider extends ChangeNotifier {
   }
 
   List<Map<String, dynamic>> getOptionsForDate(String dateStr, {bool isOutbound = true}) {
-    if (_optionsByDate[dateStr]?[isOutbound] != null) {
-      return _optionsByDate[dateStr]![isOutbound]!;
-    }
-    final transportTimes = isOutbound
-        ? ['07:00 AM', '08:00 AM', '09:00 AM']
-        : ['13:00 PM', '15:00 PM', '17:00 PM'];
-    final list = transportTimes.map((time) => {'service': 'Bus', 'time': time, 'available': true, 'details': 'Inicio/Periferia'}).toList();
+    final cached = _optionsByDate[dateStr]?[isOutbound];
+    if (cached != null) return cached;
+
+    final selectedDate = DateTime.tryParse(dateStr);
+
+    final filteredServices = _loadedServices.where((service) {
+      final type = service.typeService.toLowerCase();
+      final matchesTrip = isOutbound ? type == 'ida' : type == 'regreso';
+      if (!matchesTrip) return false;
+      if (selectedDate != null && !_serviceRunsOnDate(service, selectedDate)) {
+        return false;
+      }
+      return _serviceMatchesSelectedLocation(service);
+    }).toList();
+
+    final list = filteredServices.map(_mapServiceToOption).toList();
+
     _optionsByDate[dateStr] ??= {};
     _optionsByDate[dateStr]![isOutbound] = list;
     return list;
@@ -265,6 +294,7 @@ class TransportReservationsProvider extends ChangeNotifier {
   Map<String, String>? get selectedLocation => _selectedLocation;
   set selectedLocation(Map<String, String>? value) {
     _selectedLocation = value;
+    _optionsByDate.clear();
     notifyListeners();
   }
 
@@ -502,6 +532,77 @@ class TransportReservationsProvider extends ChangeNotifier {
     return DateFormat('HH:mm').format(time);
   }
 
+  Map<String, dynamic> _mapServiceToOption(TransportServiceModel service) {
+    final itineraryNames =
+        service.itinerary.map((stop) => stop.name).join(' - ');
+    return {
+      'service': service.name,
+      'serviceId': service.id,
+      'time': _formatDeparture(service.departure),
+      'available': true,
+      'details': itineraryNames.isNotEmpty ? itineraryNames : service.nameItinerary,
+      'rawDeparture': service.departure,
+      'type': service.typeService,
+    };
+  }
+
+  String _formatDeparture(String departure) {
+    try {
+      final parts = departure.split(':');
+      final hour = int.parse(parts[0]);
+      final minute = int.parse(parts[1]);
+      final dt = DateTime(0, 1, 1, hour, minute);
+      return DateFormat('hh:mm a').format(dt);
+    } catch (_) {
+      return departure;
+    }
+  }
+
+  bool _serviceRunsOnDate(TransportServiceModel service, DateTime date) {
+    switch (date.weekday) {
+      case DateTime.monday:
+        return service.monTrip;
+      case DateTime.tuesday:
+        return service.tueTrip;
+      case DateTime.wednesday:
+        return service.wedTrip;
+      case DateTime.thursday:
+        return service.thuTrip;
+      case DateTime.friday:
+        return service.friTrip;
+      case DateTime.saturday:
+        return service.satTrip;
+      case DateTime.sunday:
+        return service.sunTrip;
+      default:
+        return true;
+    }
+  }
+
+  bool _serviceMatchesSelectedLocation(TransportServiceModel service) {
+    final location = _selectedLocation;
+    if (location == null) return true;
+
+    final campusId = location['campus_id'];
+    final clinicalId = location['clinical_id'];
+    if ((campusId == null || campusId.isEmpty) &&
+        (clinicalId == null || clinicalId.isEmpty)) {
+      return true;
+    }
+
+    return service.itinerary.any((stop) {
+      final matchesCampus = campusId != null &&
+          campusId.isNotEmpty &&
+          stop.campusId != null &&
+          stop.campusId.toString() == campusId;
+      final matchesClinical = clinicalId != null &&
+          clinicalId.isNotEmpty &&
+          stop.clinicalId != null &&
+          stop.clinicalId.toString() == clinicalId;
+      return matchesCampus || matchesClinical;
+    });
+  }
+
   bool hasOutboundOnDate(String date) {
     return _reservations.any((r) =>
       r['outbound'] != null && r['outbound']['date'] == date
@@ -648,4 +749,126 @@ class TransportReservationsProvider extends ChangeNotifier {
   Future<void> fetchUpdatedReservations() async {
     await fetchReservations();
   }
+
+  void _syncReservationsFromAgenda({bool force = false}) {
+    if (!force && _loadedAgenda.isEmpty) return;
+    _reservations = _mapAgendaListToReservations(_loadedAgenda);
+  }
+
+  List<Map<String, dynamic>> _mapAgendaListToReservations(
+    List<TransportAgendaModel> agenda,
+  ) {
+    final Map<String, Map<String, dynamic>> grouped = {};
+    for (final item in agenda) {
+      final key = item.agendaId.toString();
+      final entry = grouped.putIfAbsent(key, () => {
+            'id': key,
+            'outbound': null,
+            'return': null,
+          });
+      final isOutbound = item.tripType.toLowerCase().contains('ida');
+      final leg = _mapAgendaLeg(item, isOutbound: isOutbound);
+      if (isOutbound) {
+        entry['outbound'] = leg;
+      } else {
+        entry['return'] = leg;
+      }
+    }
+    return grouped.values.toList();
+  }
+
+  Map<String, dynamic> _mapAgendaLeg(
+    TransportAgendaModel agenda, {
+    required bool isOutbound,
+  }) {
+    final origin = isOutbound ? agenda.sede : agenda.clinicalField;
+    final destination = isOutbound ? agenda.clinicalField : agenda.sede;
+    final detailTrip = isOutbound ? 'ida' : 'regreso';
+    final dateStr = DateFormat('yyyy-MM-dd').format(agenda.date);
+    return {
+      'type': 'transport',
+      'date': dateStr,
+      'origin': origin,
+      'destination': destination,
+      'originAddress': origin,
+      'destinationAddress': destination,
+      'originTime': agenda.departureTime,
+      'service': agenda.serviceName,
+      'details': '$origin a $destination ($detailTrip)',
+      'highlighted': true,
+      'status': TransportReservationStatus.aceptada.displayName,
+    };
+  }
+
+
+  @override
+  void onAgendaLoaded(List<TransportAgendaModel> agenda) {
+    _loadedAgenda = agenda;
+    _syncReservationsFromAgenda(force: true);
+    notifyListeners();
+  }
+
+  @override
+  void onReservationCancelled(int agendaId) {
+    _loadedAgenda =
+        _loadedAgenda.where((a) => a.agendaId != agendaId).toList();
+    _syncReservationsFromAgenda(force: true);
+    notifyListeners();
+  }
+
+
+  @override
+  void onReservationConfirmed(TransportAgendaModel agenda) {
+    _loadedAgenda = [
+      ..._loadedAgenda.where((a) => a.agendaId != agenda.agendaId),
+      agenda,
+    ];
+    _syncReservationsFromAgenda(force: true);
+    notifyListeners();
+  }
+
+
+  @override
+  void onServicesLoaded(List<TransportServiceModel> services) {
+    _loadedServices = services;
+    _optionsByDate.clear();
+    notifyListeners();
+  }
+
+
+  @override
+  void onTransportError(Object error, [StackTrace? trace]) {
+    _lastError = error;
+    // podrías agregar lógica para logs, o flags de error:
+    // _hasError = true;
+    notifyListeners();
+  }
+
+  @override
+  Future<void> requestReturnReservation({required TransportServiceModel service, required DateTime date}) {
+    // implement requestReturnReservation
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<void> requestRoundTripReservation({required TransportServiceModel outboundService, required TransportServiceModel returnService, required DateTime outboundDate, required DateTime returnDate}) {
+    // implement requestRoundTripReservation
+    throw UnimplementedError();
+  }
+  @override
+  Future<void> requestOutboundReservation({
+    required TransportServiceModel service,
+    required DateTime date,
+  }) {
+    return app.createReservationForService(
+      service: service,
+      date: date,
+    );
+  }
+
+  @override
+  Future<void> requestReservationCancellation(int agendaId) {
+    return app.cancelReservation(agendaId);
+  }
+
 }

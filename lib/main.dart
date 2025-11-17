@@ -44,7 +44,7 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         // Inicializamos el proveedor vacío, sin datos aún
-        ChangeNotifierProvider(create: (_) => TransportReservationsProvider()),
+        ChangeNotifierProvider(create: (_) => serviceLocator<TransportReservationsProvider>()),
         ChangeNotifierProvider(
           create: (_) => LodgingProvider()..fetchReservations(),
         ),

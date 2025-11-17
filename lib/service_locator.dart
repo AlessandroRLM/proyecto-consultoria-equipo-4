@@ -8,6 +8,12 @@ import 'package:mobile/adapters/core/driven/services/mapbox_service.dart';
 import 'package:mobile/ports/core/driven/for_managing_location.dart';
 import 'package:mobile/ports/core/driven/for_querying_campus.dart';
 import 'package:mobile/ports/core/driven/for_managing_map.dart';
+import 'package:mobile/adapters/transport/driven/providers/transport_reservations_provider.dart';
+import 'package:mobile/adapters/transport/driven/local_transport_repository.dart';
+import 'package:mobile/adapters/transport/drivers/application/transport_application_service.dart';
+
+import 'package:mobile/ports/transport/driven/for_querying_transport.dart';
+
 
 final GetIt serviceLocator = GetIt.instance;
 
@@ -24,7 +30,37 @@ void setupServiceLocator() {
 
   // Servicio de mapa 
   serviceLocator.registerLazySingleton<ForManagingMap>(() => MapboxMapService(locationService: serviceLocator<ForManagingLocation>()));
+  
+  
+// ============================================================
+  // TRANSPORTE
+  // ============================================================
+
+  // Provider-driver (maneja estado + callbacks)
+  serviceLocator.registerLazySingleton<TransportReservationsProvider>(
+    () => TransportReservationsProvider(),
+  );
+
+  // Repositorio local que implementa ForQueryingTransport (driven port)
+  serviceLocator.registerLazySingleton<ForQueryingTransport>(
+    () => LocalTransportRepository(
+      reservationsProvider: serviceLocator<TransportReservationsProvider>(),
+    ),
+  );
+
+  // Capa de aplicación, conecta driver & driven
+  serviceLocator.registerLazySingleton<TransportApplicationService>(
+    () => TransportApplicationService(
+      driven: serviceLocator<ForQueryingTransport>(),
+      driver: serviceLocator<TransportReservationsProvider>(),
+    ),
+  );
+
+  // Inyectar el ApplicationService dentro del provider-driver
+  serviceLocator<TransportReservationsProvider>().app =
+      serviceLocator<TransportApplicationService>();
 }
+
 
 
 /// Método para limpiar servicios que requieren limpieza manual

@@ -6,6 +6,8 @@ import 'package:mobile/adapters/transport/driven/providers/transport_reservation
 import 'package:flutter/scheduler.dart';
 import 'package:mobile/adapters/core/driven/app_themes.dart';
 import 'package:mobile/adapters/transport/drivers/ui/widgets/widgets.dart';
+import 'package:mobile/ports/transport/driven/for_querying_transport.dart';
+
 String? getDateString(Map<String, dynamic> r) {
   dynamic dateValue = r['date'];
   if (dateValue is DateTime) {
@@ -275,7 +277,8 @@ class _TransportTimeSelectionScreenState extends State<TransportTimeSelectionScr
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-  _transportProvider = Provider.of<TransportReservationsProvider>(context, listen: false);
+    _transportProvider = Provider.of<TransportReservationsProvider>(context, listen: false);
+    _transportProvider.app.loadServices(const TransportServiceQuery());
     _allowedStart = _transportProvider.getMinReservableDate();
     _allowedEnd = _allowedStart!.add(Duration(days: 365));
     _focusedWeekStart = _allowedStart;
@@ -391,6 +394,28 @@ class _TransportTimeSelectionScreenState extends State<TransportTimeSelectionScr
               ),
             ),
             const Divider(color: Colors.transparent, height: 0),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: Align(
+                alignment: Alignment.bottomCenter,
+                child: SizedBox(
+                  width: 220, // Ajusta este ancho para modificar el tamaño del botón.
+                  child: ElevatedButton.icon(
+                    onPressed: () => context.go('/transport'),
+                    icon: const Icon(Icons.arrow_back_ios_new_rounded),
+                    label: const Text('Volver a mis reservas'),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      backgroundColor: theme.colorScheme.primary,
+                      foregroundColor: theme.colorScheme.onPrimary,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
           ],
         ),
       ),

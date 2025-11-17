@@ -369,6 +369,8 @@ class _ClinicMapScreenState extends State<ClinicMapScreen>
         provider.selectedLocation = {
           'name': campus.name,
           'address': '${campus.commune}, ${campus.city}',
+          'campus_id': '${campus.id}',
+          'clinical_id': '${campus.id}',
         };
         
         if (mounted) {
