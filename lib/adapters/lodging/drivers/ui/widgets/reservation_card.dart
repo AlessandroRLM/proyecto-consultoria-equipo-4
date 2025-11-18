@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mobile/adapters/core/driven/app_themes.dart';
 import 'package:mobile/adapters/core/drivers/ui/widgets/status_widget.dart';
 import 'package:mobile/domain/models/lodging/agenda_model.dart';
+import 'package:mobile/adapters/lodging/drivers/ui/screens/detail_lodging_screen.dart';
 
 class ReservationCard extends StatefulWidget {
   final AgendaModel reservation;
@@ -13,43 +14,6 @@ class ReservationCard extends StatefulWidget {
 
 class _ReservationCardState extends State<ReservationCard> {
   bool expanded = false;
-
-  String _formatReservationDate(String dateStr) {
-    try {
-      final date = DateTime.parse(dateStr);
-      const weekdays = [
-        'Lunes',
-        'Martes',
-        'Miércoles',
-        'Jueves',
-        'Viernes',
-        'Sábado',
-        'Domingo',
-      ];
-      const months = [
-        'Enero',
-        'Febrero',
-        'Marzo',
-        'Abril',
-        'Mayo',
-        'Junio',
-        'Julio',
-        'Agosto',
-        'Septiembre',
-        'Octubre',
-        'Noviembre',
-        'Diciembre',
-      ];
-      final weekday = weekdays[date.weekday - 1];
-      final day = date.day;
-      final month = months[date.month - 1];
-      final year = date.year;
-      return "$weekday $day de $month $year";
-    } catch (_) {
-      // Si algo raro viniera, mostramos el string tal cual
-      return dateStr;
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -73,6 +37,7 @@ class _ReservationCardState extends State<ReservationCard> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // HEADER: icono + nombre + estado + fecha de reserva
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -99,7 +64,7 @@ class _ReservationCardState extends State<ReservationCard> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          "Reserva: ${_formatReservationDate(widget.reservation.reservationDate)}",
+                          "Reserva: ${widget.reservation.reservationDate}",
                           style: text.bodySmall?.copyWith(
                             color: text.bodySmall?.color?.withValues(
                               alpha: 0.8,
@@ -148,10 +113,11 @@ class _ReservationCardState extends State<ReservationCard> {
                         ),
                       ),
                       onPressed: () {
-                        Navigator.push(
-                          context,
+                        Navigator.of(context).push(
                           MaterialPageRoute(
-                            builder: (_) => const _TempDetailScreen(),
+                            builder: (_) => HomeAlojamientoScreen(
+                              homeId: widget.reservation.homeId,
+                            ),
                           ),
                         );
                       },
@@ -162,24 +128,6 @@ class _ReservationCardState extends State<ReservationCard> {
               ],
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-// Pantalla temporal del QA
-class _TempDetailScreen extends StatelessWidget {
-  const _TempDetailScreen();
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text("Detalle (placeholder)")),
-      body: const Center(
-        child: Text(
-          "La implementación real del detalle se hace en otra rama.\n",
-          textAlign: TextAlign.center,
         ),
       ),
     );
