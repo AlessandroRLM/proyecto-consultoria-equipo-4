@@ -4,12 +4,11 @@ import 'package:mobile/adapters/core/driven/app_themes.dart';
 import 'package:mobile/adapters/lodging/drivers/ui/widgets/image_carousel.dart';
 import 'package:mobile/adapters/lodging/drivers/ui/widgets/section_title.dart';
 import 'package:mobile/adapters/lodging/drivers/ui/widgets/service_item.dart';
-import 'package:provider/provider.dart';
-import 'package:mobile/adapters/lodging/driven/providers/lodging_provider.dart';
 import 'package:mobile/domain/models/lodging/residencia_model.dart';
 import 'package:mobile/service_locator.dart';
 import 'package:mobile/ports/core/driven/for_managing_map.dart';
 import 'package:mobile/domain/core/user_location.dart';
+import 'package:mobile/ports/lodging/driven/for_querying_lodging.dart';
 
 class HomeAlojamientoScreen extends StatefulWidget {
   final int homeId;
@@ -27,9 +26,11 @@ class _HomeAlojamientoScreenState extends State<HomeAlojamientoScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final provider = context.read<LodgingProvider>();
+      //Usamos el puerto hexagonal, no el provider
+      final lodgingService = serviceLocator<ForQueryingLodging>();
       try {
-        final data = await provider.fetchResidenceDetail(widget.homeId);
+        final data = await lodgingService.getResidenceById(widget.homeId);
+
         if (!mounted) return;
         setState(() {
           residencia = data;
@@ -107,7 +108,7 @@ class _HomeAlojamientoScreenState extends State<HomeAlojamientoScreen> {
       );
     }
 
-    // Servicio de mapa desde el service locator
+    // Servicio de mapa desde el service locator (puerto hexagonal)
     final mapService = serviceLocator<ForManagingMap>();
 
     // Estilos disponibles desde el servicio
@@ -304,7 +305,7 @@ class _HomeAlojamientoScreenState extends State<HomeAlojamientoScreen> {
                           ),
                         );
 
-                        // Agregamos un marcador en la residencia (sin usar residencia!.id)
+                        // Agregamos un marcador en la residencia
                         await mapService.addMarker(
                           latitude: residencia!.latitude,
                           longitude: residencia!.longitude,
