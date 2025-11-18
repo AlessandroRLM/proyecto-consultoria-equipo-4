@@ -104,8 +104,25 @@ class _HomeAlojamientoScreenState extends State<HomeAlojamientoScreen> {
     }
 
     if (residencia == null) {
-      return const Scaffold(
-        body: Center(child: Text("Residencia no encontrada")),
+      return Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text("Residencia no encontrada"),
+              const SizedBox(height: 20),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
       );
     }
 
