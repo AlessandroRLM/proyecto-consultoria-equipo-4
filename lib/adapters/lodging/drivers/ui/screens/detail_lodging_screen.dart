@@ -25,9 +25,10 @@ class _HomeAlojamientoScreenState extends State<HomeAlojamientoScreen> {
   @override
   void initState() {
     super.initState();
+
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      //Usamos el puerto hexagonal, no el provider
       final lodgingService = serviceLocator<ForQueryingLodging>();
+
       try {
         final data = await lodgingService.getResidenceById(widget.homeId);
 
@@ -39,6 +40,7 @@ class _HomeAlojamientoScreenState extends State<HomeAlojamientoScreen> {
       } catch (e) {
         if (!mounted) return;
         setState(() => loading = false);
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error al cargar residencia: $e')),
         );
@@ -48,14 +50,12 @@ class _HomeAlojamientoScreenState extends State<HomeAlojamientoScreen> {
 
   @override
   void dispose() {
-    // Limpieza del servicio de mapa
     if (serviceLocator.isRegistered<ForManagingMap>()) {
       serviceLocator<ForManagingMap>().dispose();
     }
     super.dispose();
   }
 
-  // --- Normalizador y mapeo flexible de servicios --- //
   String _norm(String s) => s.toLowerCase().trim();
 
   MapEntry<IconData, String> _mapService(String raw) {
@@ -102,18 +102,18 @@ class _HomeAlojamientoScreenState extends State<HomeAlojamientoScreen> {
     if (loading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
+
     if (residencia == null) {
       return const Scaffold(
-        body: Center(child: Text('Residencia no encontrada')),
+        body: Center(child: Text("Residencia no encontrada")),
       );
     }
 
-    // Servicio de mapa desde el service locator (puerto hexagonal)
     final mapService = serviceLocator<ForManagingMap>();
 
-    // Estilos disponibles desde el servicio
     final styles = mapService.getAvailableStyles();
     String? styleUri;
+
     if (styles.isNotEmpty) {
       if (styles.length >= 2) {
         styleUri = isDark ? styles[1] : styles[0];
@@ -122,18 +122,17 @@ class _HomeAlojamientoScreenState extends State<HomeAlojamientoScreen> {
       }
     }
 
-    //  Fallback de imágenes si no vienen URLs
     final images = residencia!.images.isEmpty
         ? const <String>[]
         : residencia!.images.map((e) => e.url).toList();
 
-    //  Fallback de servicios si viene vacío
-    final services = (residencia!.availableServices.isEmpty)
+    final services = residencia!.availableServices.isEmpty
         ? const <String>[]
         : residencia!.availableServices;
 
     const hPad = 16.0;
     const spacing = 12.0;
+
     final w = MediaQuery.of(context).size.width;
     final itemWidth = (w - (hPad * 2) - spacing) / 2;
 
@@ -143,13 +142,45 @@ class _HomeAlojamientoScreenState extends State<HomeAlojamientoScreen> {
         child: AppBar(elevation: 0, backgroundColor: Colors.transparent),
       ),
       backgroundColor: cs.surface,
+
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: SizedBox(
+          width: double.infinity,
+          height: 50,
+          child: ElevatedButton(
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("Alojamiento confirmado")),
+              );
+              Navigator.pop(context);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30),
+              ),
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              elevation: 3,
+            ),
+            child: const Text(
+              "Confirmar",
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ),
+      ),
+
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: EdgeInsets.zero,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Imagen con botón back
               SizedBox(
                 height: 220,
                 child: Stack(
@@ -169,15 +200,9 @@ class _HomeAlojamientoScreenState extends State<HomeAlojamientoScreen> {
                         child: InkWell(
                           borderRadius: BorderRadius.circular(10),
                           onTap: () => Navigator.pop(context),
-                          child: Padding(
-                            padding: const EdgeInsets.all(6),
-                            child: Icon(
-                              Icons.arrow_back,
-                              size: 22,
-                              color: isDark
-                                  ? AppThemes.black_100
-                                  : AppThemes.black_800,
-                            ),
+                          child: const Padding(
+                            padding: EdgeInsets.all(6),
+                            child: Icon(Icons.arrow_back, size: 22),
                           ),
                         ),
                       ),
@@ -188,7 +213,6 @@ class _HomeAlojamientoScreenState extends State<HomeAlojamientoScreen> {
 
               const SizedBox(height: 20),
 
-              // Título + dirección
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Column(
@@ -205,7 +229,7 @@ class _HomeAlojamientoScreenState extends State<HomeAlojamientoScreen> {
                     Text(
                       residencia!.address,
                       style: text.bodySmall?.copyWith(
-                        color: text.bodyMedium?.color?.withAlpha(180),
+                        color: text.bodySmall?.color?.withAlpha(180),
                       ),
                     ),
                   ],
@@ -213,14 +237,8 @@ class _HomeAlojamientoScreenState extends State<HomeAlojamientoScreen> {
               ),
 
               const SizedBox(height: 20),
-              const Divider(
-                height: 10,
-                thickness: 1,
-                indent: 16,
-                endIndent: 16,
-              ),
+              const Divider(indent: 16, endIndent: 16),
 
-              // Administrador
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
                 child: Column(
@@ -235,7 +253,7 @@ class _HomeAlojamientoScreenState extends State<HomeAlojamientoScreen> {
                     ),
                     const SizedBox(height: 3),
                     Text(
-                      'Administrador de Residencia',
+                      "Administrador de Residencia",
                       style: text.bodySmall?.copyWith(
                         color: text.bodySmall?.color?.withAlpha(180),
                       ),
@@ -243,19 +261,13 @@ class _HomeAlojamientoScreenState extends State<HomeAlojamientoScreen> {
                   ],
                 ),
               ),
-              const Divider(
-                height: 10,
-                thickness: 1,
-                indent: 16,
-                endIndent: 16,
-              ),
+              const Divider(indent: 16, endIndent: 16),
 
-              const SizedBox(height: 5),
+              const SizedBox(height: 10),
 
-              // Servicios disponibles
               const Padding(
                 padding: EdgeInsets.fromLTRB(16, 8, 16, 4),
-                child: SectionTitle('Servicios Disponibles'),
+                child: SectionTitle("Servicios Disponibles"),
               ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: hPad),
@@ -266,20 +278,12 @@ class _HomeAlojamientoScreenState extends State<HomeAlojamientoScreen> {
                 ),
               ),
 
-              const Padding(
-                padding: EdgeInsets.only(top: 12),
-                child: Divider(
-                  height: 10,
-                  thickness: 1,
-                  indent: 16,
-                  endIndent: 16,
-                ),
-              ),
+              const SizedBox(height: 10),
+              const Divider(indent: 16, endIndent: 16),
 
-              // Mapa usando ForManagingMap
               const Padding(
                 padding: EdgeInsets.fromLTRB(16, 10, 16, 6),
-                child: SectionTitle('Mapa'),
+                child: SectionTitle("Mapa"),
               ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -293,10 +297,8 @@ class _HomeAlojamientoScreenState extends State<HomeAlojamientoScreen> {
                       initialLatitude: residencia!.latitude,
                       initialLongitude: residencia!.longitude,
                       onMapCreated: (mapInstance) async {
-                        // Inicializamos el mapa
                         mapService.initialize(mapInstance);
 
-                        // Centramos en la residencia
                         await mapService.centerOnLocation(
                           UserLocation(
                             latitude: residencia!.latitude,
@@ -305,7 +307,6 @@ class _HomeAlojamientoScreenState extends State<HomeAlojamientoScreen> {
                           ),
                         );
 
-                        // Agregamos un marcador en la residencia
                         await mapService.addMarker(
                           latitude: residencia!.latitude,
                           longitude: residencia!.longitude,
@@ -317,7 +318,7 @@ class _HomeAlojamientoScreenState extends State<HomeAlojamientoScreen> {
                 ),
               ),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: 25),
             ],
           ),
         ),
