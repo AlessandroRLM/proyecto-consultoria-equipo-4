@@ -21,7 +21,7 @@ class TransportScreenState extends State<TransportScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final provider = Provider.of<TransportReservationsProvider>(context, listen: false);
       provider.fetchReservations();
-      provider.app.loadStudentAgenda(
+      provider.loadStudentAgenda(
         const TransportAgendaQuery(studentId: 'demo-student'),
       );
     });

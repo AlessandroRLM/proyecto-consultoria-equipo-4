@@ -1,18 +1,18 @@
-import 'package:mobile/adapters/transport/driven/providers/transport_reservations_provider.dart';
+import 'dart:convert';
+
 import 'package:mobile/domain/models/transport/agenda_model.dart';
 import 'package:mobile/domain/models/transport/service_model.dart';
 import 'package:mobile/ports/transport/driven/for_querying_transport.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LocalTransportRepository implements ForQueryingTransport {
-  final TransportReservationsProvider reservationsProvider;
+  final List<Map<String, dynamic>> _reservationsStore = [];
 
-  LocalTransportRepository({
-    required this.reservationsProvider,
-  });
+  LocalTransportRepository();
 
   @override
   Future<List<TransportAgendaModel>> getStudentAgenda(TransportAgendaQuery query) async {
-    await reservationsProvider.fetchReservations();
+    await _reloadStore();
     final agendas = _mapReservationsToAgenda();
     return agendas.where((agenda) {
       if (query.from != null && agenda.date.isBefore(query.from!)) {
@@ -31,7 +31,7 @@ class LocalTransportRepository implements ForQueryingTransport {
 
   @override
   Future<TransportAgendaModel?> getAgendaById(int agendaId) async {
-    await reservationsProvider.fetchReservations();
+    await _reloadStore();
     final agendas = _mapReservationsToAgenda();
     for (final agenda in agendas) {
       if (agenda.agendaId == agendaId) {
@@ -94,7 +94,7 @@ class LocalTransportRepository implements ForQueryingTransport {
     required int serviceId,
     required DateTime date,
   }) async {
-    await reservationsProvider.fetchReservations();
+    await _reloadStore();
     final reservation = {
       'id': DateTime.now().millisecondsSinceEpoch.toString(),
       'outbound': {
@@ -107,20 +107,18 @@ class LocalTransportRepository implements ForQueryingTransport {
       },
       'return': null,
     };
-    final updated = List<Map<String, dynamic>>.from(reservationsProvider.reservations)
-      ..add(reservation);
-    reservationsProvider.updateReservations(updated);
+    _reservationsStore.add(reservation);
+    await _persistStore();
     final outbound = reservation['outbound'] as Map<String, dynamic>;
     return _mapLegToAgenda(outbound, reservation['id'], true);
   }
 
   @override
   Future<void> cancelReservation(int agendaId) async {
-    await reservationsProvider.fetchReservations();
-    final updated = List<Map<String, dynamic>>.from(reservationsProvider.reservations);
+    await _reloadStore();
     bool changed = false;
-    for (var i = updated.length - 1; i >= 0; i--) {
-      final reservation = updated[i];
+    for (var i = _reservationsStore.length - 1; i >= 0; i--) {
+      final reservation = _reservationsStore[i];
       final rawId = reservation['id'];
       if (_matchesLeg(reservation['outbound'], rawId, true, agendaId)) {
         reservation['outbound'] = null;
@@ -131,17 +129,17 @@ class LocalTransportRepository implements ForQueryingTransport {
         changed = true;
       }
       if (reservation['outbound'] == null && reservation['return'] == null) {
-        updated.removeAt(i);
+        _reservationsStore.removeAt(i);
       }
     }
     if (changed) {
-      reservationsProvider.updateReservations(updated);
+      await _persistStore();
     }
   }
 
   List<TransportAgendaModel> _mapReservationsToAgenda() {
     final List<TransportAgendaModel> agendas = [];
-    for (final reservation in reservationsProvider.reservations) {
+    for (final reservation in _reservationsStore) {
       final rawId = reservation['id'];
       final outbound = reservation['outbound'] as Map<String, dynamic>?;
       final returnLeg = reservation['return'] as Map<String, dynamic>?;
@@ -213,6 +211,23 @@ class LocalTransportRepository implements ForQueryingTransport {
     final d = date.day.toString().padLeft(2, '0');
     final m = date.month.toString().padLeft(2, '0');
     return '$d-$m-${date.year}';
+  }
+
+  Future<void> _reloadStore() async {
+    final prefs = await SharedPreferences.getInstance();
+    final jsonString = prefs.getString('transport_reservations');
+    _reservationsStore.clear();
+    if (jsonString == null) return;
+    final List<dynamic> list = json.decode(jsonString) as List<dynamic>;
+    _reservationsStore.addAll(
+      list.map((e) => Map<String, dynamic>.from(e as Map<String, dynamic>)),
+    );
+  }
+
+  Future<void> _persistStore() async {
+    final prefs = await SharedPreferences.getInstance();
+    final jsonString = json.encode(_reservationsStore);
+    await prefs.setString('transport_reservations', jsonString);
   }
 
   List<Map<String, dynamic>> get _mockServices => [

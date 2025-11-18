@@ -25,7 +25,7 @@ Para pasar de este mock local a una integración real (por ejemplo, una API REST
    Asegúrese de registrar también cualquier dependencia nueva (por ejemplo, un `TransportApiClient`).
 
 4. **Mantener compatibilidad con la capa driver**  
-   Ningún código en la UI o en `TransportApplicationService` debería cambiar, ya que estas capas sólo interactúan con el puerto `ForQueryingTransport` y el puerto driver `ForTransportInteractions`. Verifique que la nueva implementación reporte los mismos datos que el mock (o un superconjunto) para evitar regresiones.
+   La UI conversa únicamente con `TransportReservationsProvider`, el cual depende del puerto `ForQueryingTransport`. Verifique que la nueva implementación reporte los mismos datos que el mock (o un superconjunto) para evitar regresiones.
 
 5. **Eliminar o conservar el mock según necesidad**  
    - Si el mock ya no se usará, elimine `LocalTransportRepository` o muévalo a un directorio de pruebas/fixtures.

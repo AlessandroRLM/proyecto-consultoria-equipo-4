@@ -278,7 +278,7 @@ class _TransportTimeSelectionScreenState extends State<TransportTimeSelectionScr
   void didChangeDependencies() {
     super.didChangeDependencies();
     _transportProvider = Provider.of<TransportReservationsProvider>(context, listen: false);
-    _transportProvider.app.loadServices(const TransportServiceQuery());
+    _transportProvider.loadServices(const TransportServiceQuery());
     _allowedStart = _transportProvider.getMinReservableDate();
     _allowedEnd = _allowedStart!.add(Duration(days: 365));
     _focusedWeekStart = _allowedStart;

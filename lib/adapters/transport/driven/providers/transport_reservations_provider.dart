@@ -5,10 +5,12 @@ import 'package:mobile/domain/models/transport/service_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'package:mobile/domain/entities/transport_reservation_status.dart';
-import 'package:mobile/ports/transport/drivers/for_transport_interactions.dart';
-import 'package:mobile/adapters/transport/drivers/application/transport_application_service.dart';
+import 'package:mobile/ports/transport/driven/for_querying_transport.dart';
 
-class TransportReservationsProvider extends ChangeNotifier implements ForTransportInteractions {
+class TransportReservationsProvider extends ChangeNotifier {
+  TransportReservationsProvider({required this.repo});
+
+  final ForQueryingTransport repo;
   // ----------------------------
   // Campos para Puerto DRIVER
   // ----------------------------
@@ -21,8 +23,65 @@ class TransportReservationsProvider extends ChangeNotifier implements ForTranspo
   List<TransportServiceModel> get loadedServices => _loadedServices;
   Object? get lastError => _lastError;
 
-      
-  late TransportApplicationService app;
+
+  Future<void> loadStudentAgenda(TransportAgendaQuery query) async {
+    try {
+      final agenda = await repo.getStudentAgenda(query);
+      _loadedAgenda = agenda;
+      _syncReservationsFromAgenda(force: true);
+      notifyListeners();
+    } catch (error) {
+      _lastError = error;
+      notifyListeners();
+    }
+  }
+
+  Future<void> loadServices(TransportServiceQuery query) async {
+    try {
+      final services = await repo.getServices(query);
+      _loadedServices = services;
+      _optionsByDate.clear();
+      notifyListeners();
+    } catch (error) {
+      _lastError = error;
+      notifyListeners();
+    }
+  }
+
+  Future<void> createReservationForService({
+    required TransportServiceModel service,
+    required DateTime date,
+  }) async {
+    try {
+      final agenda = await repo.createReservation(
+        serviceId: service.id,
+        date: date,
+      );
+      _loadedAgenda = [
+        ..._loadedAgenda.where((a) => a.agendaId != agenda.agendaId),
+        agenda,
+      ];
+      _syncReservationsFromAgenda(force: true);
+      notifyListeners();
+    } catch (error) {
+      _lastError = error;
+      notifyListeners();
+    }
+  }
+
+  Future<void> cancelReservationById(int agendaId) async {
+    try {
+      await repo.cancelReservation(agendaId);
+      _loadedAgenda =
+          _loadedAgenda.where((a) => a.agendaId != agendaId).toList();
+      _syncReservationsFromAgenda(force: true);
+      notifyListeners();
+    } catch (error) {
+      _lastError = error;
+      notifyListeners();
+    }
+  }
+
   List<Map<String, dynamic>> _reservations = [];
   final Map<String, Map<bool, List<Map<String, dynamic>>>> _optionsByDate = {};
 
@@ -800,75 +859,5 @@ class TransportReservationsProvider extends ChangeNotifier implements ForTranspo
     };
   }
 
-
-  @override
-  void onAgendaLoaded(List<TransportAgendaModel> agenda) {
-    _loadedAgenda = agenda;
-    _syncReservationsFromAgenda(force: true);
-    notifyListeners();
-  }
-
-  @override
-  void onReservationCancelled(int agendaId) {
-    _loadedAgenda =
-        _loadedAgenda.where((a) => a.agendaId != agendaId).toList();
-    _syncReservationsFromAgenda(force: true);
-    notifyListeners();
-  }
-
-
-  @override
-  void onReservationConfirmed(TransportAgendaModel agenda) {
-    _loadedAgenda = [
-      ..._loadedAgenda.where((a) => a.agendaId != agenda.agendaId),
-      agenda,
-    ];
-    _syncReservationsFromAgenda(force: true);
-    notifyListeners();
-  }
-
-
-  @override
-  void onServicesLoaded(List<TransportServiceModel> services) {
-    _loadedServices = services;
-    _optionsByDate.clear();
-    notifyListeners();
-  }
-
-
-  @override
-  void onTransportError(Object error, [StackTrace? trace]) {
-    _lastError = error;
-    // podrías agregar lógica para logs, o flags de error:
-    // _hasError = true;
-    notifyListeners();
-  }
-
-  @override
-  Future<void> requestReturnReservation({required TransportServiceModel service, required DateTime date}) {
-    // implement requestReturnReservation
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<void> requestRoundTripReservation({required TransportServiceModel outboundService, required TransportServiceModel returnService, required DateTime outboundDate, required DateTime returnDate}) {
-    // implement requestRoundTripReservation
-    throw UnimplementedError();
-  }
-  @override
-  Future<void> requestOutboundReservation({
-    required TransportServiceModel service,
-    required DateTime date,
-  }) {
-    return app.createReservationForService(
-      service: service,
-      date: date,
-    );
-  }
-
-  @override
-  Future<void> requestReservationCancellation(int agendaId) {
-    return app.cancelReservation(agendaId);
-  }
 
 }
