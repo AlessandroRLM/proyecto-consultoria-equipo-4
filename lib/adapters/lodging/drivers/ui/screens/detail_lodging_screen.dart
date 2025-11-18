@@ -292,16 +292,23 @@ class _HomeAlojamientoScreenState extends State<HomeAlojamientoScreen> {
                       initialLatitude: residencia!.latitude,
                       initialLongitude: residencia!.longitude,
                       onMapCreated: (mapInstance) async {
-                        // initialize retorna void → no se espera
+                        // Inicializamos el mapa
                         mapService.initialize(mapInstance);
 
-                        // centramos en la residencia
+                        // Centramos en la residencia
                         await mapService.centerOnLocation(
                           UserLocation(
                             latitude: residencia!.latitude,
                             longitude: residencia!.longitude,
                             timestamp: DateTime.now(),
                           ),
+                        );
+
+                        // Agregamos un marcador en la residencia (sin usar residencia!.id)
+                        await mapService.addMarker(
+                          latitude: residencia!.latitude,
+                          longitude: residencia!.longitude,
+                          label: residencia!.residenceName,
                         );
                       },
                     ),

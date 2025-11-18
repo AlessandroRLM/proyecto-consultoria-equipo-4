@@ -15,6 +15,44 @@ class ReservationCard extends StatefulWidget {
 class _ReservationCardState extends State<ReservationCard> {
   bool expanded = false;
 
+  /// Formatea solo la **fecha de reserva** (YYYY-MM-DD) a algo más legible.
+  String _formatReservationDate(String dateStr) {
+    try {
+      final date = DateTime.parse(dateStr);
+      const weekdays = [
+        'Lunes',
+        'Martes',
+        'Miércoles',
+        'Jueves',
+        'Viernes',
+        'Sábado',
+        'Domingo',
+      ];
+      const months = [
+        'Enero',
+        'Febrero',
+        'Marzo',
+        'Abril',
+        'Mayo',
+        'Junio',
+        'Julio',
+        'Agosto',
+        'Septiembre',
+        'Octubre',
+        'Noviembre',
+        'Diciembre',
+      ];
+      final weekday = weekdays[date.weekday - 1];
+      final day = date.day;
+      final month = months[date.month - 1];
+      final year = date.year;
+      return "$weekday $day de $month $year";
+    } catch (_) {
+      // Si viniera algo raro, mostramos el string tal cual
+      return dateStr;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -64,7 +102,8 @@ class _ReservationCardState extends State<ReservationCard> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          "Reserva: ${widget.reservation.reservationDate}",
+                          // aquí seteamos/ formateamos la fecha
+                          "Reserva: ${_formatReservationDate(widget.reservation.reservationDate)}",
                           style: text.bodySmall?.copyWith(
                             color: text.bodySmall?.color?.withValues(
                               alpha: 0.8,
@@ -88,6 +127,7 @@ class _ReservationCardState extends State<ReservationCard> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
+                            // horas tal cual, sin parsear
                             "Entrada: ${widget.reservation.reservationInit}",
                             style: text.bodyMedium,
                           ),
@@ -113,7 +153,7 @@ class _ReservationCardState extends State<ReservationCard> {
                         ),
                       ),
                       onPressed: () {
-                        Navigator.of(context).push(
+                        Navigator.of(context, rootNavigator: true).push(
                           MaterialPageRoute(
                             builder: (_) => HomeAlojamientoScreen(
                               homeId: widget.reservation.homeId,
