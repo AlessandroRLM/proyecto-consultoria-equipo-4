@@ -14,38 +14,6 @@ class ReservationCard extends StatefulWidget {
 class _ReservationCardState extends State<ReservationCard> {
   bool expanded = false;
 
-  String _formatDateFull(String dateStr) {
-    try {
-      final date = DateTime.parse(dateStr);
-      const weekdays = [
-        'Lunes',
-        'Martes',
-        'Miércoles',
-        'Jueves',
-        'Viernes',
-        'Sábado',
-        'Domingo',
-      ];
-      const months = [
-        'Enero',
-        'Febrero',
-        'Marzo',
-        'Abril',
-        'Mayo',
-        'Junio',
-        'Julio',
-        'Agosto',
-        'Septiembre',
-        'Octubre',
-        'Noviembre',
-        'Diciembre',
-      ];
-      return "${weekdays[date.weekday - 1]} ${date.day} de ${months[date.month - 1]}";
-    } catch (_) {
-      return dateStr; // evita FormatException
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -102,12 +70,12 @@ class _ReservationCardState extends State<ReservationCard> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            "Entrada: ${_formatDateFull(widget.reservation.reservationInit)}",
+                            "Entrada: ${widget.reservation.reservationInit}",
                             style: text.bodyMedium,
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            "Salida: ${_formatDateFull(widget.reservation.reservationFin)}",
+                            "Salida: ${widget.reservation.reservationFin}",
                             style: text.bodyMedium,
                           ),
                           const SizedBox(height: 4),
