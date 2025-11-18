@@ -14,6 +14,43 @@ class ReservationCard extends StatefulWidget {
 class _ReservationCardState extends State<ReservationCard> {
   bool expanded = false;
 
+  String _formatReservationDate(String dateStr) {
+    try {
+      final date = DateTime.parse(dateStr);
+      const weekdays = [
+        'Lunes',
+        'Martes',
+        'Miércoles',
+        'Jueves',
+        'Viernes',
+        'Sábado',
+        'Domingo',
+      ];
+      const months = [
+        'Enero',
+        'Febrero',
+        'Marzo',
+        'Abril',
+        'Mayo',
+        'Junio',
+        'Julio',
+        'Agosto',
+        'Septiembre',
+        'Octubre',
+        'Noviembre',
+        'Diciembre',
+      ];
+      final weekday = weekdays[date.weekday - 1];
+      final day = date.day;
+      final month = months[date.month - 1];
+      final year = date.year;
+      return "$weekday $day de $month $year";
+    } catch (_) {
+      // Si algo raro viniera, mostramos el string tal cual
+      return dateStr;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -37,22 +74,38 @@ class _ReservationCardState extends State<ReservationCard> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Icon(Icons.home_outlined, size: 32, color: cs.primary),
                   const SizedBox(width: 16),
                   Expanded(
-                    child: Row(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Expanded(
-                          child: Text(
-                            widget.reservation.clinicalName,
-                            style: text.bodyLarge?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                widget.reservation.clinicalName,
+                                style: text.bodyLarge?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ),
+                            StatusWidget(estado: widget.reservation.state.name),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          "Reserva: ${_formatReservationDate(widget.reservation.reservationDate)}",
+                          style: text.bodySmall?.copyWith(
+                            color: text.bodySmall?.color?.withValues(
+                              alpha: 0.8,
                             ),
                           ),
                         ),
-                        StatusWidget(estado: widget.reservation.state.name),
                       ],
                     ),
                   ),
