@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/adapters/lodging/drivers/ui/widgets/lodging_week_calendar.dart';
-import 'package:mobile/domain/models/lodging/estado_agenda.dart';
 import 'package:provider/provider.dart';
 import 'package:mobile/adapters/lodging/driven/providers/lodging_provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile/adapters/core/driven/app_themes.dart';
-import 'package:mobile/domain/models/lodging/agenda_model.dart';
 
 class LodgingCalendarScreen extends StatefulWidget {
   const LodgingCalendarScreen({super.key});
