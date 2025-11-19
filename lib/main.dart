@@ -11,6 +11,7 @@ import 'package:mobile/adapters/lodging/driven/providers/lodging_provider.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mobile/adapters/lodging/driven/providers/lodging_availability_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -20,7 +21,11 @@ void main() async {
     // Token de mapbox default 
     accessToken = 'pk.eyJ1IjoieW9ub21hYWEiLCJhIjoiY21ncjZtbDg2MjdqNTJtcHljcWJjcGg4eCJ9.baVhFCwxkSilSsmG4GP4oQ';
   }
-  setupServiceLocator();
+  
+  // Inicializar SharedPreferences y setupServiceLocator
+  final sharedPreferences = await SharedPreferences.getInstance();
+  setupServiceLocator(sharedPreferences);
+  
   await serviceLocator<ForAuthenticatingUser>().initialize();
 
   // Evitar crasheo en chrome al usar MapboxOptions.setAccessToken
@@ -43,8 +48,10 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        // Inicializamos el proveedor vacío, sin datos aún
-        ChangeNotifierProvider(create: (_) => TransportReservationsProvider()),
+        // Provider de transporte obtenido del ServiceLocator
+        ChangeNotifierProvider<TransportReservationsProvider>(
+          create: (_) => serviceLocator<TransportReservationsProvider>(),
+        ),
         ChangeNotifierProvider(
           create: (_) => LodgingProvider()..fetchReservations(),
         ),

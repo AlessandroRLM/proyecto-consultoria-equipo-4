@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:mobile/adapters/transport/driven/providers/transport_reservations_provider.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:mobile/adapters/core/driven/app_themes.dart';
+import 'dart:convert';
 
 String formatTime(String timeStr) {
   return timeStr;
@@ -279,7 +280,16 @@ class _TransportTimeSelectionScreenState extends State<TransportTimeSelectionScr
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-  _transportProvider = Provider.of<TransportReservationsProvider>(context, listen: false);
+    _transportProvider = Provider.of<TransportReservationsProvider>(context, listen: false);
+    
+    if (widget.location != null && widget.location!.isNotEmpty) {
+      try {
+        final locationMap = jsonDecode(widget.location!) as Map<String, dynamic>;
+        _transportProvider.selectedLocation = Map<String, String>.from(locationMap);
+      } catch (_) {
+      }
+    }
+    
     _allowedStart = _transportProvider.getMinReservableDate();
     _allowedEnd = _allowedStart!.add(Duration(days: 365));
     _focusedWeekStart = _allowedStart;
