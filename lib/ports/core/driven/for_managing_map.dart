@@ -17,10 +17,7 @@ abstract class ForManagingMap {
   Future<void> filterCampusMarkers(List<Campus> filteredCampusList);
 
   /// Centra el mapa en una ubicación específica
-  Future<void> centerOnLocation(
-    UserLocation location, {
-    double zoom = 14.0,
-  });
+  Future<void> centerOnLocation(UserLocation location, {double zoom = 14.0});
 
   /// Centra el mapa en un campus específico
   Future<void> centerOnCampus(Campus campus, {double zoom = 14.0});
@@ -36,6 +33,18 @@ abstract class ForManagingMap {
 
   /// Disminuye el zoom del mapa
   Future<void> zoomOut();
+
+  /// Agrega un marcador genérico en una ubicación
+  ///
+  /// [latitude] y [longitude] indican la posición.
+  /// [id] y [label] son opcionales para que la implementación pueda
+  /// identificar el marcador o mostrar un texto.
+  Future<void> addMarker({
+    required double latitude,
+    required double longitude,
+    String? id,
+    String? label,
+  });
 
   /// Retorna el widget de mapa específico del proveedor
   /// [onMapCreated] callback que se ejecuta cuando el mapa está listo

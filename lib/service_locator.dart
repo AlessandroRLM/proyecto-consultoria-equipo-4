@@ -2,6 +2,7 @@ import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:mobile/adapters/auth/driven/services/shared_preference_auth_data_storage.dart';
 import 'package:mobile/adapters/auth/drivers/services/auth_mock_service.dart';
+import 'package:mobile/adapters/lodging/driven/lodging_service_from_mocks.dart';
 import 'package:mobile/ports/auth/drivers/for_authenticating_user.dart';
 import 'package:mobile/adapters/core/driven/services/location_package_service.dart';
 import 'package:mobile/adapters/core/driven/services/campus_mock_service.dart';
@@ -49,4 +50,3 @@ Future<void> disposeServiceLocator() async {
   // Reset GetIt
   await serviceLocator.reset();
 }
-

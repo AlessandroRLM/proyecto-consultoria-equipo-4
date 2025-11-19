@@ -10,7 +10,6 @@ import 'package:mobile/service_locator.dart';
 import 'package:mobile/adapters/lodging/driven/providers/lodging_provider.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
-import 'package:mobile/adapters/lodging/driven/providers/lodging_availability_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
@@ -18,8 +17,9 @@ void main() async {
 
   String accessToken = const String.fromEnvironment('ACCESS_TOKEN');
   if (accessToken.isEmpty) {
-    // Token de mapbox default 
-    accessToken = 'pk.eyJ1IjoieW9ub21hYWEiLCJhIjoiY21ncjZtbDg2MjdqNTJtcHljcWJjcGg4eCJ9.baVhFCwxkSilSsmG4GP4oQ';
+    // Token de mapbox default
+    accessToken =
+        'pk.eyJ1IjoieW9ub21hYWEiLCJhIjoiY21ncjZtbDg2MjdqNTJtcHljcWJjcGg4eCJ9.baVhFCwxkSilSsmG4GP4oQ';
   }
   
   // Inicializar SharedPreferences y setupServiceLocator
@@ -37,7 +37,6 @@ void main() async {
 
   await initializeDateFormatting(Intl.getCurrentLocale(), null);
 
-
   runApp(const MyApp());
 }
 
@@ -54,9 +53,6 @@ class MyApp extends StatelessWidget {
         ),
         ChangeNotifierProvider(
           create: (_) => LodgingProvider()..fetchReservations(),
-        ),
-        ChangeNotifierProvider(
-          create: (_) => LodgingAvailabilityProvider(),
         ),
       ],
       child: MaterialApp.router(
