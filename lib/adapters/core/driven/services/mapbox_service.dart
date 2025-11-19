@@ -1,7 +1,9 @@
 // adapters/core/driven/mapbox_map_adapter.dart
 
 import 'dart:async';
+import 'dart:typed_data';
 import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
@@ -11,8 +13,8 @@ import 'package:mobile/domain/core/campus.dart';
 import 'package:mobile/ports/core/driven/for_managing_map.dart';
 import 'package:mobile/ports/core/driven/for_managing_location.dart';
 
-/// Adaptador de Mapbox que implementa los puertos de mapa
-/// Esta es la implementación concreta para Mapbox
+/// Adaptador de Mapbox que implementa los puertos de mapa.
+/// Esta es la implementación concreta para Mapbox.
 class MapboxMapService implements ForManagingMap {
   MapboxMap? _mapboxMap;
   final ForManagingLocation _locationRepository;
@@ -24,12 +26,12 @@ class MapboxMapService implements ForManagingMap {
 
   static const List<String> _mapStyles = [
     MapboxStyles.LIGHT,
-    MapboxStyles.DARK
+    MapboxStyles.DARK,
   ];
 
   // Inyección de dependencia del servicio de ubicación
   MapboxMapService({required ForManagingLocation locationService})
-      : _locationRepository = locationService;
+    : _locationRepository = locationService;
 
   @override
   void initialize(dynamic mapInstance) {
@@ -66,7 +68,9 @@ class MapboxMapService implements ForManagingMap {
       );
       debugPrint('Componente de ubicación de Mapbox configurado');
     } catch (e) {
-      debugPrint('Error al configurar el componente de ubicación de Mapbox: $e');
+      debugPrint(
+        'Error al configurar el componente de ubicación de Mapbox: $e',
+      );
     }
   }
 
@@ -97,7 +101,8 @@ class MapboxMapService implements ForManagingMap {
 
   Future<Uint8List> _createLocationPuckIcon() async {
     final ByteData bytes = await rootBundle.load(
-        'assets/images/location_puck/location_puck.png');
+      'assets/images/location_puck/location_puck.png',
+    );
     return bytes.buffer.asUint8List();
   }
 
@@ -144,8 +149,8 @@ class MapboxMapService implements ForManagingMap {
     if (_mapboxMap == null) return;
 
     try {
-      _campusMarkersManager =
-          await _mapboxMap!.annotations.createPointAnnotationManager();
+      _campusMarkersManager = await _mapboxMap!.annotations
+          .createPointAnnotationManager();
 
       final Map<PointAnnotation, Campus> annotationToCampusMap = {};
 
@@ -286,7 +291,7 @@ class MapboxMapService implements ForManagingMap {
     }
   }
 
-  // Implementación de ForProvidingMapWidget
+  /// Construye el widget de mapa de Mapbox
   @override
   Widget buildMapWidget({
     required Function(dynamic) onMapCreated,
@@ -315,5 +320,35 @@ class MapboxMapService implements ForManagingMap {
   @override
   List<String> getAvailableStyles() {
     return _mapStyles;
+  }
+
+  @override
+  Future<void> addMarker({
+    required double latitude,
+    required double longitude,
+    String? id,
+    String? label,
+  }) async {
+    if (_mapboxMap == null) return;
+
+    try {
+      final markerManager = await _mapboxMap!.annotations
+          .createPointAnnotationManager();
+
+      await markerManager.create(
+        PointAnnotationOptions(
+          geometry: Point(coordinates: Position(longitude, latitude)),
+          iconImage:
+              "hospital-marker", // puedes cambiarlo si quieres otro ícono
+          iconSize: 1.0,
+        ),
+      );
+
+      debugPrint(
+        "Marcador agregado en lat: $latitude, lng: $longitude (${label ?? ''})",
+      );
+    } catch (e) {
+      debugPrint("Error agregando marcador: $e");
+    }
   }
 }
