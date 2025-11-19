@@ -9,6 +9,7 @@ import 'package:mobile/service_locator.dart';
 import 'package:mobile/ports/core/driven/for_managing_map.dart';
 import 'package:mobile/domain/core/user_location.dart';
 import 'package:mobile/ports/lodging/driven/for_querying_lodging.dart';
+import 'package:go_router/go_router.dart';
 
 class HomeAlojamientoScreen extends StatefulWidget {
   final int homeId;
@@ -116,7 +117,7 @@ class _HomeAlojamientoScreenState extends State<HomeAlojamientoScreen> {
                 children: [
                   IconButton(
                     icon: const Icon(Icons.arrow_back),
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: () => context.go('/lodging'),
                   ),
                 ],
               ),
@@ -170,7 +171,7 @@ class _HomeAlojamientoScreenState extends State<HomeAlojamientoScreen> {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text("Alojamiento confirmado")),
               );
-              Navigator.pop(context);
+              context.go('/lodging');
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
@@ -182,7 +183,7 @@ class _HomeAlojamientoScreenState extends State<HomeAlojamientoScreen> {
               elevation: 3,
             ),
             child: const Text(
-              "Confirmar",
+              "Confirmar Reserva",
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
