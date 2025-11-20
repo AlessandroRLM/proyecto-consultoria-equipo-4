@@ -56,8 +56,8 @@ class _ImageCarouselState extends State<ImageCarousel> {
         ? AppThemes.black_1100
         : AppThemes.black_100; // fondo contenedor
     final Color pillShadow = isDark
-        ? Colors.black.withOpacity(0.30)
-        : Colors.black.withOpacity(0.08);
+        ? Colors.black.withValues(alpha: 0.30)
+        : Colors.black.withValues(alpha: 0.08);
     final Color dotActive = isDark
         ? AppThemes.black_100
         : AppThemes.black_800; // activo
@@ -89,7 +89,7 @@ class _ImageCarouselState extends State<ImageCarousel> {
                     child: const CircularProgressIndicator(strokeWidth: 2),
                   );
                 },
-                errorBuilder: (c, _, __) => _errorPlaceholder(c),
+                errorBuilder: (c, _, _) => _errorPlaceholder(c),
               );
             },
           ),

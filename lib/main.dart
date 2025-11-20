@@ -13,7 +13,6 @@ import 'package:mobile/ports/auth/drivers/for_authenticating_user.dart';
 import 'package:mobile/service_locator.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
-import 'package:mobile/adapters/transport/driven/providers/transport_reservations_provider.dart';
 import 'package:mobile/ports/transport/driven/for_querying_transport.dart';
 
 void main() async {
