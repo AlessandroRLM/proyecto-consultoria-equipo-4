@@ -11,6 +11,8 @@ import 'package:mobile/adapters/core/driven/services/mapbox_service.dart';
 import 'package:mobile/ports/core/driven/for_managing_location.dart';
 import 'package:mobile/ports/core/driven/for_querying_campus.dart';
 import 'package:mobile/ports/core/driven/for_managing_map.dart';
+import 'package:mobile/adapters/transport/driven/local_transport_repository.dart';
+import 'package:mobile/ports/transport/driven/for_querying_transport.dart';
 import 'package:mobile/ports/credentials/driven/for_persisting_request.dart';
 import 'package:mobile/ports/lodging/driven/for_persisting_reservations.dart';
 import 'package:mobile/ports/lodging/driven/for_querying_lodging.dart';
@@ -31,13 +33,25 @@ void setupServiceLocator() {
   // Servicio de ubicación
   serviceLocator.registerLazySingleton<ForManagingLocation>(() => LocationPackageService());
 
-  // Servicio de mapa 
+  // TRANSPORTE
+  // ============================================================
+
+  // Repositorio local que implementa ForQueryingTransport (driven port)
+  serviceLocator.registerLazySingleton<ForQueryingTransport>(
+    () => LocalTransportRepository(),
+  );
+  // ============================================================
+  // LODGING
+  // ============================================================
+
+  // Servicio de ubicación
   serviceLocator.registerLazySingleton<ForManagingMap>(
     () => MapboxMapService(
       locationService: serviceLocator<ForManagingLocation>()
     )
   );
 
+  //consulta agendas y residencias desde mocks
   // Servicio de credenciales
   serviceLocator.registerLazySingleton<ForPersistingRequest>(
     () => CredentialRequestPersistanceMockService(),
@@ -65,6 +79,7 @@ void setupServiceLocator() {
     ),
   );
 }
+
 
 
 /// Método para limpiar servicios que requieren limpieza manual

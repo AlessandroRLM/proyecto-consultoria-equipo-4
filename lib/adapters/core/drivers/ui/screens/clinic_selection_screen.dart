@@ -119,6 +119,8 @@ class _ClinicSelectionScreenState extends State<ClinicSelectionScreen> {
                             provider.selectedLocation = {
                               'name': clinic.name,
                               'address': '${clinic.commune}, ${clinic.city}',
+                              'campus_id': '${clinic.id}',
+                              'clinical_id': '${clinic.id}',
                             };
                             await context.push('/transport/time-selection', extra: {'isOutbound': true});
                           } else {

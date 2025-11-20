@@ -13,6 +13,8 @@ import 'package:mobile/ports/auth/drivers/for_authenticating_user.dart';
 import 'package:mobile/service_locator.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:mobile/adapters/transport/driven/providers/transport_reservations_provider.dart';
+import 'package:mobile/ports/transport/driven/for_querying_transport.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -45,9 +47,14 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        // Inicializamos el proveedor con el repositorio definido en el service locator
+        ChangeNotifierProvider(
+          create: (_) => TransportReservationsProvider(
+            repo: serviceLocator<ForQueryingTransport>(),
+          ),
+        ),
         ChangeNotifierProvider(create: (_) => CredentialProvider(serviceLocator<ForPersistingRequest>())),
         // Inicializamos el proveedor vacío, sin datos aún
-        ChangeNotifierProvider(create: (_) => TransportReservationsProvider()),
         ChangeNotifierProvider(
           create: (_) => LodgingProvider(serviceLocator<ForQueryingLodging>()),
         ),
