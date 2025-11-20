@@ -1,15 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/adapters/lodging/drivers/ui/widgets/lodging_week_calendar.dart';
-import 'package:mobile/domain/models/lodging/estado_agenda.dart';
 import 'package:provider/provider.dart';
 import 'package:mobile/adapters/lodging/driven/providers/lodging_provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile/adapters/core/driven/app_themes.dart';
-import 'package:mobile/domain/models/lodging/agenda_model.dart';
 
 class LodgingCalendarScreen extends StatefulWidget {
-
-  const LodgingCalendarScreen({super.key,});
+  const LodgingCalendarScreen({super.key});
 
   @override
   State<LodgingCalendarScreen> createState() => _LodgingCalendarScreenState();
@@ -20,10 +17,28 @@ class _LodgingCalendarScreenState extends State<LodgingCalendarScreen> {
   DateTime? _selectedEndDate;
 
   String formatDate(DateTime date) {
-    final weekdays = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+    final weekdays = [
+      'Lunes',
+      'Martes',
+      'Miércoles',
+      'Jueves',
+      'Viernes',
+      'Sábado',
+      'Domingo',
+    ];
     final months = [
-      'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-      'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+      'Enero',
+      'Febrero',
+      'Marzo',
+      'Abril',
+      'Mayo',
+      'Junio',
+      'Julio',
+      'Agosto',
+      'Septiembre',
+      'Octubre',
+      'Noviembre',
+      'Diciembre',
     ];
     final weekday = weekdays[date.weekday - 1];
     final day = date.day;
@@ -40,13 +55,16 @@ class _LodgingCalendarScreenState extends State<LodgingCalendarScreen> {
     final maxSelectableDate = minSelectableDate.add(const Duration(days: 365));
 
     final theme = Theme.of(context);
-    final lodgingProvider = Provider.of<LodgingProvider>(context, listen: false);
+    final lodgingProvider = Provider.of<LodgingProvider>(
+      context,
+      listen: false,
+    );
     final selectedClinic = Provider.of<LodgingProvider>(context).selectedClinic;
     if (selectedClinic == null) {
-    return Scaffold(
-      body: Center(child: Text('No se ha seleccionado ninguna clínica')),
-    );
-}
+      return Scaffold(
+        body: Center(child: Text('No se ha seleccionado ninguna clínica')),
+      );
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -91,7 +109,9 @@ class _LodgingCalendarScreenState extends State<LodgingCalendarScreen> {
                         'Seleccione la fecha del alojamiento',
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
-                          color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.6,
+                          ),
                         ),
                         textAlign: TextAlign.center,
                         maxLines: 2,
@@ -102,7 +122,10 @@ class _LodgingCalendarScreenState extends State<LodgingCalendarScreen> {
                   const SizedBox(height: 8),
                   Expanded(
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8.0,
+                        vertical: 8.0,
+                      ),
                       child: Center(
                         child: ConstrainedBox(
                           constraints: const BoxConstraints(maxWidth: 420),
@@ -112,7 +135,9 @@ class _LodgingCalendarScreenState extends State<LodgingCalendarScreen> {
                             allowedEnd: maxSelectableDate,
                             initialStartDate: _selectedStartDate,
                             initialEndDate: _selectedEndDate,
-                            reservations: lodgingProvider.occupiedReservations.where((r) => r['area'] == selectedClinic.name).toList(),
+                            reservations: lodgingProvider.occupiedReservations
+                                .where((r) => r['area'] == selectedClinic.name)
+                                .toList(),
                             onDateRangeSelected: (start, end) {
                               setState(() {
                                 _selectedStartDate = start;
@@ -139,54 +164,37 @@ class _LodgingCalendarScreenState extends State<LodgingCalendarScreen> {
                     selectedStartDate: _selectedStartDate,
                     selectedEndDate: _selectedEndDate,
                     onReserve: () {
-                      if (_selectedStartDate != null && _selectedEndDate != null) {
-                        final selectedClinic = lodgingProvider.selectedClinic;
+                      if (_selectedStartDate != null &&
+                          _selectedEndDate != null) {
+                        final selectedClinic = context
+                            .read<LodgingProvider>()
+                            .selectedClinic;
 
                         if (selectedClinic == null) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('No hay clínica seleccionada')),
+                            const SnackBar(
+                              content: Text('No hay clínica seleccionada'),
+                            ),
                           );
                           return;
                         }
 
-                        final now = DateTime.now();
-                        final reservation = AgendaModel(
-                          id: DateTime.now().millisecondsSinceEpoch, 
-                          studentId: 1,
-                          occupantName: 'Estudiante', 
-                          occupantMobile: '000000000', 
-                          occupantKind: 'Interno',
-                          reservationDate: "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}",
-                          reservationInit: "${_selectedStartDate!.hour.toString().padLeft(2, '0')}:${_selectedStartDate!.minute.toString().padLeft(2, '0')}",
-                          reservationFin: "${_selectedEndDate!.hour.toString().padLeft(2, '0')}:${_selectedEndDate!.minute.toString().padLeft(2, '0')}",
-                          clinicalName: selectedClinic.name,
-                          homeId: selectedClinic.id,
-                          state: EstadoAgenda.pendiente // o el estado que corresponda
+                        context.push(
+                          "/lodging/detail/${selectedClinic.id}",
+                          extra: {
+                            'startDate': _selectedStartDate,
+                            'endDate': _selectedEndDate,
+                            'clinic': selectedClinic,
+                            'isConfirmFlow': true,
+                          },
                         );
-
-                        lodgingProvider.addReservation(reservation);
-
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: SingleChildScrollView(
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text('Reserva confirmada'),
-                                  Text('Clínica: ${selectedClinic.name}'),
-                                  Text('Desde: ${formatDate(_selectedStartDate!)}'),
-                                  Text('Hasta: ${formatDate(_selectedEndDate!)}'),
-                                ],
-                              ),
-                            ),
-                          ),
-                        );
-
-                        context.go('/lodging');
                       } else {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Por favor, selecciona fechas para reservar')),
+                          const SnackBar(
+                            content: Text(
+                              'Por favor selecciona fechas para continuar',
+                            ),
+                          ),
                         );
                       }
                     },
@@ -264,23 +272,29 @@ class ReservationButtonWidget extends StatelessWidget {
                 width: buttonWidth.clamp(86.0, 160.0),
                 height: 40,
                 child: ElevatedButton(
-                  onPressed: selectedStartDate != null && selectedEndDate != null ? onReserve : null,
+                  onPressed:
+                      selectedStartDate != null && selectedEndDate != null
+                      ? onReserve
+                      : null,
                   style: ElevatedButton.styleFrom(
                     minimumSize: Size(buttonWidth, 40),
                     padding: const EdgeInsets.symmetric(horizontal: 14),
-                    backgroundColor: selectedStartDate != null && selectedEndDate != null ? AppThemes.primary_600 : theme.colorScheme.onSurface.withValues(alpha: 0.12),
-                    foregroundColor: selectedStartDate != null && selectedEndDate != null ? Colors.white : theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                    backgroundColor:
+                        selectedStartDate != null && selectedEndDate != null
+                        ? AppThemes.primary_600
+                        : theme.colorScheme.onSurface.withValues(alpha: 0.12),
+                    foregroundColor:
+                        selectedStartDate != null && selectedEndDate != null
+                        ? Colors.white
+                        : theme.colorScheme.onSurface.withValues(alpha: 0.6),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
                     elevation: 0,
                   ),
                   child: const Text(
-                    'Reservar',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 13,
-                    ),
+                    'Consultar Alojamiento',
+                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
                   ),
                 ),
               ),

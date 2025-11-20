@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/adapters/core/driven/app_themes.dart';
 import 'package:mobile/adapters/core/drivers/ui/widgets/status_widget.dart';
-import 'package:mobile/adapters/lodging/driven/providers/lodging_provider.dart';
-import 'package:provider/provider.dart';
 import 'package:mobile/domain/models/lodging/agenda_model.dart';
+import 'package:go_router/go_router.dart';
 
 class ReservationCard extends StatefulWidget {
   final AgendaModel reservation;
@@ -15,33 +14,41 @@ class ReservationCard extends StatefulWidget {
 
 class _ReservationCardState extends State<ReservationCard> {
   bool expanded = false;
-  Map<String, String>? clinicInfo;
 
-  @override
-  void initState() {
-    super.initState();
-    _loadClinicInfo();
-  }
-
-  Future<void> _loadClinicInfo() async {
-    final lodgingProvider = Provider.of<LodgingProvider>(context, listen: false);
-    clinicInfo = await lodgingProvider.getClinicInfoByName(widget.reservation.clinicalName);
-    if (mounted) setState(() {});
-  }
-
-  String _formatDateFull(String dateStr) {
+  /// Formatea solo la **fecha de reserva** (YYYY-MM-DD) a algo más legible.
+  String _formatReservationDate(String dateStr) {
     try {
       final date = DateTime.parse(dateStr);
-      const weekdays = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+      const weekdays = [
+        'Lunes',
+        'Martes',
+        'Miércoles',
+        'Jueves',
+        'Viernes',
+        'Sábado',
+        'Domingo',
+      ];
       const months = [
-        'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-        'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+        'Enero',
+        'Febrero',
+        'Marzo',
+        'Abril',
+        'Mayo',
+        'Junio',
+        'Julio',
+        'Agosto',
+        'Septiembre',
+        'Octubre',
+        'Noviembre',
+        'Diciembre',
       ];
       final weekday = weekdays[date.weekday - 1];
       final day = date.day;
       final month = months[date.month - 1];
-      return "$weekday $day de $month";
-    } catch (e) {
+      final year = date.year;
+      return "$weekday $day de $month $year";
+    } catch (_) {
+      // Si viniera algo raro, mostramos el string tal cual
       return dateStr;
     }
   }
@@ -50,69 +57,59 @@ class _ReservationCardState extends State<ReservationCard> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final text = Theme.of(context).textTheme;
-    final city = clinicInfo?['city'] ?? 'No disponible...';
-    final commune = clinicInfo?['commune'] ?? 'No disponible...';
 
     return GestureDetector(
-      onTap: () {
-        setState(() {
-          expanded = !expanded;
-        });
-      },
+      onTap: () => setState(() => expanded = !expanded),
       child: Card(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         elevation: 0,
         margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 16),
         child: Container(
           decoration: BoxDecoration(
-            border: Border.all(color: AppThemes.black_500.withValues(alpha: 0.4)),
+            border: Border.all(
+              color: AppThemes.black_500.withValues(alpha: 0.4),
+            ),
             borderRadius: BorderRadius.circular(12),
           ),
           padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // HEADER: icono + nombre + estado + fecha de reserva
               Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(
-                    Icons.home_outlined,
-                    size: 32,
-                    color: cs.primary,
-                  ),
+                  Icon(Icons.home_outlined, size: 32, color: cs.primary),
                   const SizedBox(width: 16),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          widget.reservation.clinicalName, 
-                          style: text.bodyLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-
-                        Text(
-                          city,
-                          style: text.bodyMedium?.copyWith(
-                            color: text.bodyMedium?.color?.withValues(alpha: 0.8),
-                          ),
-                        ),
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            Text(
-                              commune,
-                              style: text.bodyMedium?.copyWith(
-                                color: text.bodyMedium?.color?.withValues(alpha: 0.8),
+                            Expanded(
+                              child: Text(
+                                widget.reservation.clinicalName,
+                                style: text.bodyLarge?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
                               ),
                             ),
                             StatusWidget(estado: widget.reservation.state.name),
                           ],
-                        )
-
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          // aquí seteamos/ formateamos la fecha
+                          "Reserva: ${_formatReservationDate(widget.reservation.reservationDate)}",
+                          style: text.bodySmall?.copyWith(
+                            color: text.bodySmall?.color?.withValues(
+                              alpha: 0.8,
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -121,6 +118,7 @@ class _ReservationCardState extends State<ReservationCard> {
 
               if (expanded) ...[
                 const Divider(height: 24, thickness: 1),
+
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
@@ -129,12 +127,13 @@ class _ReservationCardState extends State<ReservationCard> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            "Entrada: ${_formatDateFull(widget.reservation.reservationInit)}",
+                            // horas tal cual, sin parsear
+                            "Entrada: ${widget.reservation.reservationInit}",
                             style: text.bodyMedium,
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            "Salida: ${_formatDateFull(widget.reservation.reservationFin)}",
+                            "Salida: ${widget.reservation.reservationFin}",
                             style: text.bodyMedium,
                           ),
                           const SizedBox(height: 4),
@@ -145,19 +144,20 @@ class _ReservationCardState extends State<ReservationCard> {
                         ],
                       ),
                     ),
-                    const SizedBox(width: 8),
                     FilledButton(
                       style: FilledButton.styleFrom(
                         backgroundColor: cs.primary,
                         foregroundColor: cs.onPrimary,
-                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
                       ),
                       onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('No implementada.')),
+                        context.go(
+                          '/lodging/detail/${widget.reservation.homeId}',
                         );
                       },
+
                       child: const Text("Ver"),
                     ),
                   ],
