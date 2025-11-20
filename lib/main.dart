@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
+import 'package:mobile/adapters/credentials/drivers/providers/credential_provider.dart';
+import 'package:mobile/adapters/lodging/drivers/providers/lodging_provider.dart';
+import 'package:mobile/adapters/transport/driven/providers/transport_reservations_provider.dart';
+import 'package:mobile/ports/credentials/driven/for_persisting_request.dart';
+import 'package:mobile/ports/lodging/driven/for_querying_lodging.dart';
 import 'package:provider/provider.dart';
 import 'package:mobile/adapters/core/driven/app_routes.dart';
 import 'package:mobile/adapters/core/driven/app_themes.dart';
 import 'package:mobile/ports/auth/drivers/for_authenticating_user.dart';
 import 'package:mobile/service_locator.dart';
-import 'package:mobile/adapters/lodging/driven/providers/lodging_provider.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mobile/adapters/transport/driven/providers/transport_reservations_provider.dart';
@@ -49,8 +53,10 @@ class MyApp extends StatelessWidget {
             repo: serviceLocator<ForQueryingTransport>(),
           ),
         ),
+        ChangeNotifierProvider(create: (_) => CredentialProvider(serviceLocator<ForPersistingRequest>())),
+        // Inicializamos el proveedor vacío, sin datos aún
         ChangeNotifierProvider(
-          create: (_) => LodgingProvider()..fetchReservations(),
+          create: (_) => LodgingProvider(serviceLocator<ForQueryingLodging>()),
         ),
       ],
       child: MaterialApp.router(

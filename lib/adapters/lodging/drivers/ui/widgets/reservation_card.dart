@@ -63,7 +63,7 @@ class _ReservationCardState extends State<ReservationCard> {
       child: Card(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         elevation: 0,
-        margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 16),
+        margin: const EdgeInsets.symmetric(vertical: 6),
         child: Container(
           decoration: BoxDecoration(
             border: Border.all(

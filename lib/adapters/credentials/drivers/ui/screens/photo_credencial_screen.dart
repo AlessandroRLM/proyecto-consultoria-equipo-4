@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mobile/adapters/credentials/drivers/ui/widgets/widgets_credentials.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mobile/ports/credentials/driven/for_persisting_request.dart';
+import 'package:mobile/service_locator.dart';
 
 class PhotoCredencialScreen extends StatefulWidget {
   final bool fromCamera;

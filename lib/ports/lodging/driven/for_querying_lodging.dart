@@ -7,6 +7,9 @@ abstract class ForQueryingLodging {
   /// Agendas (reservas) del estudiante actual.
   Future<List<AgendaModel>> getStudentAgendas();
 
+  /// Ocupaciones de las residencias para el calendario.
+  Future<List<Map<String, dynamic>>> getOccupiedReservationsForCalendar();
+
   /// Todas las residencias disponibles.
   Future<List<ResidenciaModel>> getResidences();
 

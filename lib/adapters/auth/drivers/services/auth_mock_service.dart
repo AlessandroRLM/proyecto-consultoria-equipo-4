@@ -10,7 +10,7 @@ class AuthMockService implements ForAuthenticatingUser {
   // Lista inmutable para un mock más seguro.
   static const List<UserModel> _users = [
     UserModel(
-      id: 'u001',
+      id: '1',
       email: 'test@test.com',
       password: '123456',
       name: 'Juan Perez',
@@ -20,7 +20,7 @@ class AuthMockService implements ForAuthenticatingUser {
       servicesId: 3,
     ),
     UserModel(
-      id: 'u002',
+      id: '2',
       email: 'user1@user1.com',
       password: '123456',
       name: 'Benjamín Soto',
@@ -30,7 +30,7 @@ class AuthMockService implements ForAuthenticatingUser {
       servicesId: 0,
     ),
     UserModel(
-      id: 'u003',
+      id: '3',
       email: 'user2@user2.com',
       password: '123456',
       name: 'Carla Méndez',
@@ -40,7 +40,7 @@ class AuthMockService implements ForAuthenticatingUser {
       servicesId: 1,
     ),
     UserModel(
-      id: 'u004',
+      id: '4',
       email: 'user3@user3.com',
       password: '123456',
       name: 'Diego Rivas',
