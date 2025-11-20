@@ -5,12 +5,12 @@ import 'package:mobile/adapters/core/driven/app_themes.dart';
 import 'package:mobile/adapters/core/drivers/ui/widgets/map_search_bar.dart';
 import 'package:mobile/adapters/core/drivers/ui/widgets/map_results_list.dart';
 import 'package:mobile/adapters/core/drivers/ui/widgets/map_control_buttons.dart';
-import 'package:mobile/adapters/lodging/driven/providers/lodging_provider.dart';
 import 'package:mobile/domain/core/campus.dart';
 import 'package:mobile/ports/core/driven/for_querying_campus.dart';
 import 'package:mobile/ports/core/driven/for_managing_map.dart';
 import 'package:mobile/ports/core/driven/for_managing_location.dart';
 import 'package:mobile/ports/core/drivers/for_interacting_map.dart';
+import 'package:mobile/ports/lodging/drivers/for_reserving_lodging.dart';
 import 'package:mobile/service_locator.dart';
 import 'package:provider/provider.dart';
 import 'package:mobile/adapters/transport/driven/providers/transport_reservations_provider.dart';
@@ -379,11 +379,8 @@ class _ClinicMapScreenState extends State<ClinicMapScreen>
         }
       } else if (widget.origin == '2') {
         // Flujo de alojamiento
-        final lodgingProvider = Provider.of<LodgingProvider>(
-          context,
-          listen: false,
-        );
-        lodgingProvider.selectClinic(campus);
+        final lodgingReservationService = serviceLocator<ForReservingLodging>();
+        lodgingReservationService.campus = campus; // Guarda la clínica seleccionada
         
         if (mounted) {
           context.go('/lodging/calendar');

@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/adapters/lodging/drivers/ui/widgets/lodging_week_calendar.dart';
-import 'package:mobile/domain/models/lodging/estado_agenda.dart';
-import 'package:provider/provider.dart';
-import 'package:mobile/adapters/lodging/driven/providers/lodging_provider.dart';
+import 'package:mobile/ports/lodging/driven/for_querying_lodging.dart';
+import 'package:mobile/ports/lodging/drivers/for_reserving_lodging.dart';
+import 'package:mobile/service_locator.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile/adapters/core/driven/app_themes.dart';
-import 'package:mobile/domain/models/lodging/agenda_model.dart';
 
 class LodgingCalendarScreen extends StatefulWidget {
   const LodgingCalendarScreen({super.key});
@@ -15,6 +14,9 @@ class LodgingCalendarScreen extends StatefulWidget {
 }
 
 class _LodgingCalendarScreenState extends State<LodgingCalendarScreen> {
+  final ForReservingLodging _lodgingReserveService = serviceLocator<ForReservingLodging>();
+  final ForQueryingLodging _lodgingQueryService = serviceLocator<ForQueryingLodging>();
+
   DateTime? _selectedStartDate;
   DateTime? _selectedEndDate;
 
@@ -57,22 +59,15 @@ class _LodgingCalendarScreenState extends State<LodgingCalendarScreen> {
     final maxSelectableDate = minSelectableDate.add(const Duration(days: 365));
 
     final theme = Theme.of(context);
-    final lodgingProvider = Provider.of<LodgingProvider>(
-      context,
-      listen: false,
-    );
-    final selectedClinic = Provider.of<LodgingProvider>(context).selectedClinic;
-    if (selectedClinic == null) {
+    final campus = _lodgingReserveService.campus;
+    if (campus == null) {
       return Scaffold(
         body: Center(child: Text('No se ha seleccionado ninguna clínica')),
       );
     }
 
     return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        title: const SizedBox.shrink(),
-      ),
+      
       body: SafeArea(
         child: GestureDetector(
           onTap: () {
@@ -131,22 +126,23 @@ class _LodgingCalendarScreenState extends State<LodgingCalendarScreen> {
                       child: Center(
                         child: ConstrainedBox(
                           constraints: const BoxConstraints(maxWidth: 420),
-                          child: LodgingWeekCalendar(
+                          child: FutureBuilder(
+                            future: _lodgingQueryService.getOccupiedReservationsForCalendar(),
+                            builder: (context, snapshot) => LodgingWeekCalendar(
                             focusedWeekStart: minSelectableDate,
                             allowedStart: minSelectableDate,
                             allowedEnd: maxSelectableDate,
                             initialStartDate: _selectedStartDate,
                             initialEndDate: _selectedEndDate,
-                            reservations: lodgingProvider.occupiedReservations
-                                .where((r) => r['area'] == selectedClinic.name)
-                                .toList(),
+                            reservations: snapshot.data?.where((r) => r['area'] == campus.name)
+                                .toList() ?? [],
                             onDateRangeSelected: (start, end) {
                               setState(() {
                                 _selectedStartDate = start;
                                 _selectedEndDate = end;
                               });
                             },
-                          ),
+                          )),
                         ),
                       ),
                     ),
@@ -162,17 +158,15 @@ class _LodgingCalendarScreenState extends State<LodgingCalendarScreen> {
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16.0),
                   child: ReservationButtonWidget(
-                    selectedLocation: selectedClinic.name,
+                    selectedLocation: campus.name,
                     selectedStartDate: _selectedStartDate,
                     selectedEndDate: _selectedEndDate,
                     onReserve: () {
                       if (_selectedStartDate != null &&
                           _selectedEndDate != null) {
-                        final selectedClinic = context
-                            .read<LodgingProvider>()
-                            .selectedClinic;
+                        final campus = _lodgingReserveService.campus;
 
-                        if (selectedClinic == null) {
+                        if (campus == null) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
                               content: Text('No hay clínica seleccionada'),
@@ -181,12 +175,13 @@ class _LodgingCalendarScreenState extends State<LodgingCalendarScreen> {
                           return;
                         }
 
+                        _lodgingReserveService.initDate = _selectedStartDate!;
+                        _lodgingReserveService.endDate = _selectedEndDate!;
+
                         context.push(
-                          "/lodging/detail/${selectedClinic.id}",
+                          "/lodging/detail/${campus.id}",
                           extra: {
-                            'startDate': _selectedStartDate,
-                            'endDate': _selectedEndDate,
-                            'clinic': selectedClinic,
+                            'clinic': campus,
                             'isConfirmFlow': true,
                           },
                         );

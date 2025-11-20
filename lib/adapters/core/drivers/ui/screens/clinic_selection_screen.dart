@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile/adapters/core/driven/app_themes.dart';
-import 'package:mobile/adapters/lodging/driven/providers/lodging_provider.dart';
 import 'package:mobile/adapters/transport/driven/providers/transport_reservations_provider.dart';
 
 import 'package:mobile/domain/core/campus.dart';
 import 'package:mobile/ports/core/driven/for_querying_campus.dart';
+import 'package:mobile/ports/lodging/drivers/for_reserving_lodging.dart';
 import 'package:mobile/service_locator.dart';
 import 'package:provider/provider.dart';
 
@@ -51,10 +51,7 @@ class _ClinicSelectionScreenState extends State<ClinicSelectionScreen> {
     final text = Theme.of(context).textTheme;
 
     return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        title: const SizedBox.shrink(),
-      ),
+      
       body: SafeArea(
         child: Column(
           children: [
@@ -125,8 +122,8 @@ class _ClinicSelectionScreenState extends State<ClinicSelectionScreen> {
                             };
                             await context.push('/transport/time-selection', extra: {'isOutbound': true});
                           } else {
-                            final lodgingProvider = Provider.of<LodgingProvider>(context, listen: false);
-                            lodgingProvider.selectClinic(clinic); // Guarda la clínica seleccionada
+                            final lodgingReservationService = serviceLocator<ForReservingLodging>();
+                            lodgingReservationService.campus = clinic; // Guarda la clínica seleccionada
 
                             context.go('/lodging/calendar'); // Navega al calendario sin pasar extra
                           }

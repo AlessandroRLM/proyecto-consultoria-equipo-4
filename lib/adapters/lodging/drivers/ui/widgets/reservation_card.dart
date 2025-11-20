@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:mobile/adapters/core/driven/app_themes.dart';
 import 'package:mobile/adapters/core/drivers/ui/widgets/status_widget.dart';
 import 'package:mobile/domain/models/lodging/agenda_model.dart';
-import 'package:mobile/adapters/lodging/drivers/ui/screens/detail_lodging_screen.dart';
 import 'package:go_router/go_router.dart';
 
 class ReservationCard extends StatefulWidget {
@@ -64,7 +63,7 @@ class _ReservationCardState extends State<ReservationCard> {
       child: Card(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         elevation: 0,
-        margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 16),
+        margin: const EdgeInsets.symmetric(vertical: 6),
         child: Container(
           decoration: BoxDecoration(
             border: Border.all(
