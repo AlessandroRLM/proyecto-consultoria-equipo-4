@@ -51,10 +51,7 @@ class _ClinicSelectionScreenState extends State<ClinicSelectionScreen> {
     final text = Theme.of(context).textTheme;
 
     return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        title: const SizedBox.shrink(),
-      ),
+      
       body: SafeArea(
         child: Column(
           children: [

@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
+import 'package:mobile/adapters/credentials/drivers/providers/credential_provider.dart';
+import 'package:mobile/adapters/lodging/drivers/providers/lodging_provider.dart';
 import 'package:mobile/adapters/transport/driven/providers/transport_reservations_provider.dart';
+import 'package:mobile/ports/credentials/driven/for_persisting_request.dart';
+import 'package:mobile/ports/lodging/driven/for_querying_lodging.dart';
 import 'package:provider/provider.dart';
 import 'package:mobile/adapters/core/driven/app_routes.dart';
 import 'package:mobile/adapters/core/driven/app_themes.dart';
@@ -41,8 +45,12 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        ChangeNotifierProvider(create: (_) => CredentialProvider(serviceLocator<ForPersistingRequest>())),
         // Inicializamos el proveedor vacío, sin datos aún
         ChangeNotifierProvider(create: (_) => TransportReservationsProvider()),
+        ChangeNotifierProvider(
+          create: (_) => LodgingProvider(serviceLocator<ForQueryingLodging>()),
+        ),
       ],
       child: MaterialApp.router(
         title: 'ServicesApp',

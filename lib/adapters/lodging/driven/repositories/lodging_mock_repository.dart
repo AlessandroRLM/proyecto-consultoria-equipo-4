@@ -42,7 +42,7 @@ class LodgingMockRepository
             : 1,
         studentId: int.parse(authService.currentUser?.id ?? '0'),
         occupantName: authService.currentUser?.name ?? '',
-        reservationDate: DateFormat('dd-MM-yyyy').format(initDate),
+        reservationDate: DateFormat('yyyy-MM-dd').format(initDate),
         clinicalName: campus.name,
         occupantMobile: '+5691111111',
         occupantKind: 'intern',
@@ -61,7 +61,7 @@ class LodgingMockRepository
             : 1,
         studentId: int.parse(authService.currentUser?.id ?? '0'),
         occupantName: authService.currentUser?.name ?? '',
-        reservationDate: DateFormat('dd-MM-yyyy').format(endDate),
+        reservationDate: DateFormat('yyyy-MM-dd').format(endDate),
         clinicalName: campus.name,
         occupantMobile: '+5691111111',
         occupantKind: 'intern',
@@ -81,13 +81,13 @@ class LodgingMockRepository
 
   @override
   Future<List<AgendaModel>> getStudentAgendas() async {
-    // Lógica para obtener las reservas desde el Mock JSON (datos iniciales)
+    // Reservas iniciales del JSON
     final rawFromDs = await _ds.getStudentSchedulesRaw();
     final initialReservations = rawFromDs
         .map((j) => AgendaModel.fromJson(j))
         .toList();
 
-    // Lógica para obtener las reservas guardadas por el usuario (persistencia mock)
+    // Reservas creadas por el usuario
     final prefs = await SharedPreferences.getInstance();
     final userReservationsJson = prefs.getString(_reservationsKey);
     final List<AgendaModel> userReservations = [];
@@ -101,8 +101,13 @@ class LodgingMockRepository
       );
     }
 
-    // Combinar las reservas iniciales con las creadas por el usuario en el mock
-    return initialReservations..addAll(userReservations);
+    // Se agregarán las que no estén en initialReservations
+    final initialIds = initialReservations.map((r) => r.id).toSet();
+    final newUserReservations = userReservations
+        .where((r) => !initialIds.contains(r.id))
+        .toList();
+
+    return [...initialReservations, ...newUserReservations];
   }
 
   /// Todas las residencias disponibles.
@@ -158,24 +163,26 @@ class LodgingMockRepository
   }
 
   @override
-  Future<List<Map<String, dynamic>>> getOccupiedReservationsForCalendar() async {
+  Future<List<Map<String, dynamic>>>
+  getOccupiedReservationsForCalendar() async {
     final List<Map<String, dynamic>> occupiedReservations = [];
-    
+
     // Cargar todas las reservas del mock JSON
     final allSchedules = await _ds.getSchedulesRaw();
-    
+
     for (final it in allSchedules) {
-      final clinicalName = (it['clinical_name'] as String?)?.trim()?? 'Clínico';
+      final clinicalName =
+          (it['clinical_name'] as String?)?.trim() ?? 'Clínico';
       final String reservationInit = it['reservation_init'] as String;
       final String reservationFin = it['reservation_fin'] as String;
-      
+
       occupiedReservations.add({
         'area': clinicalName,
         'reservationInit': reservationInit,
         'reservationFin': reservationFin,
       });
     }
-    
+
     return occupiedReservations;
   }
 }

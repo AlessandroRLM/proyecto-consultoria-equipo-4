@@ -67,10 +67,7 @@ class _LodgingCalendarScreenState extends State<LodgingCalendarScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        title: const SizedBox.shrink(),
-      ),
+      
       body: SafeArea(
         child: GestureDetector(
           onTap: () {

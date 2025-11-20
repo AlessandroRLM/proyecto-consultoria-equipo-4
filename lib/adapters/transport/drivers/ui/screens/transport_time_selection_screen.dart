@@ -308,10 +308,7 @@ class _TransportTimeSelectionScreenState extends State<TransportTimeSelectionScr
     final timeLabel = _isOutbound ? 'ida' : 'vuelta';
 
     return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        title: const SizedBox.shrink(),
-      ),
+      
       body: SafeArea(
         child: Column(
           children: [

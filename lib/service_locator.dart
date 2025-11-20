@@ -1,6 +1,7 @@
 import 'package:get_it/get_it.dart';
 import 'package:mobile/adapters/auth/driven/services/shared_preference_auth_data_storage.dart';
 import 'package:mobile/adapters/auth/drivers/services/auth_mock_service.dart';
+import 'package:mobile/adapters/credentials/driven/credential_request_persistance_mock_service.dart';
 import 'package:mobile/adapters/lodging/driven/repositories/lodging_mock_repository.dart';
 import 'package:mobile/adapters/lodging/drivers/services/lodging_reserve_service.dart';
 import 'package:mobile/ports/auth/drivers/for_authenticating_user.dart';
@@ -10,6 +11,7 @@ import 'package:mobile/adapters/core/driven/services/mapbox_service.dart';
 import 'package:mobile/ports/core/driven/for_managing_location.dart';
 import 'package:mobile/ports/core/driven/for_querying_campus.dart';
 import 'package:mobile/ports/core/driven/for_managing_map.dart';
+import 'package:mobile/ports/credentials/driven/for_persisting_request.dart';
 import 'package:mobile/ports/lodging/driven/for_persisting_reservations.dart';
 import 'package:mobile/ports/lodging/driven/for_querying_lodging.dart';
 import 'package:mobile/ports/lodging/drivers/for_reserving_lodging.dart';
@@ -34,6 +36,11 @@ void setupServiceLocator() {
     () => MapboxMapService(
       locationService: serviceLocator<ForManagingLocation>()
     )
+  );
+
+  // Servicio de credenciales
+  serviceLocator.registerLazySingleton<ForPersistingRequest>(
+    () => CredentialRequestPersistanceMockService(),
   );
 
   // Servicio de lodging
