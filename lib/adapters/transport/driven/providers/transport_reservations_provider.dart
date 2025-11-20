@@ -9,9 +9,14 @@ import 'package:mobile/ports/transport/drivers/for_transport_interactions.dart';
 
 class TransportReservationsProvider extends ChangeNotifier
     implements ForTransportInteractions {
-  TransportReservationsProvider({required this.repo});
+  TransportReservationsProvider({required ForQueryingTransport repo}) {
+    _interactor = _TransportReservationsInteractor(
+      repo: repo,
+      interactions: this,
+    );
+  }
 
-  final ForQueryingTransport repo;
+  late final _TransportReservationsInteractor _interactor;
 
   final TransportReservationStore _reservationStore =
       TransportReservationStore();
@@ -75,28 +80,22 @@ class TransportReservationsProvider extends ChangeNotifier
   Future<void> requestOutboundReservation({
     required TransportServiceModel service,
     required DateTime date,
-  }) async {
-    final agenda = await _createRemoteReservation(
-      serviceId: service.id,
+  }) {
+    return _interactor.requestOutboundReservation(
+      service: service,
       date: date,
     );
-    if (agenda != null) {
-      onReservationConfirmed(agenda);
-    }
   }
 
   @override
   Future<void> requestReturnReservation({
     required TransportServiceModel service,
     required DateTime date,
-  }) async {
-    final agenda = await _createRemoteReservation(
-      serviceId: service.id,
+  }) {
+    return _interactor.requestReturnReservation(
+      service: service,
       date: date,
     );
-    if (agenda != null) {
-      onReservationConfirmed(agenda);
-    }
   }
 
   @override
@@ -105,33 +104,18 @@ class TransportReservationsProvider extends ChangeNotifier
     required TransportServiceModel returnService,
     required DateTime outboundDate,
     required DateTime returnDate,
-  }) async {
-    final outboundAgenda = await _createRemoteReservation(
-      serviceId: outboundService.id,
-      date: outboundDate,
+  }) {
+    return _interactor.requestRoundTripReservation(
+      outboundService: outboundService,
+      returnService: returnService,
+      outboundDate: outboundDate,
+      returnDate: returnDate,
     );
-    if (outboundAgenda == null) {
-      return;
-    }
-    onReservationConfirmed(outboundAgenda);
-
-    final returnAgenda = await _createRemoteReservation(
-      serviceId: returnService.id,
-      date: returnDate,
-    );
-    if (returnAgenda != null) {
-      onReservationConfirmed(returnAgenda);
-    }
   }
 
   @override
-  Future<void> requestReservationCancellation(int agendaId) async {
-    try {
-      await repo.cancelReservation(agendaId);
-      onReservationCancelled(agendaId);
-    } catch (error, stack) {
-      onTransportError(error, stack);
-    }
+  Future<void> requestReservationCancellation(int agendaId) {
+    return _interactor.requestReservationCancellation(agendaId);
   }
 
   List<Map<String, dynamic>> get reservations =>
@@ -152,22 +136,12 @@ class TransportReservationsProvider extends ChangeNotifier
     return DateFormat('EEE dd/MM', 'es_ES').format(candidate);
   }
 
-  Future<void> loadStudentAgenda(TransportAgendaQuery query) async {
-    try {
-      final agenda = await repo.getStudentAgenda(query);
-      onAgendaLoaded(agenda);
-    } catch (error, stack) {
-      onTransportError(error, stack);
-    }
+  Future<void> loadStudentAgenda(TransportAgendaQuery query) {
+    return _interactor.loadStudentAgenda(query);
   }
 
-  Future<void> loadServices(TransportServiceQuery query) async {
-    try {
-      final services = await repo.getServices(query);
-      onServicesLoaded(services);
-    } catch (error, stack) {
-      onTransportError(error, stack);
-    }
+  Future<void> loadServices(TransportServiceQuery query) {
+    return _interactor.loadServices(query);
   }
 
   Future<void> createReservationForService({
@@ -368,11 +342,17 @@ class TransportReservationsProvider extends ChangeNotifier
   }
 
   bool hasOutboundOnDate(String date) {
-    return _reservationStore.hasOutboundOnDate(date);
+    return _reservationStore.hasOutboundOnDate(
+      date,
+      location: _selection.location,
+    );
   }
 
   bool hasReturnOnDate(String date) {
-    return _reservationStore.hasReturnOnDate(date);
+    return _reservationStore.hasReturnOnDate(
+      date,
+      location: _selection.location,
+    );
   }
 
   bool isOptionReserved(
@@ -385,6 +365,7 @@ class TransportReservationsProvider extends ChangeNotifier
       date: date,
       formattedTime: formattedTime,
       isOutbound: isOutbound,
+      location: _selection.location,
     );
   }
 
@@ -421,6 +402,7 @@ class TransportReservationsProvider extends ChangeNotifier
         date: date,
         formattedTime: formatted,
         isOutbound: isOutbound,
+        location: _selection.location,
       );
       if (!result) {
         return false;
@@ -439,22 +421,6 @@ class TransportReservationsProvider extends ChangeNotifier
     await fetchReservations();
   }
 
-  Future<TransportAgendaModel?> _createRemoteReservation({
-    required int serviceId,
-    required DateTime date,
-  }) async {
-    try {
-      final agenda = await repo.createReservation(
-        serviceId: serviceId,
-        date: date,
-      );
-      return agenda;
-    } catch (error, stack) {
-      onTransportError(error, stack);
-      return null;
-    }
-  }
-
   void _syncReservationsFromAgenda({bool force = false}) {
     if (!force && _loadedAgenda.isEmpty) return;
     final mapped = _agendaMapper.mapAgendaToReservations(_loadedAgenda);
@@ -464,5 +430,99 @@ class TransportReservationsProvider extends ChangeNotifier
   Future<void> _persistAndNotify() async {
     await saveReservations();
     notifyListeners();
+  }
+}
+
+class _TransportReservationsInteractor {
+  _TransportReservationsInteractor({
+    required this.repo,
+    required this.interactions,
+  });
+
+  final ForQueryingTransport repo;
+  final ForTransportInteractions interactions;
+
+  Future<void> loadStudentAgenda(TransportAgendaQuery query) async {
+    try {
+      final agenda = await repo.getStudentAgenda(query);
+      interactions.onAgendaLoaded(agenda);
+    } catch (error, stack) {
+      interactions.onTransportError(error, stack);
+    }
+  }
+
+  Future<void> loadServices(TransportServiceQuery query) async {
+    try {
+      final services = await repo.getServices(query);
+      interactions.onServicesLoaded(services);
+    } catch (error, stack) {
+      interactions.onTransportError(error, stack);
+    }
+  }
+
+  Future<void> requestOutboundReservation({
+    required TransportServiceModel service,
+    required DateTime date,
+  }) {
+    return _createRemoteReservation(
+      serviceId: service.id,
+      date: date,
+    );
+  }
+
+  Future<void> requestReturnReservation({
+    required TransportServiceModel service,
+    required DateTime date,
+  }) {
+    return _createRemoteReservation(
+      serviceId: service.id,
+      date: date,
+    );
+  }
+
+  Future<void> requestRoundTripReservation({
+    required TransportServiceModel outboundService,
+    required TransportServiceModel returnService,
+    required DateTime outboundDate,
+    required DateTime returnDate,
+  }) async {
+    final outboundAgenda = await _createRemoteReservation(
+      serviceId: outboundService.id,
+      date: outboundDate,
+    );
+    if (outboundAgenda == null) {
+      return;
+    }
+
+    await _createRemoteReservation(
+      serviceId: returnService.id,
+      date: returnDate,
+    );
+  }
+
+  Future<void> requestReservationCancellation(int agendaId) async {
+    try {
+      await repo.cancelReservation(agendaId);
+      interactions.onReservationCancelled(agendaId);
+    } catch (error, stack) {
+      interactions.onTransportError(error, stack);
+    }
+  }
+
+  Future<TransportAgendaModel?> _createRemoteReservation({
+    required int serviceId,
+    required DateTime date,
+  }) async {
+    try {
+      final agenda = await repo.createReservation(
+        serviceId: serviceId,
+        date: date,
+      );
+      interactions.onReservationConfirmed(agenda);
+      return agenda;
+    } catch (error, stack) {
+      interactions.onTransportError(error, stack);
+      return null;
+    }
   }
 }

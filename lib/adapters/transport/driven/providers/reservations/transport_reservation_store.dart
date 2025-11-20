@@ -144,15 +144,35 @@ class TransportReservationStore {
     return futureRes;
   }
 
-  bool hasOutboundOnDate(String date) {
+  bool hasOutboundOnDate(
+    String date, {
+    Map<String, String>? location,
+  }) {
     return _reservations.any(
-      (r) => r['outbound'] != null && r['outbound']['date'] == date,
+      (r) =>
+          r['outbound'] != null &&
+          r['outbound']['date'] == date &&
+          _matchesLocation(
+            r['outbound'] as Map<String, dynamic>,
+            location,
+            isOutbound: true,
+          ),
     );
   }
 
-  bool hasReturnOnDate(String date) {
+  bool hasReturnOnDate(
+    String date, {
+    Map<String, String>? location,
+  }) {
     return _reservations.any(
-      (r) => r['return'] != null && r['return']['date'] == date,
+      (r) =>
+          r['return'] != null &&
+          r['return']['date'] == date &&
+          _matchesLocation(
+            r['return'] as Map<String, dynamic>,
+            location,
+            isOutbound: false,
+          ),
     );
   }
 
@@ -160,20 +180,31 @@ class TransportReservationStore {
     required String date,
     required String formattedTime,
     required bool isOutbound,
+    Map<String, String>? location,
   }) {
     if (isOutbound) {
       return _reservations.any(
         (r) =>
             r['outbound'] != null &&
             r['outbound']['date'] == date &&
-            r['outbound']['originTime'] == formattedTime,
+            r['outbound']['originTime'] == formattedTime &&
+            _matchesLocation(
+              r['outbound'] as Map<String, dynamic>,
+              location,
+              isOutbound: true,
+            ),
       );
     } else {
       return _reservations.any(
         (r) =>
             r['return'] != null &&
             r['return']['date'] == date &&
-            r['return']['originTime'] == formattedTime,
+            r['return']['originTime'] == formattedTime &&
+            _matchesLocation(
+              r['return'] as Map<String, dynamic>,
+              location,
+              isOutbound: false,
+            ),
       );
     }
   }
@@ -209,13 +240,19 @@ class TransportReservationStore {
     required String date,
     required String formattedTime,
     required bool isOutbound,
+    Map<String, String>? location,
   }) {
     for (int i = 0; i < _reservations.length; i++) {
       final res = _reservations[i];
       final leg = isOutbound ? res['outbound'] : res['return'];
       if (leg != null &&
           leg['date'] == date &&
-          leg['originTime'] == formattedTime) {
+          leg['originTime'] == formattedTime &&
+          _matchesLocation(
+            Map<String, dynamic>.from(leg),
+            location,
+            isOutbound: isOutbound,
+          )) {
         if (isOutbound) {
           res['outbound'] = null;
         } else {
@@ -229,6 +266,87 @@ class TransportReservationStore {
       }
     }
     return false;
+  }
+
+  bool _matchesLocation(
+    Map<String, dynamic> leg,
+    Map<String, String>? location, {
+    required bool isOutbound,
+  }) {
+    if (location == null || location.isEmpty) {
+      return true;
+    }
+    final targetKeys = _keysForLocation(location);
+    if (targetKeys.isEmpty) {
+      return true;
+    }
+    final legKeys = _keysForLeg(leg, isOutbound: isOutbound);
+    if (legKeys.isEmpty) {
+      return false;
+    }
+    return legKeys.any(targetKeys.contains);
+  }
+
+  Set<String> _keysForLocation(Map<String, String>? location) {
+    if (location == null) {
+      return const <String>{};
+    }
+    final keys = <String>{};
+    final campusId = _normalizeId(location['campus_id']);
+    if (campusId != null) {
+      keys.add('campus:$campusId');
+    }
+    final clinicalId = _normalizeId(location['clinical_id']);
+    if (clinicalId != null) {
+      keys.add('clinical:$clinicalId');
+    }
+    final nameKey = _nameKey(location['name']);
+    if (nameKey != null) {
+      keys.add(nameKey);
+    }
+    return keys;
+  }
+
+  Set<String> _keysForLeg(
+    Map<String, dynamic> leg, {
+    required bool isOutbound,
+  }) {
+    final keys = <String>{};
+    final storedKey = _normalizeId(leg['locationKey']?.toString());
+    if (storedKey != null) {
+      keys.add(storedKey);
+    }
+    final campusId = _normalizeId(leg['campusId']?.toString());
+    if (campusId != null) {
+      keys.add('campus:$campusId');
+    }
+    final clinicalId = _normalizeId(leg['clinicalId']?.toString());
+    if (clinicalId != null) {
+      keys.add('clinical:$clinicalId');
+    }
+    final nameSource =
+        isOutbound ? leg['destination'] as String? : leg['origin'] as String?;
+    final nameKey = _nameKey(nameSource);
+    if (nameKey != null) {
+      keys.add(nameKey);
+    }
+    return keys;
+  }
+
+  String? _normalizeId(String? value) {
+    final trimmed = value?.trim();
+    if (trimmed == null || trimmed.isEmpty) {
+      return null;
+    }
+    return trimmed;
+  }
+
+  String? _nameKey(String? value) {
+    final trimmed = value?.trim();
+    if (trimmed == null || trimmed.isEmpty) {
+      return null;
+    }
+    return 'name:${trimmed.toLowerCase()}';
   }
 
   DateTime? _getEarliestDate(Map<String, dynamic> reservation) {

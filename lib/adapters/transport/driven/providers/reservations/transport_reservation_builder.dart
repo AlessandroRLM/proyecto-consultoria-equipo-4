@@ -90,6 +90,7 @@ class TransportReservationBuilder {
       time: time,
       details: details,
       service: service,
+      location: location,
     );
   }
 
@@ -112,6 +113,7 @@ class TransportReservationBuilder {
       time: time,
       details: 'Campus Universidad a Campo Clinico (IDA)',
       service: service,
+      location: location,
     );
   }
 
@@ -132,6 +134,7 @@ class TransportReservationBuilder {
       time: time,
       details: 'Campo Clinico a Campus Universidad (REGRESO)',
       service: service,
+      location: location,
     );
   }
 
@@ -144,7 +147,11 @@ class TransportReservationBuilder {
     required String time,
     required String details,
     String? service,
+    Map<String, String>? location,
   }) {
+    final campusId = _normalizeId(location?['campus_id']);
+    final clinicalId = _normalizeId(location?['clinical_id']);
+    final locationKey = _deriveLocationKey(location);
     return {
       'type': 'transport',
       'date': date,
@@ -157,6 +164,9 @@ class TransportReservationBuilder {
       'details': details,
       'highlighted': true,
       'status': TransportReservationStatus.pendiente.displayName,
+      if (campusId != null) 'campusId': campusId,
+      if (clinicalId != null) 'clinicalId': clinicalId,
+      if (locationKey != null) 'locationKey': locationKey,
     };
   }
 
@@ -177,5 +187,29 @@ class TransportReservationBuilder {
   String _formatTime(String time) {
     final parsed = _timeUtils.parseTime(time);
     return _timeUtils.formatTime(parsed);
+  }
+
+  String? _normalizeId(String? value) {
+    final trimmed = value?.trim();
+    if (trimmed == null || trimmed.isEmpty) {
+      return null;
+    }
+    return trimmed;
+  }
+
+  String? _deriveLocationKey(Map<String, String>? location) {
+    final campus = _normalizeId(location?['campus_id']);
+    if (campus != null) {
+      return 'campus:$campus';
+    }
+    final clinical = _normalizeId(location?['clinical_id']);
+    if (clinical != null) {
+      return 'clinical:$clinical';
+    }
+    final name = location?['name']?.trim().toLowerCase();
+    if (name != null && name.isNotEmpty) {
+      return 'name:$name';
+    }
+    return null;
   }
 }

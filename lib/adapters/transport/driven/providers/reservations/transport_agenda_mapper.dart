@@ -38,6 +38,7 @@ class TransportAgendaMapper {
     final destination = isOutbound ? agenda.clinicalField : agenda.sede;
     final detailTrip = isOutbound ? 'ida' : 'regreso';
     final dateStr = DateFormat('yyyy-MM-dd').format(agenda.date);
+    final locationKey = _nameKey(agenda.clinicalField);
     return {
       'type': 'transport',
       'date': dateStr,
@@ -50,6 +51,15 @@ class TransportAgendaMapper {
       'details': '$origin a $destination ($detailTrip)',
       'highlighted': true,
       'status': TransportReservationStatus.aceptada.displayName,
+      if (locationKey != null) 'locationKey': locationKey,
     };
+  }
+
+  String? _nameKey(String? value) {
+    final trimmed = value?.trim();
+    if (trimmed == null || trimmed.isEmpty) {
+      return null;
+    }
+    return 'name:${trimmed.toLowerCase()}';
   }
 }
