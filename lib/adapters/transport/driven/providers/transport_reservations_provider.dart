@@ -5,8 +5,10 @@ import 'package:mobile/domain/entities/transport_reservation_status.dart';
 import 'package:mobile/domain/models/transport/agenda_model.dart';
 import 'package:mobile/domain/models/transport/service_model.dart';
 import 'package:mobile/ports/transport/driven/for_querying_transport.dart';
+import 'package:mobile/ports/transport/drivers/for_transport_interactions.dart';
 
-class TransportReservationsProvider extends ChangeNotifier {
+class TransportReservationsProvider extends ChangeNotifier
+    implements ForTransportInteractions {
   TransportReservationsProvider({required this.repo});
 
   final ForQueryingTransport repo;
@@ -31,6 +33,107 @@ class TransportReservationsProvider extends ChangeNotifier {
   List<TransportServiceModel> get loadedServices => _loadedServices;
   Object? get lastError => _lastError;
 
+  @override
+  void onAgendaLoaded(List<TransportAgendaModel> agenda) {
+    _loadedAgenda = List<TransportAgendaModel>.from(agenda);
+    _syncReservationsFromAgenda(force: true);
+    notifyListeners();
+  }
+
+  @override
+  void onServicesLoaded(List<TransportServiceModel> services) {
+    _loadedServices = List<TransportServiceModel>.from(services);
+    _optionsCache.clear();
+    notifyListeners();
+  }
+
+  @override
+  void onReservationConfirmed(TransportAgendaModel agenda) {
+    _loadedAgenda = [
+      ..._loadedAgenda.where((a) => a.agendaId != agenda.agendaId),
+      agenda,
+    ];
+    _syncReservationsFromAgenda(force: true);
+    notifyListeners();
+  }
+
+  @override
+  void onReservationCancelled(int agendaId) {
+    _loadedAgenda =
+        _loadedAgenda.where((a) => a.agendaId != agendaId).toList();
+    _syncReservationsFromAgenda(force: true);
+    notifyListeners();
+  }
+
+  @override
+  void onTransportError(Object error, [StackTrace? trace]) {
+    _lastError = error;
+    notifyListeners();
+  }
+
+  @override
+  Future<void> requestOutboundReservation({
+    required TransportServiceModel service,
+    required DateTime date,
+  }) async {
+    final agenda = await _createRemoteReservation(
+      serviceId: service.id,
+      date: date,
+    );
+    if (agenda != null) {
+      onReservationConfirmed(agenda);
+    }
+  }
+
+  @override
+  Future<void> requestReturnReservation({
+    required TransportServiceModel service,
+    required DateTime date,
+  }) async {
+    final agenda = await _createRemoteReservation(
+      serviceId: service.id,
+      date: date,
+    );
+    if (agenda != null) {
+      onReservationConfirmed(agenda);
+    }
+  }
+
+  @override
+  Future<void> requestRoundTripReservation({
+    required TransportServiceModel outboundService,
+    required TransportServiceModel returnService,
+    required DateTime outboundDate,
+    required DateTime returnDate,
+  }) async {
+    final outboundAgenda = await _createRemoteReservation(
+      serviceId: outboundService.id,
+      date: outboundDate,
+    );
+    if (outboundAgenda == null) {
+      return;
+    }
+    onReservationConfirmed(outboundAgenda);
+
+    final returnAgenda = await _createRemoteReservation(
+      serviceId: returnService.id,
+      date: returnDate,
+    );
+    if (returnAgenda != null) {
+      onReservationConfirmed(returnAgenda);
+    }
+  }
+
+  @override
+  Future<void> requestReservationCancellation(int agendaId) async {
+    try {
+      await repo.cancelReservation(agendaId);
+      onReservationCancelled(agendaId);
+    } catch (error, stack) {
+      onTransportError(error, stack);
+    }
+  }
+
   List<Map<String, dynamic>> get reservations =>
       _reservationStore.reservations;
   List<Map<String, dynamic>> get futureReservations =>
@@ -52,59 +155,30 @@ class TransportReservationsProvider extends ChangeNotifier {
   Future<void> loadStudentAgenda(TransportAgendaQuery query) async {
     try {
       final agenda = await repo.getStudentAgenda(query);
-      _loadedAgenda = agenda;
-      _syncReservationsFromAgenda(force: true);
-      notifyListeners();
-    } catch (error) {
-      _lastError = error;
-      notifyListeners();
+      onAgendaLoaded(agenda);
+    } catch (error, stack) {
+      onTransportError(error, stack);
     }
   }
 
   Future<void> loadServices(TransportServiceQuery query) async {
     try {
       final services = await repo.getServices(query);
-      _loadedServices = services;
-      _optionsCache.clear();
-      notifyListeners();
-    } catch (error) {
-      _lastError = error;
-      notifyListeners();
+      onServicesLoaded(services);
+    } catch (error, stack) {
+      onTransportError(error, stack);
     }
   }
 
   Future<void> createReservationForService({
     required TransportServiceModel service,
     required DateTime date,
-  }) async {
-    try {
-      final agenda = await repo.createReservation(
-        serviceId: service.id,
-        date: date,
-      );
-      _loadedAgenda = [
-        ..._loadedAgenda.where((a) => a.agendaId != agenda.agendaId),
-        agenda,
-      ];
-      _syncReservationsFromAgenda(force: true);
-      notifyListeners();
-    } catch (error) {
-      _lastError = error;
-      notifyListeners();
-    }
+  }) {
+    return requestOutboundReservation(service: service, date: date);
   }
 
-  Future<void> cancelReservationById(int agendaId) async {
-    try {
-      await repo.cancelReservation(agendaId);
-      _loadedAgenda =
-          _loadedAgenda.where((a) => a.agendaId != agendaId).toList();
-      _syncReservationsFromAgenda(force: true);
-      notifyListeners();
-    } catch (error) {
-      _lastError = error;
-      notifyListeners();
-    }
+  Future<void> cancelReservationById(int agendaId) {
+    return requestReservationCancellation(agendaId);
   }
 
   Future<void> fetchReservations() async {
@@ -363,6 +437,22 @@ class TransportReservationsProvider extends ChangeNotifier {
 
   Future<void> fetchUpdatedReservations() async {
     await fetchReservations();
+  }
+
+  Future<TransportAgendaModel?> _createRemoteReservation({
+    required int serviceId,
+    required DateTime date,
+  }) async {
+    try {
+      final agenda = await repo.createReservation(
+        serviceId: serviceId,
+        date: date,
+      );
+      return agenda;
+    } catch (error, stack) {
+      onTransportError(error, stack);
+      return null;
+    }
   }
 
   void _syncReservationsFromAgenda({bool force = false}) {

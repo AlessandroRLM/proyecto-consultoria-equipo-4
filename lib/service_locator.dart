@@ -9,7 +9,6 @@ import 'package:mobile/ports/core/driven/for_managing_location.dart';
 import 'package:mobile/ports/core/driven/for_querying_campus.dart';
 import 'package:mobile/ports/core/driven/for_managing_map.dart';
 import 'package:mobile/adapters/transport/driven/local_transport_repository.dart';
-import 'package:mobile/adapters/transport/driven/providers/transport_reservations_provider.dart';
 import 'package:mobile/ports/transport/driven/for_querying_transport.dart';
 
 
@@ -39,12 +38,6 @@ void setupServiceLocator() {
     () => LocalTransportRepository(),
   );
 
-  // Provider principal que conversa directamente con el repositorio
-  serviceLocator.registerLazySingleton<TransportReservationsProvider>(
-    () => TransportReservationsProvider(
-      repo: serviceLocator<ForQueryingTransport>(),
-    ),
-  );
 }
 
 

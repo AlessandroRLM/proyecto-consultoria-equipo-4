@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
-import 'package:mobile/adapters/transport/driven/providers/transport_reservations_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:mobile/adapters/core/driven/app_routes.dart';
 import 'package:mobile/adapters/core/driven/app_themes.dart';
@@ -11,6 +10,8 @@ import 'package:mobile/adapters/lodging/driven/providers/lodging_provider.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mobile/adapters/lodging/driven/providers/lodging_availability_provider.dart';
+import 'package:mobile/adapters/transport/driven/providers/transport_reservations_provider.dart';
+import 'package:mobile/ports/transport/driven/for_querying_transport.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -43,8 +44,12 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        // Inicializamos el proveedor vacío, sin datos aún
-        ChangeNotifierProvider(create: (_) => serviceLocator<TransportReservationsProvider>()),
+        // Inicializamos el proveedor con el repositorio definido en el service locator
+        ChangeNotifierProvider(
+          create: (_) => TransportReservationsProvider(
+            repo: serviceLocator<ForQueryingTransport>(),
+          ),
+        ),
         ChangeNotifierProvider(
           create: (_) => LodgingProvider()..fetchReservations(),
         ),
