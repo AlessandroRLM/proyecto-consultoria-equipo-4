@@ -7,7 +7,6 @@ import 'package:mobile/adapters/core/driven/app_routes.dart';
 import 'package:mobile/adapters/core/driven/app_themes.dart';
 import 'package:mobile/ports/auth/drivers/for_authenticating_user.dart';
 import 'package:mobile/service_locator.dart';
-import 'package:mobile/adapters/lodging/driven/providers/lodging_provider.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
@@ -44,9 +43,6 @@ class MyApp extends StatelessWidget {
       providers: [
         // Inicializamos el proveedor vacío, sin datos aún
         ChangeNotifierProvider(create: (_) => TransportReservationsProvider()),
-        ChangeNotifierProvider(
-          create: (_) => LodgingProvider()..fetchReservations(),
-        ),
       ],
       child: MaterialApp.router(
         title: 'ServicesApp',

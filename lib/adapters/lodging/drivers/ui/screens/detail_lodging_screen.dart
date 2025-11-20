@@ -5,6 +5,7 @@ import 'package:mobile/adapters/lodging/drivers/ui/widgets/image_carousel.dart';
 import 'package:mobile/adapters/lodging/drivers/ui/widgets/section_title.dart';
 import 'package:mobile/adapters/lodging/drivers/ui/widgets/service_item.dart';
 import 'package:mobile/domain/models/lodging/residencia_model.dart';
+import 'package:mobile/ports/lodging/drivers/for_reserving_lodging.dart';
 import 'package:mobile/service_locator.dart';
 import 'package:mobile/ports/core/driven/for_managing_map.dart';
 import 'package:mobile/domain/core/user_location.dart';
@@ -100,6 +101,7 @@ class _HomeAlojamientoScreenState extends State<HomeAlojamientoScreen> {
     final cs = Theme.of(context).colorScheme;
     final text = Theme.of(context).textTheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final lodgingReserveService = serviceLocator<ForReservingLodging>();
 
     if (loading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
@@ -168,10 +170,17 @@ class _HomeAlojamientoScreenState extends State<HomeAlojamientoScreen> {
           width: double.infinity,
           height: 50,
           child: ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
+              await lodgingReserveService.reserveLodging(
+                lodgingReserveService.initDate!,
+                lodgingReserveService.endDate!,
+                lodgingReserveService.campus!,
+              );
+            
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text("Alojamiento confirmado")),
               );
+
               context.go('/lodging');
             },
             style: ElevatedButton.styleFrom(
