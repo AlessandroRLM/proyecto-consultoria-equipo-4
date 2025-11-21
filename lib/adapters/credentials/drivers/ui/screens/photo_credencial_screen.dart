@@ -1,8 +1,12 @@
 ﻿import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:mobile/adapters/credentials/drivers/providers/credential_provider.dart';
 import 'package:mobile/adapters/credentials/drivers/ui/widgets/widgets_credentials.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mobile/ports/credentials/driven/for_persisting_request.dart';
+import 'package:mobile/service_locator.dart';
+import 'package:provider/provider.dart';
 
 class PhotoCredencialScreen extends StatefulWidget {
   final bool fromCamera;
@@ -29,8 +33,13 @@ class _PhotoCredencialScreenState extends State<PhotoCredencialScreen> {
     }
   }
 
-  void _submitPhoto() {
+  void _submitPhoto() async {
     if (photo == null) return;
+    final persistRequestService =  serviceLocator<ForPersistingRequest>();
+    final crendentialProvider = Provider.of<CredentialProvider>(context);
+
+    await persistRequestService.persistRequest();
+    await crendentialProvider.refresh();
 
     final messenger = ScaffoldMessenger.of(context);
     messenger

@@ -37,9 +37,4 @@ class CredentialProvider extends ChangeNotifier {
     await loadPersistationValue();
   }
   
-  // Método para actualizar el estado después de crear una solicitud
-  void markAsPersisted() {
-    _isPersisted = true;
-    notifyListeners();
-  }
 }
